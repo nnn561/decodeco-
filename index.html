@@ -3,148 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>钻石贴纸编辑器 (可调大小版)</title>
+    <title>变色钻石 DIY 进阶版</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f7f9; margin: 0; padding: 10px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        #myCanvas { border: 2px solid #eee; border-radius: 10px; max-width: 100%; height: auto; margin-top: 10px; background: #fafafa; display: block; margin-left: auto; margin-right: auto; }
-        .sticker-menu { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-        .sticker-btn { width: 55px; height: 55px; border: 3px solid #eee; border-radius: 10px; cursor: pointer; background: #fff; object-fit: contain; }
-        .sticker-btn.active { border-color: #007bff; }
+        body { font-family: -apple-system, sans-serif; text-align: center; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 550px; margin: auto; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        /* 新增控制条样式 */
-        .control-panel { background: #f0f4f8; padding: 10px; border-radius: 10px; margin: 10px 0; }
-        .slider-label { font-size: 14px; color: #333; display: block; margin-bottom: 5px; }
-        input[type="range"] { width: 80%; cursor: pointer; }
+        /* 贴纸选择区域：自动换行 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; background: #333; padding: 10px; border-radius: 12px; }
+        .sticker-item { width: 100%; aspect-ratio: 1; border: 3px solid transparent; border-radius: 8px; cursor: pointer; transition: 0.2s; object-fit: contain; }
+        .sticker-item.active { border-color: #007bff; background: #444; }
 
-        .upload-section { background: #eef2f5; padding: 10px; border-radius: 8px; }
-        .btns { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .controls { background: #f8f9fa; padding: 15px; border-radius: 12px; margin: 10px 0; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 14px; color: #555; }
+        
+        #myCanvas { border: 1px solid #ddd; border-radius: 10px; max-width: 100%; height: auto; display: block; margin: 10px auto; background: #fff; cursor: crosshair; }
+        
+        input[type="range"] { width: 65%; }
+        input[type="color"] { width: 50px; height: 30px; border: none; padding: 0; background: none; cursor: pointer; }
+        
+        .footer-btns { display: flex; gap: 10px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 15px; }
+        .btn-undo { background: #ff4d4f; }
+        .btn-save { background: #007bff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="upload-section">
-        <p style="margin:0 0 8px 0; font-size:14px; color:#666;">第一步：上传照片</p>
-        <input type="file" id="imgInput" accept="image/*">
+    <div style="padding:10px; border-bottom:1px solid #eee;">
+        <input type="file" id="imgInput" accept="image/*" style="font-size: 14px;">
     </div>
 
-    <div class="sticker-menu">
-        <img src="sticker1.png" class="sticker-btn active" onclick="sel(0, this)">
-        <img src="sticker2.png" class="sticker-btn" onclick="sel(1, this)">
-        <img src="sticker3.png" class="sticker-btn" onclick="sel(2, this)">
-    </div>
+    <div class="sticker-grid" id="stickerGrid">
+        </div>
 
-    <div class="control-panel">
-        <span class="slider-label">调节钻石大小: <span id="sizeVal">50</span></span>
-        <input type="range" id="sizeSlider" min="10" max="200" value="50" oninput="updateSizeDisplay(this.value)">
+    <div class="controls">
+        <div class="control-row">
+            <span>💎 钻石颜色:</span>
+            <input type="color" id="colorPicker" value="#00E5FF">
+            <span id="colorHex" style="font-family: monospace; font-size: 12px;">#00E5FF</span>
+        </div>
+        <div class="control-row">
+            <span>📏 钻石大小:</span>
+            <input type="range" id="sizeSlider" min="10" max="300" value="70">
+            <span id="sizeVal">70</span>
+        </div>
     </div>
 
     <canvas id="myCanvas"></canvas>
     
-    <div class="btns">
-        <button style="background:#ff4d4f" onclick="undo()">撤销一步</button>
-        <button style="background:#52c41a" onclick="download()">保存图片</button>
+    <div class="footer-btns">
+        <button class="btn-undo" onclick="undo()">撤销上一步</button>
+        <button class="btn-save" onclick="download()">保存到手机</button>
     </div>
 </div>
 
 <script>
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
-    const sizeSlider = document.getElementById('sizeSlider');
-    const sizeValLabel = document.getElementById('sizeVal');
+    const stickerGrid = document.getElementById('stickerGrid');
     
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
-    let currentStickerSize = 50; // 默认大小
 
-    // 预加载贴纸
-    const stkNames = ['sticker1.png', 'sticker2.png', 'sticker3.png'];
-    stkNames.forEach((src, index) => {
-        let img = new Image();
-        img.src = src;
-        stickers[index] = img;
-    });
+    // --- 初始化 6 张贴纸 ---
+    for(let i=1; i<=6; i++) {
+        const img = new Image();
+        img.src = `sticker${i}.png`; // 确保你的文件名是 sticker1.png 到 sticker6.png
+        stickers.push(img);
 
-    // 更新大小显示的数值
-    function updateSizeDisplay(val) {
-        currentStickerSize = parseInt(val);
-        sizeValLabel.innerText = val;
+        // 创建选择按钮
+        const imgEl = document.createElement('img');
+        imgEl.src = img.src;
+        imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
+        imgEl.onclick = function() {
+            curIdx = i - 1;
+            document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+        };
+        stickerGrid.appendChild(imgEl);
     }
 
-    document.getElementById('imgInput').onchange = function(e) {
+    // --- 上传背景逻辑 ---
+    document.getElementById('imgInput').onchange = (e) => {
         const file = e.target.files[0];
-        if (!file) return;
+        if(!file) return;
         const reader = new FileReader();
-        reader.onload = function(event) {
+        reader.onload = (f) => {
             mainImg = new Image();
-            mainImg.onload = function() {
+            mainImg.onload = () => {
                 canvas.width = mainImg.width;
                 canvas.height = mainImg.height;
                 draw();
             };
-            mainImg.src = event.target.result;
+            mainImg.src = f.target.result;
         };
         reader.readAsDataURL(file);
     };
 
-    function sel(idx, el) {
-        curIdx = idx;
-        document.querySelectorAll('.sticker-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    // 兼容手机和电脑点击
-    canvas.addEventListener('mousedown', handleClick);
-    canvas.addEventListener('touchstart', function(e) {
+    // --- 点击画布贴钻 ---
+    canvas.addEventListener('mousedown', (e) => handleInput(e));
+    canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
-        handleClick(e.touches[0]);
-    }, { passive: false });
+        handleInput(e.touches[0]);
+    }, {passive: false});
 
-    function handleClick(e) {
-        if(!mainImg.src || mainImg.src === "") return;
-        
+    function handleInput(e) {
+        if(!mainImg.src) return;
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         
-        const x = (e.clientX - rect.left) * scaleX;
-        const y = (e.clientY - rect.top) * scaleY;
-
-        // 记录时同时记录当时的大小
-        records.push({ 
-            x: x, 
-            y: y, 
-            idx: curIdx, 
-            size: currentStickerSize 
+        records.push({
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY,
+            idx: curIdx,
+            color: document.getElementById('colorPicker').value,
+            size: parseInt(document.getElementById('sizeSlider').value)
         });
         draw();
     }
 
+    // --- 核心绘制与变色逻辑 ---
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
         
         records.forEach(r => {
             const sImg = stickers[r.idx];
-            // 使用记录时的大小，这样不同的钻石可以有不同的大小
-            ctx.drawImage(sImg, r.x - r.size/2, r.y - r.size/2, r.size, r.size);
+            if(!sImg.complete) return;
+
+            // 创建离屏画布进行染色
+            const offCanvas = document.createElement('canvas');
+            const offCtx = offCanvas.getContext('2d');
+            offCanvas.width = r.size;
+            offCanvas.height = r.size;
+
+            // 1. 填充目标颜色
+            offCtx.fillStyle = r.color;
+            offCtx.fillRect(0, 0, r.size, r.size);
+
+            // 2. 核心：使用白色贴纸作为遮罩染色
+            offCtx.globalCompositeOperation = "destination-in";
+            offCtx.drawImage(sImg, 0, 0, r.size, r.size);
+            
+            // 3. 画回主画布
+            ctx.drawImage(offCanvas, r.x - r.size/2, r.y - r.size/2);
         });
     }
 
+    // --- 辅助功能 ---
     function undo() { records.pop(); draw(); }
     
     function download() {
-        if(!mainImg.src) return alert("请先上传背景！");
+        if(!mainImg.src) return;
         const link = document.createElement('a');
-        link.download = 'deco_photo.png';
+        link.download = 'my_diamond_work.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
-</script>
 
+    // 实时更新数值显示
+    document.getElementById('sizeSlider').oninput = function() {
+        document.getElementById('sizeVal').innerText = this.value;
+    };
+    document.getElementById('colorPicker').oninput = function() {
+        document.getElementById('colorHex').innerText = this.value.toUpperCase();
+    };
+
+</script>
 </body>
 </html>
