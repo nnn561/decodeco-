@@ -41,9 +41,9 @@
   <div class="card">
     <h3>2. 選擇鑽石點擊上方貼上</h3>
     <div class="sticker-list" id="stickerList">
-      <img src="image/sticker1.jpg" class="sticker-option selected" onclick="selectSticker(0)">
-      <img src="image/sticker2.jpg" class="sticker-option" onclick="selectSticker(1)">
-      <img src="image/sticker3.jpg" class="sticker-option" onclick="selectSticker(2)">
+      <img src="image/sticker1.png" class="sticker-option selected" onclick="selectSticker(0)">
+      <img src="image/sticker2.png" class="sticker-option" onclick="selectSticker(1)">
+      <img src="image/sticker3.png" class="sticker-option" onclick="selectSticker(2)">
     </div>
     <button onclick="clearCanvas()">清空貼紙</button>
   </div>
@@ -57,8 +57,8 @@
     let stickerRecords = [];
     let currentStickerIndex = 0;
 
-    // 預加載貼紙 (對應你 GitHub 裡的 image 檔案夾和 .jpg 格式)
-    const stickerPaths = ['image/sticker1.jpg', 'image/sticker2.jpg', 'image/sticker3.jpg'];
+    // 預加載貼紙 (對應你 GitHub 裡的 image 檔案夾和 .png 格式)
+    const stickerPaths = ['image/sticker1.png', 'image/sticker2.png', 'image/sticker3.png'];
     const stickers = stickerPaths.map(src => {
       const img = new Image();
       img.src = src;
