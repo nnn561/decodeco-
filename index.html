@@ -1,1 +1,109 @@
-<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Diamond Sticker Editor</title>\n    <style>\n        #canvas {\n            border: 1px solid #000;\n            margin-top: 10px;\n        }\n    </style>\n</head>\n<body>\n    <h1>Diamond Sticker Editor</h1>\n    <input type=\"file\" id=\"imageUpload\" accept=\"image/*\">\n    <canvas id=\"canvas\" width=\"500\" height=\"500\"></canvas>\n    <div>\n        <button id=\"sticker1\">Sticker 1</button>\n        <button id=\"sticker2\">Sticker 2</button>\n        <button id=\"sticker3\">Sticker 3</button>\n        <button id=\"undo\">Undo</button>\n        <button id=\"download\">Download</button>\n    </div>\n    <script>\n        const canvas = document.getElementById('canvas');\n        const ctx = canvas.getContext('2d');\n        let image = new Image();\n        let stickers = [];\n        let lastSticker = null;\n\n        document.getElementById('imageUpload').addEventListener('change', (event) => {\n            const file = event.target.files[0];\n            const reader = new FileReader();\n            reader.onload = function(e) {\n                image.src = e.target.result;\n                image.onload = function() {\n                    ctx.clearRect(0, 0, canvas.width, canvas.height);\n                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);\n                }\n            };\n            reader.readAsDataURL(file);\n        });\n\n        const addSticker = (sticker) => {\n            const stickerImg = new Image();\n            stickerImg.src = sticker;\n            stickers.push({ img: stickerImg, x: 0, y: 0 });\n            stickerImg.onload = () => {\n                ctx.drawImage(stickerImg, 0, 0);\n                lastSticker = stickerImg;\n            };\n        };\n\n        document.getElementById('sticker1').addEventListener('click', () => addSticker('sticker1.png'));\n        document.getElementById('sticker2').addEventListener('click', () => addSticker('sticker2.png'));\n        document.getElementById('sticker3').addEventListener('click', () => addSticker('sticker3.png'));\n\n        document.getElementById('undo').addEventListener('click', () => {\n            if (lastSticker) {\n                stickers.pop();\n                ctx.clearRect(0, 0, canvas.width, canvas.height);\n                stickers.forEach(sticker => {\n                    ctx.drawImage(sticker.img, sticker.x, sticker.y);\n                });\n                lastSticker = stickers.length > 0 ? stickers[stickers.length - 1].img : null;\n            }\n        });\n\n        document.getElementById('download').addEventListener('click', () => {\n            const link = document.createElement('a');\n            link.download = 'edited-image.png';\n            link.href = canvas.toDataURL();\n            link.click();\n        });\n    </script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钻石贴纸编辑器</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #myCanvas { border: 2px solid #ddd; border-radius: 8px; max-width: 100%; height: auto; margin-top: 15px; background: #fff; cursor: crosshair; }
+        .sticker-menu { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+        .sticker-btn { width: 60px; height: 60px; border: 3px solid #eee; border-radius: 8px; cursor: pointer; transition: 0.2s; background: #fafafa; object-fit: contain; }
+        .sticker-btn.active { border-color: #007bff; background: #e7f3ff; }
+        .upload-area { margin-bottom: 15px; }
+        button.action-btn { padding: 10px 20px; border: none; border-radius: 5px; background: #ff4d4f; color: white; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💎 钻石贴纸编辑器</h2>
+    
+    <div class="upload-area">
+        <label>第一步：上传照片 </label>
+        <input type="file" id="imgInput" accept="image/*">
+    </div>
+
+    <div class="sticker-menu">
+        <img src="image/sticker1.png" class="sticker-btn active" onclick="sel(0, this)">
+        <img src="image/sticker2.png" class="sticker-btn" onclick="sel(1, this)">
+        <img src="image/sticker3.png" class="sticker-btn" onclick="sel(2, this)">
+    </div>
+
+    <canvas id="myCanvas"></canvas>
+    
+    <div>
+        <button class="action-btn" onclick="undo()">撤销一步</button>
+        <button class="action-btn" style="background:#52c41a" onclick="download()">保存图片</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    let mainImg = new Image();
+    let stickers = [];
+    let records = [];
+    let curIdx = 0;
+
+    // 预加载贴纸
+    ['image/sticker1.png', 'image/sticker2.png', 'image/sticker3.png'].forEach(src => {
+        let img = new Image();
+        img.src = src;
+        stickers.push(img);
+    });
+
+    document.getElementById('imgInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            mainImg.src = f.target.result;
+            mainImg.onload = () => {
+                canvas.width = mainImg.width;
+                canvas.height = mainImg.height;
+                draw();
+            };
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    function sel(idx, el) {
+        curIdx = idx;
+        document.querySelectorAll('.sticker-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    canvas.onclick = (e) => {
+        if(!mainImg.src) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        records.push({
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY,
+            idx: curIdx
+        });
+        draw();
+    };
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
+        records.forEach(r => {
+            let size = canvas.width * 0.12; // 贴纸大小缩放
+            ctx.drawImage(stickers[r.idx], r.x - size/2, r.y - size/2, size, size);
+        });
+    }
+
+    function undo() { records.pop(); draw(); }
+    
+    function download() {
+        const link = document.createElement('a');
+        link.download = 'my_artwork.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+</script>
+
+</body>
+</html>
