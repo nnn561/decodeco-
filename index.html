@@ -125,8 +125,7 @@
         });
         draw();
     }
-
-    // --- 核心绘制与变色逻辑 ---
+        // --- 核心繪製與變色邏輯（亮晶晶增強版） ---
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
@@ -135,25 +134,29 @@
             const sImg = stickers[r.idx];
             if(!sImg.complete) return;
 
-            // 创建离屏画布进行染色
+            // 創建一個臨時的離屏畫布來處理染色
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d');
             offCanvas.width = r.size;
             offCanvas.height = r.size;
 
-            // 1. 填充目标颜色
+            // 步驟 1：先畫出原始的白色鑽石（保留高光細節）
+            offCtx.drawImage(sImg, 0, 0, r.size, r.size);
+
+            // 步驟 2：使用 'multiply' (正片疊底) 模式染上顏色
+            // 這種模式下，白色會變成你選的顏色，而黑色/陰影會變得更深，效果最真實
+            offCtx.globalCompositeOperation = "multiply";
             offCtx.fillStyle = r.color;
             offCtx.fillRect(0, 0, r.size, r.size);
 
-            // 2. 核心：使用白色贴纸作为遮罩染色
+            // 步驟 3：使用 'destination-in' 模式，把多餘的顏色切掉，只留下鑽石形狀
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, r.size, r.size);
             
-            // 3. 画回主画布
+            // 步驟 4：最後將這顆染好色、亮晶晶的鑽石畫到主畫布上
             ctx.drawImage(offCanvas, r.x - r.size/2, r.y - r.size/2);
         });
     }
-
     // --- 辅助功能 ---
     function undo() { records.pop(); draw(); }
     
