@@ -26,9 +26,10 @@
     </div>
 
     <div class="sticker-menu">
-        <img src="image/sticker1.png" class="sticker-btn active" onclick="sel(0, this)">
-        <img src="image/sticker2.png" class="sticker-btn" onclick="sel(1, this)">
-        <img src="image/sticker3.png" class="sticker-btn" onclick="sel(2, this)">
+        <img src="sticker1.png" class="sticker-btn active" onclick="sel(0, this)">
+        <img src="sticker2.png" class="sticker-btn" onclick="sel(1, this)">
+        <img src="sticker3.png" class="sticker-btn" onclick="sel(2, this)">
+
     </div>
 
     <canvas id="myCanvas"></canvas>
@@ -48,7 +49,8 @@
     let curIdx = 0;
 
     // 预加载贴纸
-    ['image/sticker1.png', 'image/sticker2.png', 'image/sticker3.png'].forEach(src => {
+    ['sticker1.png', 'sticker2.png',        'sticker3.png'].forEach(src => { ...
+.forEach(src => {
         let img = new Image();
         img.src = src;
         stickers.push(img);
