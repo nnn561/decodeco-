@@ -14,95 +14,85 @@
         }
 
         body { 
-            font-family: "Comic Sans MS", "curstive", "Microsoft YaHei", sans-serif; 
+            font-family: "Comic Sans MS", "curstive", sans-serif; 
             background: #ffeef4; 
             margin: 0; padding: 10px; 
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
-        /* 顶部标题样式 */
         .title-header {
-            font-size: 32px;
-            color: var(--text-pink);
-            font-weight: bold;
-            margin: 15px 0;
-            text-shadow: 2px 2px 0px #fff, 4px 4px 0px rgba(255, 133, 162, 0.2);
-            letter-spacing: 1px;
-            animation: floating 3s ease-in-out infinite;
+            font-size: 28px; color: var(--text-pink); font-weight: bold; margin: 10px 0;
+            text-shadow: 2px 2px 0px #fff;
         }
 
-        @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
+        /* 增强层次感的书本 */
         .book-container { 
-            width: 100%; max-width: 500px; 
+            width: 100%; max-width: 480px; 
             background: var(--book-pink); 
-            padding: 15px; border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.2);
+            padding: 12px; border-radius: 15px 30px 30px 15px;
+            /* 模拟纸张层叠效果 */
+            box-shadow: 
+                2px 0 0 white,
+                4px 0 0 var(--book-pink),
+                6px 0 0 white,
+                8px 0 0 var(--book-pink),
+                10px 15px 30px rgba(255, 105, 180, 0.2);
             position: relative;
         }
 
         .top-page, .bottom-page {
             background: var(--paper-white);
-            padding: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
+            padding: 15px; position: relative;
         }
-        .top-page { border-radius: 15px 15px 5px 5px; }
-        .bottom-page { border-radius: 5px 5px 15px 15px; min-height: 300px; }
+        .top-page { border-radius: 10px 20px 5px 5px; }
+        .bottom-page { border-radius: 5px 5px 20px 10px; min-height: 280px; }
 
         .notebook-rings {
-            height: 30px; display: flex; justify-content: space-around;
-            padding: 0 20px; position: relative; z-index: 3; margin: -5px 0;
+            height: 25px; display: flex; justify-content: space-around;
+            padding: 0 20px; position: relative; z-index: 10; margin: -5px 0;
         }
-        .ring { width: 10px; height: 35px; background: var(--ring-color); border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .ring { width: 8px; height: 30px; background: var(--ring-color); border-radius: 4px; }
 
         .sticker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 5px; }
         .sticker-item { 
             width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; 
-            transition: 0.3s; object-fit: contain; background: #fff; border: 1px solid #f0f0f0;
+            transition: 0.2s; object-fit: contain; background: #fff; border: 1px solid #f0f0f0;
         }
+        /* 钻石点击：仅倾斜发光，不产生阴影 */
         .sticker-item.active { 
-            border-color: var(--text-pink); transform: rotate(-12deg) scale(1.1);
-            box-shadow: 0 0 15px var(--text-pink);
+            border-color: var(--text-pink); transform: rotate(-10deg) scale(1.1);
+            filter: drop-shadow(0 0 5px rgba(255, 133, 162, 0.5));
         }
 
         .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
         .current-color-dot {
-            width: 40px; height: 40px; border-radius: 50%; border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; background: #00E5FF;
+            width: 45px; height: 45px; border-radius: 50%; border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
         }
 
         .canvas-area {
-            position: relative; margin: 15px 0; border: 2px dashed #ffcad4;
-            border-radius: 10px; min-height: 250px; display: flex; align-items: center; justify-content: center;
-            overflow: hidden; background-color: #fffafb; cursor: pointer;
+            position: relative; margin: 10px 0; border: 2px dashed #ffcad4;
+            border-radius: 10px; min-height: 200px; display: flex; align-items: center; justify-content: center;
+            background-color: #fffafb; cursor: pointer; overflow: hidden;
         }
-        #myCanvas { max-width: 100%; height: auto; display: block; }
-        .upload-tip { position: absolute; color: #ffabbd; font-size: 14px; pointer-events: none; }
+        #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; }
+        .upload-tip { position: absolute; color: #ffabbd; font-size: 13px; pointer-events: none; }
 
-        /* 弹出色环弹窗样式 */
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 90; backdrop-filter: blur(2px); }
+        /* 弹窗样式 */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; }
         #pickerContainer {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 25px; border-radius: 30px; z-index: 100; text-align: center;
-            width: 280px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            background: white; padding: 20px; border-radius: 25px; z-index: 100; text-align: center;
+            width: 260px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);
         }
 
-        .picker-header { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
-        .selected-preview { width: 50px; height: 50px; border-radius: 12px; border: 2px solid #eee; }
-        .eyedropper-btn { 
-            background: #f0f0f0; border: none; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 20px;
-            transition: 0.2s;
-        }
-        .eyedropper-btn:hover { background: #e0e0e0; }
-
-        .macaron-preset { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 20px; }
-        .preset-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .macaron-preset { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 15px 0; }
+        .recent-colors { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; min-height: 25px; }
+        .preset-dot, .recent-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         .footer-btns { display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 25px; color: white; font-weight: bold; cursor: pointer; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-undo { background: #ffabbd; }
         .btn-save { background: var(--text-pink); }
     </style>
@@ -118,12 +108,15 @@
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="controls">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="current-color-dot" id="colorBtn"></div>
-                <span style="font-size: 14px; color: var(--text-gray); font-weight: bold;">Color</span>
+                <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-size: 12px; color: var(--text-pink); font-weight: bold;">COLOR</span>
+                    <span id="hexLabel" style="font-size: 10px; font-family: monospace; color: #aaa;">#FFB7B2</span>
+                </div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 14px; color: var(--text-gray); font-weight: bold;">Size:</span>
-                <input type="range" id="sizeSlider" min="5" max="300" value="70" style="width: 100px; accent-color:#ff85a2;">
+                <span style="font-size: 12px; font-weight: bold; color: #888;">SIZE:</span>
+                <input type="range" id="sizeSlider" min="5" max="300" value="70" style="width: 80px; accent-color:#ff85a2;">
             </div>
         </div>
     </div>
@@ -135,30 +128,26 @@
 
     <div class="bottom-page">
         <div class="canvas-area" id="dropZone">
-            <span class="upload-tip" id="uploadTip">🌸 Click to upload image 🌸</span>
+            <span class="upload-tip" id="uploadTip">点击上传底图 🌸</span>
             <canvas id="myCanvas"></canvas>
         </div>
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
         
         <div class="footer-btns">
-            <button class="btn-undo" onclick="undo()">Undo</button>
-            <button class="btn-save" onclick="download()">Save</button>
+            <button class="btn-undo" onclick="smartUndo()">撤销</button>
+            <button class="btn-save" onclick="download()">保存</button>
         </div>
     </div>
 </div>
 
 <div id="pickerContainer">
-    <div class="picker-header">
-        <div class="selected-preview" id="previewBox"></div>
-        <button class="eyedropper-btn" id="eyeDropper" title="吸色器">🧪</button>
-        <span id="hexLabel" style="font-size: 12px; font-family: monospace;">#00E5FF</span>
-    </div>
+    <div style="font-size: 14px; color: #888; margin-bottom: 10px;">历史选色</div>
+    <div class="recent-colors" id="recentColors"></div>
     
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
     
     <div class="macaron-preset" id="presets"></div>
-    
-    <button onclick="closePicker()" style="margin-top:25px; background:var(--text-pink); width:100%; border-radius: 15px;">OK</button>
+    <button onclick="closePicker()" style="margin-top:15px; background:var(--text-pink); width:100%; border-radius: 12px;">确定</button>
 </div>
 
 <script>
@@ -166,46 +155,31 @@
     const ctx = canvas.getContext('2d');
     const imgInput = document.getElementById('imgInput');
     const dropZone = document.getElementById('dropZone');
-    const uploadTip = document.getElementById('uploadTip');
     
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
-    let currentColor = "#00E5FF";
+    let currentColor = "#FFB7B2";
+    let lastClickTime = 0; // 记录上次点击贴纸的时间
 
-    // --- 1. 初始化色环 ---
+    // --- 色环初始化 ---
     const colorPicker = new iro.ColorPicker("#iroPicker", {
-        width: 220, color: currentColor,
+        width: 200, color: currentColor,
         layout: [{ component: iro.ui.Wheel }]
     });
 
-    colorPicker.on(['color:init', 'color:change'], (color) => {
+    colorPicker.on('color:change', (color) => {
         currentColor = color.hexString;
         document.getElementById('colorBtn').style.backgroundColor = currentColor;
-        document.getElementById('previewBox').style.backgroundColor = currentColor;
         document.getElementById('hexLabel').innerText = currentColor.toUpperCase();
     });
 
-    // --- 2. 吸色功能 (Eyedropper API) ---
-    const eyeBtn = document.getElementById('eyeDropper');
-    if (!window.EyeDropper) {
-        eyeBtn.style.display = 'none'; // 如果浏览器不支持则隐藏
-    }
-
-    eyeBtn.onclick = async () => {
-        try {
-            const eyeDropper = new EyeDropper();
-            const result = await eyeDropper.open();
-            colorPicker.color.set(result.sRGBHex);
-        } catch (e) {
-            console.log("用户取消了吸色");
-        }
-    };
-
-    // 预设马卡龙颜色
+    // 历史与马卡龙预设
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
     const presetContainer = document.getElementById('presets');
+    const recentContainer = document.getElementById('recentColors');
+
     macaronColors.forEach(c => {
         const dot = document.createElement('div');
         dot.className = 'preset-dot';
@@ -214,7 +188,19 @@
         presetContainer.appendChild(dot);
     });
 
-    // 点击上传
+    function addRecentColor(hex) {
+        const dots = recentContainer.querySelectorAll('.recent-dot');
+        if([...dots].some(d => d.dataset.color === hex)) return;
+        const dot = document.createElement('div');
+        dot.className = 'recent-dot';
+        dot.dataset.color = hex;
+        dot.style.backgroundColor = hex;
+        dot.onclick = () => colorPicker.color.set(hex);
+        recentContainer.prepend(dot);
+        if(recentContainer.children.length > 6) recentContainer.lastChild.remove();
+    }
+
+    // --- 逻辑还原 ---
     dropZone.onclick = () => imgInput.click();
     imgInput.onchange = (e) => {
         const file = e.target.files[0];
@@ -223,19 +209,16 @@
         reader.onload = (f) => {
             mainImg = new Image();
             mainImg.onload = () => {
-                canvas.width = mainImg.width;
-                canvas.height = mainImg.height;
-                uploadTip.style.display = 'none';
+                canvas.width = mainImg.width; canvas.height = mainImg.height;
+                document.getElementById('uploadTip').style.display = 'none';
                 dropZone.style.border = 'none';
-                records = [];
-                draw();
+                records = []; draw();
             };
             mainImg.src = f.target.result;
         };
         reader.readAsDataURL(file);
     };
 
-    // 贴纸加载与动画
     for(let i=1; i<=6; i++) {
         const img = new Image();
         img.src = `sticker${i}.png`; 
@@ -243,8 +226,7 @@
         const imgEl = document.createElement('img');
         imgEl.src = img.src;
         imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-        imgEl.onclick = (e) => {
-            e.stopPropagation();
+        imgEl.onclick = () => {
             curIdx = i - 1;
             document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
             imgEl.classList.add('active');
@@ -252,18 +234,18 @@
         document.getElementById('stickerGrid').appendChild(imgEl);
     }
 
-    // 弹窗控制
     document.getElementById('colorBtn').onclick = () => {
         document.getElementById('pickerContainer').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
     };
     function closePicker() {
+        addRecentColor(currentColor);
         document.getElementById('pickerContainer').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
     }
     document.getElementById('overlay').onclick = closePicker;
 
-    // 绘图
+    // --- 贴纸交互与智能撤销 ---
     let isDrawing = false;
     canvas.onmousedown = (e) => { isDrawing = true; handleInput(e); };
     canvas.onmousemove = (e) => { if(isDrawing) handleInput(e); };
@@ -274,15 +256,30 @@
 
     function handleInput(e) {
         if(!mainImg.src) return;
+        const now = Date.now();
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
+        
         records.push({
             x: (e.clientX - rect.left) * scaleX,
             y: (e.clientY - rect.top) * scaleY,
             idx: curIdx, color: currentColor,
-            size: parseInt(document.getElementById('sizeSlider').value)
+            size: parseInt(document.getElementById('sizeSlider').value),
+            time: now // 记录时间戳用于连点撤销
         });
+        lastClickTime = now;
+        draw();
+    }
+
+    // 智能撤销逻辑
+    function smartUndo() {
+        if (records.length === 0) return;
+        const last = records.pop();
+        // 如果倒数第二个记录和上个记录间隔小于 500ms，则继续撤销
+        while (records.length > 0 && (last.time - records[records.length-1].time < 500)) {
+            records.pop();
+        }
         draw();
     }
 
@@ -295,6 +292,7 @@
             const ratio = sImg.width / sImg.height;
             let drawW = ratio > 1 ? r.size : r.size * ratio;
             let drawH = ratio > 1 ? r.size / ratio : r.size;
+            
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d');
             offCanvas.width = drawW; offCanvas.height = drawH;
@@ -304,17 +302,16 @@
             offCtx.fillRect(0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
-            ctx.shadowBlur = r.size/10; ctx.shadowColor = r.color;
+            
+            // 彻底去除 ctx.shadow 阴影代码
             ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
-            ctx.shadowBlur = 0;
         });
     }
 
-    function undo() { records.pop(); draw(); }
     function download() {
         if(!mainImg.src) return;
         const link = document.createElement('a');
-        link.download = `pancake_art.png`;
+        link.download = `pancake_sticker.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
