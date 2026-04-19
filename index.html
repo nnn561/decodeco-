@@ -34,19 +34,23 @@
         }
 
         /* 厚度書本 */
-        .book-container { 
-            width: 100%; max-width: 440px; background: var(--book-cover); 
-            padding: 15px; border-radius: 10px 40px 40px 10px;
-            box-shadow: -5px 0 0px #e097aa, -10px 0 0px #d48a9d, 10px 15px 40px rgba(214, 51, 132, 0.2);
-            position: relative; display: flex; flex-direction: column;
-        }
+ book-container { 
+    width: 95%; /* 稍微缩小一点点防止贴边 
+    max-width: 440px; 
+    background: var(--book-cover); 
+    padding: 15px; 
+    border-radius: 10px 40px 40px 10px;
+    margin: 15px auto; 
+    box-shadow: 
+        -4px 0 0px #e097aa,
+        -8px 0 0px #d48a9d, 
+        10px 15px 40px rgba(214, 51, 132, 0.2);
+    position: relative; 
+    display: flex; 
+    flex-direction: column;
+    box-sizing: border-box; 
+}
 
-        .top-page, .bottom-page { 
-            background: var(--page-white); flex: 1; min-height: 320px; 
-            padding: 15px; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.02);
-        }
-        .top-page { border-radius: 8px 15px 0 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center;}
-        .bottom-page { border-radius: 0 0 15px 8px; display: flex; flex-direction: column; }
 
         /* 線圈 */
         .notebook-rings { height: 40px; display: flex; justify-content: space-around; padding: 0 25px; z-index: 20; margin: -20px 0; }
