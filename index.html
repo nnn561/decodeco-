@@ -10,106 +10,106 @@
             --book-pink: #ffdae9;
             --paper-white: #ffffff;
             --text-gray: #7d5a6a;
-            --accent-glow: rgba(255, 255, 255, 0.8);
+            --ring-color: linear-gradient(to right, #d1d1d1, #f0f0f0, #c4c4c4);
         }
 
         body { 
             font-family: -apple-system, sans-serif; 
-            background: #ffeef4; /* 整体浅粉底色 */
-            margin: 0; padding: 15px; 
-            display: flex; justify-content: center; align-items: flex-start;
+            background: #ffeef4; 
+            margin: 0; padding: 10px; 
+            display: flex; justify-content: center;
             min-height: 100vh;
         }
 
-        /* 粉色书本样式容器 */
+        /* 书本整体 */
         .book-container { 
             width: 100%; max-width: 500px; 
             background: var(--book-pink); 
-            padding: 20px; 
-            border-radius: 10px 40px 40px 10px; /* 右侧圆角更明显，像书页边缘 */
-            box-shadow: 
-                -10px 0 20px rgba(0,0,0,0.1), /* 书脊阴影 */
-                5px 10px 30px rgba(255, 105, 180, 0.3);
+            padding: 15px; 
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.2);
             position: relative;
-            border-left: 15px solid #f2b6ce; /* 模拟书脊线 */
         }
 
-        /* 内部纸张效果 */
-        .page {
+        /* 上半部分：贴纸页 */
+        .top-page {
             background: var(--paper-white);
-            border-radius: 5px;
+            border-radius: 10px 10px 5px 5px;
             padding: 15px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.02);
-        }
-
-        /* 贴纸区域 */
-        .sticker-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; margin: 15px 0;
-        }
-        
-        .sticker-item { 
-            width: 100%; aspect-ratio: 1; border-radius: 12px; 
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            object-fit: contain; background: #fff; border: 2px solid #f0f0f0;
-        }
-        
-        /* 钻石点击倾斜发光效果 */
-        .sticker-item.active { 
-            border-color: #ff85a2; 
-            transform: rotate(-10deg) scale(1.1); /* 倾斜 */
-            box-shadow: 0 0 20px #ff85a2; /* 发光 */
             z-index: 2;
         }
 
-        /* 颜色选择区域 */
-        .color-section { margin: 15px 0; text-align: center; }
-        
-        .color-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
-        
-        /* 选色圆圈 */
+        /* --- 线圈本样式 --- */
+        .notebook-rings {
+            height: 30px;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20px;
+            position: relative;
+            z-index: 3;
+            margin: -5px 0; /* 让线圈压住上下两页 */
+        }
+        .ring {
+            width: 10px; height: 35px;
+            background: var(--ring-color);
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 下半部分：编辑页 */
+        .bottom-page {
+            background: var(--paper-white);
+            border-radius: 5px 5px 10px 10px;
+            padding: 15px;
+            min-height: 300px;
+        }
+
+        /* 贴纸样式 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 5px; }
+        .sticker-item { 
+            width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; 
+            transition: 0.3s; object-fit: contain; background: #fff; border: 1px solid #f0f0f0;
+        }
+        .sticker-item.active { 
+            border-color: #ff85a2; transform: rotate(-12deg) scale(1.1);
+            box-shadow: 0 0 15px #ff85a2;
+        }
+
+        /* 交互控件 */
+        .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
         .current-color-dot {
-            width: 40px; height: 40px; border-radius: 50%;
-            border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            cursor: pointer; background: #00E5FF;
+            width: 35px; height: 35px; border-radius: 50%; border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; background: #00E5FF;
         }
 
-        /* 马卡龙预设色 */
-        .macaron-preset {
-            display: flex; gap: 8px; justify-content: center; margin-bottom: 10px;
+        /* 画布区域：点击上传 */
+        .canvas-area {
+            position: relative;
+            margin: 15px 0;
+            border: 2px dashed #ffcad4;
+            border-radius: 10px;
+            min-height: 250px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            background-color: #fffafb;
+            cursor: pointer;
         }
-        .preset-dot {
-            width: 25px; height: 25px; border-radius: 50%; cursor: pointer;
-            border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            transition: 0.2s;
-        }
-        .preset-dot:hover { transform: scale(1.2); }
+        #myCanvas { max-width: 100%; height: auto; display: block; }
+        .upload-tip { position: absolute; color: #ffabbd; font-size: 14px; pointer-events: none; }
 
-        /* 隐藏的色环容器 */
+        /* 弹出层（色环 + 预设） */
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; }
         #pickerContainer {
-            display: none; /* 默认隐藏 */
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white; padding: 20px; border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            z-index: 100;
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 20px; z-index: 100; text-align: center;
         }
-
-        canvas { 
-            display: block; margin: 15px auto; background: #fff;
-            border: 1px solid #eee; border-radius: 5px;
-            max-width: 100%; height: auto; cursor: crosshair;
-        }
+        .macaron-preset { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
+        .preset-dot { width: 25px; height: 25px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         .footer-btns { display: flex; gap: 10px; }
-        button { 
-            flex: 1; padding: 12px; border: none; border-radius: 25px; 
-            color: white; font-weight: bold; cursor: pointer;
-        }
+        button { flex: 1; padding: 12px; border: none; border-radius: 25px; color: white; font-weight: bold; cursor: pointer; }
         .btn-undo { background: #ffabbd; }
         .btn-save { background: #ff85a2; }
-        
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; }
     </style>
 </head>
 <body>
@@ -117,31 +117,31 @@
 <div class="overlay" id="overlay"></div>
 
 <div class="book-container">
-    <div class="page">
-        <div style="border-bottom: 1px dashed #ffcad4; padding-bottom: 10px; margin-bottom: 15px;">
-            <input type="file" id="imgInput" accept="image/*" style="font-size: 12px;">
-        </div>
-
+    <div class="top-page">
         <div class="sticker-grid" id="stickerGrid"></div>
-
-        <div class="color-section">
-            <div class="macaron-preset" id="presets">
-                </div>
-            
-            <div class="color-row">
-                <span style="font-size: 14px; color: var(--text-gray);">点击调色:</span>
+        <div class="controls">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <div class="current-color-dot" id="colorBtn"></div>
-                <input type="range" id="sizeSlider" min="10" max="300" value="70" style="width: 100px;">
-                <span id="sizeVal" style="font-size: 14px; color: var(--text-gray);">70</span>
+                <span style="font-size: 12px; color: var(--text-gray);">点击选色</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 12px; color: var(--text-gray);">大小:</span>
+                <input type="range" id="sizeSlider" min="10" max="300" value="70" style="width: 80px; accent-color:#ff85a2;">
             </div>
         </div>
+    </div>
 
-        <div id="pickerContainer">
-            <div id="iroPicker"></div>
-            <button onclick="closePicker()" style="margin-top:10px; background:#ff85a2; width:100%;">确定</button>
+    <div class="notebook-rings">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    </div>
+
+    <div class="bottom-page">
+        <div class="canvas-area" id="dropZone">
+            <span class="upload-tip" id="uploadTip">✨ 点击这里上传底图 ✨</span>
+            <canvas id="myCanvas"></canvas>
         </div>
-
-        <canvas id="myCanvas"></canvas>
+        <input type="file" id="imgInput" accept="image/*" style="display: none;">
         
         <div class="footer-btns">
             <button class="btn-undo" onclick="undo()">撤销</button>
@@ -150,55 +150,66 @@
     </div>
 </div>
 
+<div id="pickerContainer">
+    <div id="iroPicker"></div>
+    <div class="macaron-preset" id="presets"></div>
+    <button onclick="closePicker()" style="margin-top:20px; background:#ff85a2; width:100%;">确定</button>
+</div>
+
 <script>
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
+    const imgInput = document.getElementById('imgInput');
+    const dropZone = document.getElementById('dropZone');
+    const uploadTip = document.getElementById('uploadTip');
+    
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
     let currentColor = "#00E5FF";
 
-    // 马卡龙预设色系
+    // 初始化色环
+    const colorPicker = new iro.ColorPicker("#iroPicker", {
+        width: 200, color: currentColor,
+        layout: [{ component: iro.ui.Wheel }]
+    });
+    colorPicker.on('color:change', (color) => {
+        currentColor = color.hexString;
+        document.getElementById('colorBtn').style.backgroundColor = currentColor;
+    });
+
+    // 预设颜色（仅在色环弹窗显示）
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
     const presetContainer = document.getElementById('presets');
     macaronColors.forEach(c => {
         const dot = document.createElement('div');
         dot.className = 'preset-dot';
         dot.style.backgroundColor = c;
-        dot.onclick = () => {
-            currentColor = c;
-            updateColorUI();
-            colorPicker.color.set(c);
-        };
+        dot.onclick = () => { colorPicker.color.set(c); };
         presetContainer.appendChild(dot);
     });
 
-    // 初始化色环
-    const colorPicker = new iro.ColorPicker("#iroPicker", {
-        width: 200, color: currentColor,
-        layout: [{ component: iro.ui.Wheel }]
-    });
-
-    colorPicker.on('color:change', (color) => {
-        currentColor = color.hexString;
-        updateColorUI();
-    });
-
-    function updateColorUI() {
-        document.getElementById('colorBtn').style.backgroundColor = currentColor;
-    }
-
-    // 弹出控制
-    document.getElementById('colorBtn').onclick = () => {
-        document.getElementById('pickerContainer').style.display = 'block';
-        document.getElementById('overlay').style.display = 'block';
+    // 点击上传逻辑
+    dropZone.onclick = () => imgInput.click();
+    imgInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            mainImg = new Image();
+            mainImg.onload = () => {
+                canvas.width = mainImg.width;
+                canvas.height = mainImg.height;
+                uploadTip.style.display = 'none';
+                dropZone.style.border = 'none';
+                records = [];
+                draw();
+            };
+            mainImg.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
     };
-    function closePicker() {
-        document.getElementById('pickerContainer').style.display = 'none';
-        document.getElementById('overlay').style.display = 'none';
-    }
-    document.getElementById('overlay').onclick = closePicker;
 
     // 初始化贴纸
     for(let i=1; i<=6; i++) {
@@ -208,37 +219,32 @@
         const imgEl = document.createElement('img');
         imgEl.src = img.src;
         imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-        imgEl.onclick = function() {
+        imgEl.onclick = (e) => {
+            e.stopPropagation();
             curIdx = i - 1;
             document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
-            this.classList.add('active');
+            imgEl.classList.add('active');
         };
         document.getElementById('stickerGrid').appendChild(imgEl);
     }
 
-    // 画布逻辑还原
-    document.getElementById('imgInput').onchange = (e) => {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (f) => {
-            mainImg = new Image();
-            mainImg.onload = () => {
-                canvas.width = mainImg.width;
-                canvas.height = mainImg.height;
-                records = [];
-                draw();
-            };
-            mainImg.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
+    // 选色弹窗
+    document.getElementById('colorBtn').onclick = (e) => {
+        e.stopPropagation();
+        document.getElementById('pickerContainer').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
     };
+    function closePicker() {
+        document.getElementById('pickerContainer').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+    document.getElementById('overlay').onclick = closePicker;
 
+    // 绘图逻辑
     let isDrawing = false;
     canvas.onmousedown = (e) => { isDrawing = true; handleInput(e); };
     canvas.onmousemove = (e) => { if(isDrawing) handleInput(e); };
     window.onmouseup = () => { isDrawing = false; };
-
     canvas.ontouchstart = (e) => { e.preventDefault(); isDrawing = true; handleInput(e.touches[0]); };
     canvas.ontouchmove = (e) => { e.preventDefault(); if(isDrawing) handleInput(e.touches[0]); };
     canvas.ontouchend = () => { isDrawing = false; };
@@ -251,8 +257,7 @@
         records.push({
             x: (e.clientX - rect.left) * scaleX,
             y: (e.clientY - rect.top) * scaleY,
-            idx: curIdx,
-            color: currentColor,
+            idx: curIdx, color: currentColor,
             size: parseInt(document.getElementById('sizeSlider').value)
         });
         draw();
@@ -267,7 +272,6 @@
             const ratio = sImg.width / sImg.height;
             let drawW = ratio > 1 ? r.size : r.size * ratio;
             let drawH = ratio > 1 ? r.size / ratio : r.size;
-
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d');
             offCanvas.width = drawW; offCanvas.height = drawH;
@@ -277,7 +281,6 @@
             offCtx.fillRect(0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
-            
             ctx.shadowBlur = r.size/10; ctx.shadowColor = r.color;
             ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
             ctx.shadowBlur = 0;
@@ -288,13 +291,10 @@
     function download() {
         if(!mainImg.src) return;
         const link = document.createElement('a');
-        link.download = `pancake_${Date.now()}.png`;
+        link.download = `pancake_art.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
-    document.getElementById('sizeSlider').oninput = function() {
-        document.getElementById('sizeVal').innerText = this.value;
-    };
 </script>
 </body>
 </html>
