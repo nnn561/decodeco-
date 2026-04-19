@@ -248,17 +248,16 @@
     function smartUndo() {
     if (records.length === 0) return;
 
-    // 1. 先取出最后贴的一个钻石
+    //
     let lastAction = records.pop();
 
-    // 2. 检查前一个钻石，如果点击间隔小于 100 毫秒，就一起删掉
-    // 这样连点的一串钻石点一下撤销就能全清
+    // 
     while (records.length > 0 && 
-           (lastAction.time - records[records.length - 1].time < 100)) {
+           (lastAction.time - records[records.length - 1].time < 50)) {
         lastAction = records.pop(); // 继续往前删
     }
 
-    draw(); // 重新画图
+    draw(); // 
 }
 
 
