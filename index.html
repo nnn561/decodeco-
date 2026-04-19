@@ -71,7 +71,11 @@
             background-color: #fffafb; cursor: pointer; overflow: hidden;
             transition: background-color 0.2s;
         }
-        #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; z-index: 5; }
+        #myCanvas { 
+            max-width: 100%; height: auto; display: block; 
+            touch-action: none; 
+            z-index: 5; 
+        }
         
         .plus-icon { font-size: 60px; color: #ffabbd; font-weight: bold; line-height: 1; pointer-events: none; }
         .upload-tip { color: #ffabbd; font-size: 14px; pointer-events: none; font-weight: bold; margin-top: 5px; }
@@ -93,9 +97,9 @@
         .footer-btns { display: flex; gap: 10px; }
         button { flex: 1; padding: 12px; border: none; border-radius: 20px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-undo { background: #ffabbd; }
+        .btn-random { background: linear-gradient(45deg, #ff85a2, #ffb7b2); box-shadow: 0 4px 10px rgba(255, 133, 162, 0.3); }
         .btn-save { background: var(--text-pink); }
 
-        /* --- 放大後的滑塊樣式 --- */
         .slider-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
         .slider-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
         .slider-label { font-size: 12px; font-weight: bold; color: #ff85a2; min-width: 32px; }
@@ -111,7 +115,6 @@
             accent-color: #ff85a2;
         }
 
-        /* 讓圓鈕變大，更容易點擊 */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -181,7 +184,8 @@
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
         
         <div class="footer-btns">
-            <button class="btn-undo" onclick="smartUndo()">撤銷</button>
+            <button class="btn-undo" onclick="smartUndo()">撤销</button>
+            <button class="btn-random" onclick="generateRandomDiamonds()">随机钻石</button>
             <button class="btn-save" onclick="download()">保存</button>
         </div>
     </div>
@@ -208,13 +212,84 @@
 
     let mainImg = new Image();
     let stickers = [];
-    let records = [];
+    let records = []; // 存儲繪製記錄：[[point1, point2], [diamondLine], [point3]]
     let curIdx = 0;
     let currentColor = "#FFB7B2";
 
+    // 優化：預渲染緩存
+    let preRenderedSticker = null;
+
+    // 隨機生成相關
+    let diamonds = []; // 鑽石貼紙圖片對象
+    let randomClickCount = 0; // 追蹤隨機點擊次數
+
+    // 實時更新數值顯示
     sizeSlider.oninput = function() { sizeValLabel.innerText = this.value; };
     rotateSlider.oninput = function() { rotValLabel.innerText = this.value + "°"; };
 
+    // --- 初始化 ---
+    async function init() {
+        // 1. 加載普通貼紙
+        for(let i=1; i<=6; i++) {
+            const img = new Image();
+            img.src = `sticker${i}.png`; 
+            stickers.push(img);
+            const imgEl = document.createElement('img');
+            imgEl.src = img.src;
+            imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
+            imgEl.onclick = (e) => {
+                e.stopPropagation();
+                curIdx = i - 1;
+                document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
+                imgEl.classList.add('active');
+                updatePreRender();
+            };
+            document.getElementById('stickerGrid').appendChild(imgEl);
+        }
+
+        // 2. 加載鑽石貼紙 (假設有 3 張，需確認路徑)
+        for(let i=1; i<=3; i++) {
+            const img = new Image();
+            img.src = `diamond${i}.png`;
+            await new Promise(r => img.onload = r);
+            diamonds.push(img);
+        }
+
+        // 3. 初始預渲染
+        updatePreRender();
+    }
+
+    // --- 優化核心：預渲染函數 ---
+    function updatePreRender() {
+        const sImg = stickers[curIdx];
+        if (!sImg || !sImg.complete) return;
+
+        const size = parseInt(sizeSlider.value);
+        const ratio = sImg.width / sImg.height;
+        let drawW = ratio > 1 ? size : size * ratio;
+        let drawH = ratio > 1 ? size / ratio : size;
+
+        const offCanvas = document.createElement('canvas');
+        const offCtx = offCanvas.getContext('2d');
+        offCanvas.width = drawW;
+        offCanvas.height = drawH;
+
+        offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+        offCtx.globalCompositeOperation = "multiply";
+        offCtx.fillStyle = currentColor;
+        offCtx.fillRect(0, 0, drawW, drawH);
+        offCtx.globalCompositeOperation = "destination-in";
+        offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+
+        preRenderedSticker = new Image();
+        preRenderedSticker.src = offCanvas.toDataURL();
+    }
+
+    // 監聽滑塊停止事件 (優化)
+    sizeSlider.addEventListener('change', updatePreRender);
+    rotateSlider.addEventListener('change', updatePreRender);
+
+    // --- 颜色选择逻辑 ---
     const colorPicker = new iro.ColorPicker("#iroPicker", {
         width: 200, color: currentColor,
         layout: [{ component: iro.ui.Wheel }]
@@ -224,8 +299,10 @@
         currentColor = color.hexString;
         document.getElementById('colorBtn').style.backgroundColor = currentColor;
         document.getElementById('hexLabel').innerText = currentColor.toUpperCase();
+        updatePreRender(); // 顏色變了，重新預渲染
     });
 
+    // ... 歷史顏色邏輯 (現有的) ...
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
     const presetContainer = document.getElementById('presets');
     const recentContainer = document.getElementById('recentColors');
@@ -261,6 +338,7 @@
     }
     document.getElementById('overlay').onclick = closePicker;
 
+    // --- 上传逻辑 ---
     dropZone.onclick = (e) => {
         if (!mainImg.src || e.target === dropZone) imgInput.click();
     };
@@ -281,90 +359,157 @@
         reader.readAsDataURL(file);
     };
 
-    for(let i=1; i<=6; i++) {
-        const img = new Image();
-        img.src = `sticker${i}.png`; 
-        stickers.push(img);
-        const imgEl = document.createElement('img');
-        imgEl.src = img.src;
-        imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-        imgEl.onclick = (e) => {
-            e.stopPropagation();
-            curIdx = i - 1;
-            document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
-            imgEl.classList.add('active');
-        };
-        document.getElementById('stickerGrid').appendChild(imgEl);
-    }
-
+    // --- 繪畫交互 (優化) ---
     let isDrawing = false;
-    canvas.onmousedown = (e) => { isDrawing = true; handleInput(e); };
-    canvas.onmousemove = (e) => { if(isDrawing) handleInput(e); };
+
+    // 拦截画布上的触摸移动，防止拖拽页面
+    canvas.addEventListener('touchstart', (e) => e.preventDefault(), {passive: false});
+    canvas.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false});
+
+    canvas.onmousedown = (e) => { isDrawing = true; startPaint(e); };
+    canvas.onmousemove = (e) => { if(isDrawing) paint(e); };
     window.onmouseup = () => { isDrawing = false; };
-    canvas.ontouchstart = (e) => { e.preventDefault(); isDrawing = true; handleInput(e.touches[0]); };
-    canvas.ontouchmove = (e) => { e.preventDefault(); if(isDrawing) handleInput(e.touches[0]); };
+
+    canvas.ontouchstart = (e) => { isDrawing = true; startPaint(e.touches[0]); };
+    canvas.ontouchmove = (e) => { if(isDrawing) paint(e.touches[0]); };
     canvas.ontouchend = () => { isDrawing = false; };
 
-    function handleInput(e) {
-        if(!mainImg.src) return;
-        const now = Date.now();
+    function getCanvasPoint(e) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        
-        records.push({
+        return {
             x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY,
-            idx: curIdx, color: currentColor,
-            size: parseInt(sizeSlider.value),
+            y: (e.clientY - rect.top) * scaleY
+        };
+    }
+
+    function startPaint(e) {
+        if(!mainImg.src) return;
+        records.push([]); // 新增一條線段
+        paint(e);
+    }
+
+    function paint(e) {
+        if(!mainImg.src || !preRenderedSticker) return;
+        const p = getCanvasPoint(e);
+        const now = Date.now();
+        const currentLine = records[records.length - 1];
+
+        // 這裡不存存儲複雜對象，只存坐標和角度，繪製圖像在繪製時應用當前預渲染
+        const currentRecord = {
+            x: p.x, y: p.y,
+            img: preRenderedSticker,
             angle: (parseInt(rotateSlider.value) * Math.PI) / 180,
-            time: now
-        });
-        draw();
+            time: now,
+            isRandom: false
+        };
+
+        currentLine.push(currentRecord);
+        
+        // 實時繪製這一個點
+        const size = parseInt(sizeSlider.value);
+        const ratio = preRenderedSticker.width / preRenderedSticker.height;
+        const drawW = ratio > 1 ? size : size * ratio;
+        const drawH = ratio > 1 ? size / ratio : size;
+
+        ctx.save();
+        ctx.translate(currentRecord.x, currentRecord.y);
+        ctx.rotate(currentRecord.angle);
+        ctx.drawImage(currentRecord.img, -drawW/2, -drawH/2, drawW, drawH);
+        ctx.restore();
     }
 
-    function smartUndo() {
-        if (records.length === 0) return;
-        const last = records.pop();
-        while (records.length > 0 && (last.time - records[records.length-1].time < 500)) records.pop();
-        draw();
-    }
-
+    // 重繪核心 (撤銷或隨機生成後調用)
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
-        records.forEach(r => {
-            const sImg = stickers[r.idx];
-            if(!sImg.complete) return;
-            const ratio = sImg.width / sImg.height;
-            let drawW = ratio > 1 ? r.size : r.size * ratio;
-            let drawH = ratio > 1 ? r.size / ratio : r.size;
-            
-            const offCanvas = document.createElement('canvas');
-            const offCtx = offCanvas.getContext('2d');
-            offCanvas.width = drawW; offCanvas.height = drawH;
-            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
-            offCtx.globalCompositeOperation = "multiply";
-            offCtx.fillStyle = r.color;
-            offCtx.fillRect(0, 0, drawW, drawH);
-            offCtx.globalCompositeOperation = "destination-in";
-            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
-            
-            ctx.save();
-            ctx.translate(r.x, r.y);
-            ctx.rotate(r.angle || 0);
-            ctx.drawImage(offCanvas, -drawW/2, -drawH/2);
-            ctx.restore();
+        
+        records.forEach(line => {
+            line.forEach(r => {
+                const size = r.isRandom ? r.size : parseInt(sizeSlider.value);
+                const sImg = r.isRandom ? diamonds[r.idx] : r.img; 
+                if(!sImg) return;
+                
+                const ratio = sImg.width / sImg.height;
+                const drawW = ratio > 1 ? size : size * ratio;
+                const drawH = ratio > 1 ? size / ratio : size;
+
+                ctx.save();
+                ctx.translate(r.x, r.y);
+                ctx.rotate(r.angle);
+
+                if (r.isRandom && r.color) {
+                    // 隨機生成的钻石：使用hue混合以保持細節
+                    const offCanvas = document.createElement('canvas');
+                    const offCtx = offCanvas.getContext('2d');
+                    offCanvas.width = drawW; offCanvas.height = drawH;
+                    offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+                    
+                    offCtx.globalCompositeOperation = "hue"; 
+                    offCtx.fillStyle = r.color;
+                    offCtx.fillRect(0, 0, drawW, drawH);
+                    offCtx.globalCompositeOperation = "destination-in";
+                    offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+                    ctx.drawImage(offCanvas, -drawW/2, -drawH/2);
+                } else {
+                    // 普通預渲染貼紙
+                    ctx.drawImage(sImg, -drawW/2, -drawH/2, drawW, drawH);
+                }
+                ctx.restore();
+            });
         });
+    }
+
+    // 撤銷
+    function smartUndo() {
+        if (records.length === 0) return;
+        records.pop(); // 直接刪除最新的一條记录（可能是線段，也可能是隨機生成的鑽石群）
+        draw();
+    }
+
+    // --- 隨機生成功能 ---
+    function generateRandomDiamonds() {
+        if (!mainImg.src || diamonds.length === 0) return;
+
+        randomClickCount++;
+
+        // 決定生成數量
+        const count = Math.floor(Math.random() * 11) + 5; // 5 到 15 顆
+        const randomLine = []; // 將鑽石群視為一條“線”
+
+        for (let i = 0; i < count; i++) {
+            // 隨機坐標
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+
+            // 隨機圖片、大小和角度
+            const diamondIdx = Math.floor(Math.random() * diamonds.length);
+            const size = Math.floor(Math.random() * 80) + 40; // 尺寸 40 到 120
+            const angle = Math.random() * Math.PI * 2; // 0 到 360 度
+
+            // 顏色邏輯
+            let color = currentColor; 
+            if (randomClickCount > 1) {
+                // “多點幾次”：生成隨機顏色
+                color = `hsl(${Math.random() * 360}, 70%, 70%)`;
+            }
+
+            randomLine.push({
+                x: x, y: y,
+                idx: diamondIdx,
+                size: size,
+                angle: angle,
+                color: color,
+                isRandom: true,
+                time: Date.now()
+            });
+        }
+
+        records.push(randomLine);
+        draw();
     }
 
     function download() {
         if(!mainImg.src) return;
-        const link = document.createElement('a');
-        link.download = `pancake_art_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }
-</script>
-</body>
-</html>
+        const link 
