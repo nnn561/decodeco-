@@ -187,9 +187,9 @@
         </div>
 
         <div class="top-action-bar">
-            <button class="btn-undo" onclick="smartUndo()">撤銷動作</button>
-            <button class="btn-random" onclick="generateRandomDiamonds()">隨機鑽石</button>
-            <button class="btn-save" onclick="download()">保存手帳</button>
+            <button class="btn-undo" onclick="smartUndo()">撤销动作</button>
+            <button class="btn-random" onclick="generateRandomDiamonds()">随机钻石</button>
+            <button class="btn-save" onclick="download()">保存手帐</button>
         </div>
     </div>
 
@@ -211,7 +211,7 @@
 </div>
 
 <div id="pickerContainer">
-    <div style="font-size: 12px; color: #888; margin-bottom: 5px;">歷史顏色 (History)</div>
+    <div style="font-size: 12px; color: #888; margin-bottom: 5px;">历史颜色 (History)</div>
     <div class="history-row" id="historyColors"></div>
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
     <div class="color-row" id="presets"></div>
@@ -317,14 +317,14 @@
     }
     function smartUndo() { if (records.length > 0) { records.pop(); draw(); } }
     
-    // 隨機鑽石邏輯（大小 100-300，點擊 4 次以上變成彩色）
+    // 隨機鑽石邏輯（大小 40-200，點擊 4 次以上變成彩色）
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
         randomClickCount++;
         const count = 12, group = [];
         for (let i = 0; i < count; i++) {
             const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
-            const size = 100 + Math.random() * 200; // 要求：大小在 100-300 之間
+            const size = 100 + Math.random() * 200; // 要求：大小在 40-200 之間
             let color = (randomClickCount >= 4) ? `hsl(${Math.random()*360}, 80%, 80%)` : currentColor;
             const sImg = stickers[Math.floor(Math.random()*stickers.length)];
             const tc = document.createElement('canvas'); const tx = tc.getContext('2d');
