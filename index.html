@@ -10,31 +10,31 @@
             font-family: -apple-system, sans-serif; text-align: center; 
             background: linear-gradient(-45deg, #ffdee9, #b5fffc, #ffdef3, #f7bbff);
             background-size: 400% 400%; animation: gradientBG 10s ease infinite;
-            margin: 0; padding: 10px; min-height: 100vh; overflow: hidden; /* 防止双指缩放触发页面滚动 */
+            margin: 0; padding: 10px; min-height: 100vh; overflow: hidden; 
         }
         @keyframes gradientBG { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
 
         .container { 
             max-width: 550px; margin: auto; background: rgba(255, 255, 255, 0.75); 
             backdrop-filter: blur(10px); padding: 15px; border-radius: 25px; 
-            display: flex; flex-direction: column; height: 95vh;
+            display: flex; flex-direction: column; height: 92vh;
         }
 
         .sticker-grid { 
-            display: grid; grid-template-columns: repeat(6, 1fr); /* 改为横向一行，节省空间 */
+            display: grid; grid-template-columns: repeat(6, 1fr); 
             gap: 8px; margin: 10px 0; background: rgba(255, 255, 255, 0.4); 
             padding: 10px; border-radius: 15px; 
         }
         .sticker-item { width: 100%; aspect-ratio: 1; border: 2px solid transparent; border-radius: 8px; cursor: pointer; object-fit: contain; background: #fff; }
-        .sticker-item.active { border-color: var(--accent-pink); transform: scale(1.1); }
+        .sticker-item.active { border-color: var(--accent-pink); transform: scale(1.1); box-shadow: 0 0 10px var(--accent-pink); }
 
         /* 画布交互区域 */
         .viewport { 
             flex: 1; position: relative; overflow: hidden; 
-            background: #eee; border-radius: 15px; border: 2px solid #fff; margin: 10px 0;
-            touch-action: none; /* 禁用系统默认手势 */
+            background: #fff; border-radius: 15px; border: 2px solid #fff; margin: 10px 0;
+            touch-action: none;
         }
-        #myCanvas { position: absolute; transform-origin: 0 0; cursor: crosshair; }
+        #myCanvas { position: absolute; transform-origin: 0 0; }
 
         .controls { background: white; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
         .control-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-color); font-weight: bold; }
@@ -42,9 +42,9 @@
         .palette-button { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
         #colorPicker { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; }
 
-        input[type="range"] { width: 60%; accent-color: var(--accent-pink); }
+        input[type="range"] { width: 50%; accent-color: var(--accent-pink); }
         .footer-btns { display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 14px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; }
         .btn-undo { background: #ff7875; }
         .btn-save { background: var(--accent-pink); }
     </style>
@@ -58,9 +58,9 @@
 
     <div class="controls">
         <div class="control-row">
-            <span>🎨 选色: <span id="colorHex" style="font-size: 10px;">#00E5FF</span></span>
+            <span>🎨 调色盘:</span>
             <div class="palette-button" id="paletteBtn"><input type="color" id="colorPicker" value="#00E5FF"></div>
-            <span>📏 大小:</span>
+            <span>📏 钻石大小:</span>
             <input type="range" id="sizeSlider" min="10" max="500" value="70">
             <span id="sizeVal">70</span>
         </div>
@@ -71,7 +71,7 @@
     </div>
     
     <div class="footer-btns">
-        <button class="btn-undo" onclick="undo()">撤销</button>
+        <button class="btn-undo" onclick="undo()">撤销上一步</button>
         <button class="btn-save" onclick="download()">保存到手机</button>
     </div>
 </div>
@@ -87,13 +87,15 @@
     let curIdx = 0;
 
     // 变换参数
-    let scale = 1, lastScale = 1;
-    let offsetX = 0, offsetY = 0;
-    let startX = 0, startY = 0;
-    let isDragging = false;
-    let initialPinchDist = 0;
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // 交互辅助
+    let lastPinchDist = 0;
+    let lastPinchCenter = { x: 0, y: 0 };
 
-    // --- 初始化贴纸 ---
+    // --- 初始化 6 张贴纸 ---
     for(let i=1; i<=6; i++) {
         const img = new Image();
         img.src = `sticker${i}.png`; 
@@ -109,7 +111,7 @@
         document.getElementById('stickerGrid').appendChild(imgEl);
     }
 
-    // --- 上传图片 ---
+    // --- 上传并居中 ---
     document.getElementById('imgInput').onchange = (e) => {
         const file = e.target.files[0];
         if(!file) return;
@@ -119,10 +121,14 @@
             mainImg.onload = () => {
                 canvas.width = mainImg.width;
                 canvas.height = mainImg.height;
-                // 初始自适应缩放
-                scale = Math.min(viewport.clientWidth / canvas.width, viewport.clientHeight / canvas.height);
-                offsetX = (viewport.clientWidth - canvas.width * scale) / 2;
-                offsetY = (viewport.clientHeight - canvas.height * scale) / 2;
+                
+                // 自动居中计算
+                const vW = viewport.clientWidth;
+                const vH = viewport.clientHeight;
+                scale = Math.min(vW / canvas.width, vH / canvas.height) * 0.9;
+                offsetX = (vW - canvas.width * scale) / 2;
+                offsetY = (vH - canvas.height * scale) / 2;
+                
                 updateTransform();
                 draw();
             };
@@ -131,65 +137,53 @@
         reader.readAsDataURL(file);
     };
 
-    // --- 核心手势逻辑 ---
+    // --- 触控交互逻辑 ---
     viewport.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) { // 单指：可能是贴砖或拖动
-            isDragging = true;
-            startX = e.touches[0].clientX - offsetX;
-            startY = e.touches[0].clientY - offsetY;
-            // 记录点击时间，区分长按拖动和短触贴砖
-            canvas.clickTime = Date.now();
-        } else if (e.touches.length === 2) { // 双指：缩放
-            isDragging = false;
-            initialPinchDist = getDistance(e.touches);
-            lastScale = scale;
+        if (e.touches.length === 2) {
+            // 双指开始：记录初始距离和中心点
+            lastPinchDist = getDistance(e.touches);
+            lastPinchCenter = getCenter(e.touches);
         }
     }, {passive: false});
 
     viewport.addEventListener('touchmove', (e) => {
         e.preventDefault();
-        if (e.touches.length === 1 && isDragging) {
-            offsetX = e.touches[0].clientX - startX;
-            offsetY = e.touches[0].clientY - startY;
-        } else if (e.touches.length === 2) {
+        if (e.touches.length === 2) {
+            // 双指移动：同时处理缩放和位移
             const currentDist = getDistance(e.touches);
-            const pinchScale = currentDist / initialPinchDist;
-            const newScale = lastScale * pinchScale;
+            const currentCenter = getCenter(e.touches);
             
-            // 以双指中心点进行缩放
-            const center = getCenter(e.touches);
-            zoomAt(center.x, center.y, newScale);
+            // 缩放
+            const zoomFactor = currentDist / lastPinchDist;
+            const newScale = scale * zoomFactor;
+            
+            // 计算以中心点缩放带来的偏移
+            const rect = viewport.getBoundingClientRect();
+            const centerX = currentCenter.x - rect.left;
+            const centerY = currentCenter.y - rect.top;
+
+            offsetX = centerX - (centerX - offsetX) * (newScale / scale);
+            offsetY = centerY - (centerY - offsetY) * (newScale / scale);
+            
+            // 位移（同步跟随中心点移动）
+            offsetX += (currentCenter.x - lastPinchCenter.x);
+            offsetY += (currentCenter.y - lastPinchCenter.y);
+
+            scale = newScale;
+            lastPinchDist = currentDist;
+            lastPinchCenter = currentCenter;
+            
+            updateTransform();
         }
-        updateTransform();
     }, {passive: false});
 
     viewport.addEventListener('touchend', (e) => {
-        if (isDragging && Date.now() - canvas.clickTime < 200) {
-            // 如果触摸时间很短，判定为贴钻
+        // 如果是单指抬起，且之前没有双指操作，则判定为贴钻
+        if (e.touches.length === 0 && e.changedTouches.length === 1) {
+            // 简单判定：没有发生双指缩放时才贴
             addSticker(e.changedTouches[0]);
         }
-        isDragging = false;
     });
-
-    // 鼠标滚轮缩放
-    viewport.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        zoomAt(e.clientX, e.clientY, scale * delta);
-        updateTransform();
-    }, {passive: false});
-
-    function zoomAt(clientX, clientY, newScale) {
-        newScale = Math.max(0.1, Math.min(newScale, 10)); // 限制缩放范围
-        const rect = viewport.getBoundingClientRect();
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
-
-        // 计算图片相对鼠标的偏移，实现原点缩放
-        offsetX = mouseX - (mouseX - offsetX) * (newScale / scale);
-        offsetY = mouseY - (mouseY - offsetY) * (newScale / scale);
-        scale = newScale;
-    }
 
     function updateTransform() {
         canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
@@ -198,7 +192,7 @@
     function addSticker(touch) {
         if(!mainImg.src) return;
         const rect = viewport.getBoundingClientRect();
-        // 核心：逆向计算出在原始图片上的像素坐标
+        // 精准计算原始像素坐标
         const x = (touch.clientX - rect.left - offsetX) / scale;
         const y = (touch.clientY - rect.top - offsetY) / scale;
 
@@ -211,7 +205,6 @@
         draw();
     }
 
-    // --- 绘制逻辑（保持之前修复好的等比例） ---
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
@@ -225,12 +218,14 @@
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d');
             offCanvas.width = drawW; offCanvas.height = drawH;
+            
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "multiply";
             offCtx.fillStyle = r.color;
             offCtx.fillRect(0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+            
             ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
         });
     }
@@ -251,7 +246,7 @@
         link.click();
     }
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; };
-    document.getElementById('colorPicker').oninput = function() { document.getElementById('colorHex').innerText = this.value.toUpperCase(); };
+    document.getElementById('colorPicker').oninput = function() { document.getElementById('paletteBtn').style.backgroundColor = this.value; };
 </script>
 </body>
 </html>
