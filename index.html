@@ -4,83 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>pancake sticker book</title>
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
-        :root {
-            --accent-pink: #ff85a2;
-            --text-color: #d63384;
-        }
-
+        :root { --accent-pink: #ff85a2; --text-color: #d63384; }
         body { 
-            font-family: -apple-system, sans-serif;
-            text-align: center; 
+            font-family: -apple-system, sans-serif; text-align: center; 
             background: linear-gradient(-45deg, #ffdee9, #b5fffc, #ffdef3, #f7bbff);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
+            background-size: 400% 400%; animation: gradientBG 10s ease infinite;
             margin: 0; padding: 10px; min-height: 100vh;
         }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        @keyframes gradientBG { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
 
         .container { 
-            max-width: 550px; margin: auto; 
-            background: rgba(255, 255, 255, 0.75); 
-            backdrop-filter: blur(10px);
-            padding: 20px; border-radius: 25px; 
+            max-width: 550px; margin: auto; background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(10px); padding: 20px; border-radius: 25px; 
             box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2); 
         }
 
-        /* 贴纸展示：修复压缩感 */
+        .upload-section { margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px; }
+
         .sticker-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; margin: 15px 0; 
-            background: rgba(255, 255, 255, 0.4); 
+            gap: 12px; margin: 15px 0; background: rgba(255, 255, 255, 0.4); 
             padding: 15px; border-radius: 15px; 
         }
         
         .sticker-item { 
-            width: 100%; aspect-ratio: 1; 
-            border: 3px solid transparent; border-radius: 12px; 
+            width: 100%; aspect-ratio: 1; border: 3px solid transparent; border-radius: 12px; 
             cursor: pointer; transition: 0.2s; 
-            object-fit: contain; /* 确保预览图也不被压缩 */
-            background: rgba(255,255,255,0.8);
+            object-fit: contain; /* 预览图等比例 */
+            background: #fff;
         }
         
         .sticker-item.active { border-color: var(--accent-pink); background: #fff; transform: scale(1.05); }
 
-        .controls { background: white; padding: 15px; border-radius: 15px; margin: 10px 0; }
-        .control-row { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; font-size: 14px; color: var(--text-color); font-weight: bold; }
+        .controls { background: white; padding: 15px; border-radius: 15px; margin: 10px 0; text-align: left; }
+        .control-row { display: flex; align-items: center; margin: 10px 0; font-size: 14px; color: var(--text-color); font-weight: bold; gap: 10px; }
         
-        /* 调色盘外观优化 */
-        .palette-button {
-            width: 45px; height: 45px; 
-            border-radius: 50%; 
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-        }
-        #colorPicker {
-            position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            cursor: pointer; border: none;
-        }
+        /* 色环容器样式 */
+        #colorWheel { margin: 10px auto; display: flex; justify-content: center; }
 
-        .canvas-wrapper { 
-            width: 100%; overflow: auto; 
-            background: #fff; border-radius: 10px; 
-            margin: 15px 0; border: 2px solid #fff;
+        input[type="range"] { flex: 1; accent-color: var(--accent-pink); }
+        
+        #myCanvas { 
+            display: block; margin: 15px auto; 
+            border: 2px solid #fff; border-radius: 15px; 
+            cursor: crosshair; background: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            max-width: 100%; height: auto; /* 核心：原来的大小自适应逻辑 */
         }
-        #myCanvas { display: block; margin: 0 auto; cursor: crosshair; }
         
-        input[type="range"] { width: 55%; accent-color: var(--accent-pink); }
-        
-        .footer-btns { display: flex; gap: 10px; }
+        .footer-btns { display: flex; gap: 10px; margin-top: 15px; }
         button { 
             flex: 1; padding: 15px; border: none; border-radius: 12px; 
             color: white; font-weight: bold; cursor: pointer; font-size: 15px; 
@@ -92,7 +65,7 @@
 <body>
 
 <div class="container">
-    <div style="padding-bottom:15px;">
+    <div class="upload-section">
         <input type="file" id="imgInput" accept="image/*" style="font-size: 12px;">
     </div>
 
@@ -100,29 +73,17 @@
 
     <div class="controls">
         <div class="control-row">
-            <span>🎨 调色盘选色:</span>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <div class="palette-button" id="paletteBtn">
-                    <input type="color" id="colorPicker" value="#00E5FF">
-                </div>
-                <span id="colorHex" style="font-family: monospace;">#00E5FF</span>
-            </div>
-        </div>
-        <div class="control-row">
             <span>📏 钻石大小:</span>
-            <input type="range" id="sizeSlider" min="10" max="500" value="70">
-            <span id="sizeVal">70</span>
+            <input type="range" id="sizeSlider" min="10" max="300" value="70">
+            <span id="sizeVal" style="min-width: 30px; text-align: right;">70</span>
         </div>
-        <div class="control-row" style="border-top: 1px solid #f0f0f0; padding-top: 10px;">
-            <span>🔍 画面缩放:</span>
-            <input type="range" id="zoomSlider" min="0.5" max="2.5" step="0.1" value="1">
-            <span id="zoomVal">100%</span>
-        </div>
+        
+        <div style="color: var(--text-color); font-weight: bold; font-size: 14px; margin-top: 15px; text-align: center;">🎨 钻石颜色 (色环):</div>
+        <div id="colorWheel"></div>
+        <div style="text-align: center; font-family: monospace; color: #888; font-size: 12px;" id="colorHex">#00E5FF</div>
     </div>
 
-    <div class="canvas-wrapper">
-        <canvas id="myCanvas"></canvas>
-    </div>
+    <canvas id="myCanvas"></canvas>
     
     <div class="footer-btns">
         <button class="btn-undo" onclick="undo()">撤销上一步</button>
@@ -134,13 +95,30 @@
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
     const stickerGrid = document.getElementById('stickerGrid');
-    const zoomSlider = document.getElementById('zoomSlider');
     
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
-    let currentZoom = 1;
+    let currentDiamondColor = "#00E5FF"; // 初始颜色
+
+    // --- 3. 初始化色环 (iro.js) ---
+    var colorPicker = new iro.ColorPicker("#colorWheel", {
+        width: 180, // 色环宽度
+        color: currentDiamondColor,
+        borderWidth: 2,
+        borderColor: "#fff",
+        layout: [
+            { component: iro.ui.Wheel, }, // 只有色环
+            { component: iro.ui.Slider, options: { sliderType: 'saturation' } }, // 加上饱和度滑块，选色更准
+        ]
+    });
+
+    // 监听色环颜色变化
+    colorPicker.on('color:change', function(color) {
+        currentDiamondColor = color.hexString; // 更新当前颜色变量
+        document.getElementById('colorHex').innerText = currentDiamondColor.toUpperCase();
+    });
 
     // --- 初始化贴纸 ---
     for(let i=1; i<=6; i++) {
@@ -159,7 +137,7 @@
         stickerGrid.appendChild(imgEl);
     }
 
-    // --- 上传逻辑 ---
+    // --- 4. 还原原来的上传逻辑（图片自适应） ---
     document.getElementById('imgInput').onchange = (e) => {
         const file = e.target.files[0];
         if(!file) return;
@@ -167,8 +145,10 @@
         reader.onload = (f) => {
             mainImg = new Image();
             mainImg.onload = () => {
+                // 原来的自适应逻辑：直接设为图片原大，CSS 负责显示适配
                 canvas.width = mainImg.width;
                 canvas.height = mainImg.height;
+                records = []; // 上传新图时清空之前的钻石
                 draw();
             };
             mainImg.src = f.target.result;
@@ -176,37 +156,43 @@
         reader.readAsDataURL(file);
     };
 
-    // --- 缩放逻辑 ---
-    zoomSlider.oninput = function() {
-        currentZoom = parseFloat(this.value);
-        document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + "%";
-        canvas.style.transform = `scale(${currentZoom})`;
-        canvas.style.transformOrigin = "top center";
-    };
+    // --- 4. 还原原来的交互：点击和滑动皆可贴钻 ---
+    let isDrawing = false; // 鼠标/手指是否按下
 
-    // --- 点击交互 ---
-    canvas.addEventListener('mousedown', (e) => handleInput(e));
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; handleInput(e); });
+    canvas.addEventListener('mousemove', (e) => { if(isDrawing) handleInput(e); });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; }); // 离开画布停止
+
+    // 手机端原样逻辑
     canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+        e.preventDefault(); // 防止滚动
+        isDrawing = true;
         handleInput(e.touches[0]);
     }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if(isDrawing) handleInput(e.touches[0]);
+    }, {passive: false});
+    canvas.addEventListener('touchend', () => { isDrawing = false; });
 
     function handleInput(e) {
         if(!mainImg.src) return;
         const rect = canvas.getBoundingClientRect();
-        // 修正缩放后的点击坐标
-        const x = (e.clientX - rect.left) / currentZoom * (canvas.width / (rect.width / currentZoom));
-        const y = (e.clientY - rect.top) / currentZoom * (canvas.height / (rect.height / currentZoom));
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
         
         records.push({
-            x: x, y: y,
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY,
             idx: curIdx,
-            color: document.getElementById('colorPicker').value,
+            color: currentDiamondColor, // 使用从色环获取的颜色
             size: parseInt(document.getElementById('sizeSlider').value)
         });
         draw();
     }
 
+    // --- 5. 核心修复：防止贴纸压缩逻辑 ---
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
@@ -215,13 +201,15 @@
             const sImg = stickers[r.idx];
             if(!sImg.complete) return;
 
-            // 计算等比例缩放后的宽高，防止压缩
-            const ratio = sImg.width / sImg.height;
+            // ** 关键修复：计算等比例缩放后的宽高 **
+            const ratio = sImg.width / sImg.height; // 获取原始宽高比
             let drawW, drawH;
             if (ratio > 1) {
+                // 如果是横向的长方形 (Sticker2 这类)
                 drawW = r.size;
                 drawH = r.size / ratio;
             } else {
+                // 如果是纵向的长方形或正方形
                 drawW = r.size * ratio;
                 drawH = r.size;
             }
@@ -239,27 +227,30 @@
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
             
+            // 绘制，并加上淡淡的发光感
+            ctx.shadowBlur = r.size / 10;
+            ctx.shadowColor = r.color;
             ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
+            ctx.shadowBlur = 0; // 重置阴影
         });
     }
 
+    // --- 辅助功能 ---
     function undo() { records.pop(); draw(); }
     
     function download() {
         if(!mainImg.src) return;
         const link = document.createElement('a');
-        link.download = `pancake_art_${Date.now()}.png`; // 使用时间戳防止重名
+        link.download = `pancake_art_${Date.now()}.png`; // 时间戳文件名防重复
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
 
+    // 实时更新数值显示
     document.getElementById('sizeSlider').oninput = function() {
         document.getElementById('sizeVal').innerText = this.value;
     };
-    document.getElementById('colorPicker').oninput = function() {
-        document.getElementById('colorHex').innerText = this.value.toUpperCase();
-        document.getElementById('paletteBtn').style.backgroundColor = this.value;
-    };
+
 </script>
 </body>
 </html>
