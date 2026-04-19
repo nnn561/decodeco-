@@ -3,239 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>✨ pancake sticker book ✨</title>
+    <title>pancake sticker book</title>
     <style>
-        :root {
-            --primary-pink: #ff85a2;
-            --dark-pink: #d63384;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-        }
-
+        :root { --accent-pink: #ff85a2; --text-color: #d63384; }
         body { 
-            font-family: 'Segoe UI', sans-serif;
-            text-align: center; 
+            font-family: -apple-system, sans-serif; text-align: center; 
             background: linear-gradient(-45deg, #ffdee9, #b5fffc, #ffdef3, #f7bbff);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-            margin: 0; 
-            padding: 10px; 
-            min-height: 100vh;
-            overflow-x: hidden;
+            background-size: 400% 400%; animation: gradientBG 10s ease infinite;
+            margin: 0; padding: 10px; min-height: 100vh; overflow: hidden; /* 防止双指缩放触发页面滚动 */
         }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+        @keyframes gradientBG { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
 
         .container { 
-            max-width: 650px; 
-            margin: auto; 
-            background: var(--glass-bg); 
-            backdrop-filter: blur(15px);
-            padding: 20px; 
-            border-radius: 30px; 
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.3); 
+            max-width: 550px; margin: auto; background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(10px); padding: 15px; border-radius: 25px; 
+            display: flex; flex-direction: column; height: 95vh;
         }
 
-        /* 顶部上传区 */
-        .upload-section {
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
-            margin-bottom: 15px;
-        }
-
-        /* 贴纸网格 */
         .sticker-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; 
-            margin: 15px 0; 
-            background: rgba(255, 255, 255, 0.3); 
-            padding: 15px; 
-            border-radius: 20px; 
-            border: 2px solid white;
+            display: grid; grid-template-columns: repeat(6, 1fr); /* 改为横向一行，节省空间 */
+            gap: 8px; margin: 10px 0; background: rgba(255, 255, 255, 0.4); 
+            padding: 10px; border-radius: 15px; 
         }
-        
-        .sticker-item { 
-            width: 100%; 
-            aspect-ratio: 1; 
-            border: 3px solid transparent; 
-            border-radius: 15px; 
-            cursor: pointer; 
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            object-fit: contain;
-            background: white;
-        }
-        
-        .sticker-item.active { 
-            border-color: var(--dark-pink); 
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: 0 0 20px var(--primary-pink);
-        }
+        .sticker-item { width: 100%; aspect-ratio: 1; border: 2px solid transparent; border-radius: 8px; cursor: pointer; object-fit: contain; background: #fff; }
+        .sticker-item.active { border-color: var(--accent-pink); transform: scale(1.1); }
 
-        /* 控制区 */
-        .controls { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 20px; 
-            margin: 15px 0;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        /* 画布交互区域 */
+        .viewport { 
+            flex: 1; position: relative; overflow: hidden; 
+            background: #eee; border-radius: 15px; border: 2px solid #fff; margin: 10px 0;
+            touch-action: none; /* 禁用系统默认手势 */
         }
-        
-        .control-row { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            margin: 12px 0; 
-            font-size: 15px; 
-            color: var(--dark-pink); 
-            font-weight: bold;
-        }
+        #myCanvas { position: absolute; transform-origin: 0 0; cursor: crosshair; }
 
-        /* 调色盘外观优化 */
-        .color-picker-wrapper {
-            position: relative;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-            cursor: pointer;
-        }
+        .controls { background: white; padding: 10px; border-radius: 15px; margin-bottom: 10px; }
+        .control-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-color); font-weight: bold; }
         
-        input[type="color"] {
-            position: absolute;
-            top: -10px; left: -10px;
-            width: 80px; height: 80px;
-            cursor: pointer;
-            border: none;
-        }
-        
-        /* 滑动条美化 */
-        input[type="range"] { 
-            width: 55%; 
-            accent-color: var(--dark-pink);
-            cursor: pointer;
-        }
+        .palette-button { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        #colorPicker { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; }
 
-        /* 画布容器：支持放大显示 */
-        .canvas-wrapper {
-            width: 100%;
-            overflow: auto; /* 允许在手机上滚动查看放大的图片 */
-            border-radius: 20px;
-            background: #fff;
-            margin: 15px 0;
-            max-height: 500px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        #myCanvas { 
-            display: block; 
-            margin: 0 auto;
-            cursor: crosshair;
-            transition: transform 0.2s ease; /* 图片缩放时的平滑效果 */
-        }
-        
-        /* 底部按钮 */
-        .footer-btns { display: flex; gap: 12px; }
-        button { 
-            flex: 1; 
-            padding: 15px; 
-            border: none; 
-            border-radius: 50px; 
-            color: white; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 16px; 
-            transition: 0.3s;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            box-shadow: 0 5px 15px rgba(214, 51, 132, 0.2);
-        }
-        .btn-undo { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #d63384; }
-        .btn-save { background: linear-gradient(135deg, #ff4d94 0%, #ff85a2 100%); }
-        button:active { transform: scale(0.95); }
-
+        input[type="range"] { width: 60%; accent-color: var(--accent-pink); }
+        .footer-btns { display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 14px; }
+        .btn-undo { background: #ff7875; }
+        .btn-save { background: var(--accent-pink); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--dark-pink); margin: 0 0 15px 0;">pancake sticker book</h2>
-    
-    <div class="upload-section">
-        <label style="font-size: 14px; color: #888;">上传底图：</label>
-        <input type="file" id="imgInput" accept="image/*">
-    </div>
+    <input type="file" id="imgInput" accept="image/*" style="font-size: 12px; margin-bottom: 5px;">
 
     <div class="sticker-grid" id="stickerGrid"></div>
 
     <div class="controls">
         <div class="control-row">
-            <span>🎨 钻石色彩:</span>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="color-picker-wrapper">
-                    <input type="color" id="colorPicker" value="#00E5FF">
-                </div>
-                <span id="colorHex" style="font-family: monospace;">#00E5FF</span>
-            </div>
-        </div>
-        <div class="control-row">
-            <span>📏 钻石大小:</span>
-            <input type="range" id="sizeSlider" min="10" max="800" value="100">
-            <span id="sizeVal" style="min-width: 40px;">100</span>
-        </div>
-        <div class="control-row" style="border-top: 1px dashed #eee; pt: 10px;">
-            <span>🔍 画布缩放:</span>
-            <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
-            <span id="zoomVal">100%</span>
+            <span>🎨 选色: <span id="colorHex" style="font-size: 10px;">#00E5FF</span></span>
+            <div class="palette-button" id="paletteBtn"><input type="color" id="colorPicker" value="#00E5FF"></div>
+            <span>📏 大小:</span>
+            <input type="range" id="sizeSlider" min="10" max="500" value="70">
+            <span id="sizeVal">70</span>
         </div>
     </div>
 
-    <div class="canvas-wrapper">
+    <div class="viewport" id="viewport">
         <canvas id="myCanvas"></canvas>
     </div>
     
     <div class="footer-btns">
-        <button class="btn-undo" onclick="undo()">⬅️ 撤销</button>
-        <button class="btn-save" onclick="download()">💾 保存作品</button>
+        <button class="btn-undo" onclick="undo()">撤销</button>
+        <button class="btn-save" onclick="download()">保存到手机</button>
     </div>
 </div>
 
 <script>
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
-    const stickerGrid = document.getElementById('stickerGrid');
-    const zoomSlider = document.getElementById('zoomSlider');
+    const viewport = document.getElementById('viewport');
     
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
-    let currentZoom = 1;
+
+    // 变换参数
+    let scale = 1, lastScale = 1;
+    let offsetX = 0, offsetY = 0;
+    let startX = 0, startY = 0;
+    let isDragging = false;
+    let initialPinchDist = 0;
 
     // --- 初始化贴纸 ---
     for(let i=1; i<=6; i++) {
         const img = new Image();
         img.src = `sticker${i}.png`; 
         stickers.push(img);
-
         const imgEl = document.createElement('img');
         imgEl.src = img.src;
         imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-        imgEl.onclick = function() {
+        imgEl.onclick = () => {
             curIdx = i - 1;
             document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
-            this.classList.add('active');
+            imgEl.classList.add('active');
         };
-        stickerGrid.appendChild(imgEl);
+        document.getElementById('stickerGrid').appendChild(imgEl);
     }
 
-    // --- 上传与画布初始化 ---
+    // --- 上传图片 ---
     document.getElementById('imgInput').onchange = (e) => {
         const file = e.target.files[0];
         if(!file) return;
@@ -245,7 +119,11 @@
             mainImg.onload = () => {
                 canvas.width = mainImg.width;
                 canvas.height = mainImg.height;
-                resetZoom();
+                // 初始自适应缩放
+                scale = Math.min(viewport.clientWidth / canvas.width, viewport.clientHeight / canvas.height);
+                offsetX = (viewport.clientWidth - canvas.width * scale) / 2;
+                offsetY = (viewport.clientHeight - canvas.height * scale) / 2;
+                updateTransform();
                 draw();
             };
             mainImg.src = f.target.result;
@@ -253,39 +131,79 @@
         reader.readAsDataURL(file);
     };
 
-    // --- 画布缩放逻辑 ---
-    zoomSlider.oninput = function() {
-        currentZoom = parseFloat(this.value);
-        document.getElementById('zoomVal').innerText = Math.round(currentZoom * 100) + "%";
-        canvas.style.transform = `scale(${currentZoom})`;
-        canvas.style.transformOrigin = "top center";
-    };
-
-    function resetZoom() {
-        currentZoom = 1;
-        zoomSlider.value = 1;
-        document.getElementById('zoomVal').innerText = "100%";
-        canvas.style.transform = "scale(1)";
-    }
-
-    // --- 点击交互 ---
-    canvas.addEventListener('mousedown', (e) => handleInput(e));
-    canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        handleInput(e.touches[0]);
+    // --- 核心手势逻辑 ---
+    viewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) { // 单指：可能是贴砖或拖动
+            isDragging = true;
+            startX = e.touches[0].clientX - offsetX;
+            startY = e.touches[0].clientY - offsetY;
+            // 记录点击时间，区分长按拖动和短触贴砖
+            canvas.clickTime = Date.now();
+        } else if (e.touches.length === 2) { // 双指：缩放
+            isDragging = false;
+            initialPinchDist = getDistance(e.touches);
+            lastScale = scale;
+        }
     }, {passive: false});
 
-    function handleInput(e) {
+    viewport.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (e.touches.length === 1 && isDragging) {
+            offsetX = e.touches[0].clientX - startX;
+            offsetY = e.touches[0].clientY - startY;
+        } else if (e.touches.length === 2) {
+            const currentDist = getDistance(e.touches);
+            const pinchScale = currentDist / initialPinchDist;
+            const newScale = lastScale * pinchScale;
+            
+            // 以双指中心点进行缩放
+            const center = getCenter(e.touches);
+            zoomAt(center.x, center.y, newScale);
+        }
+        updateTransform();
+    }, {passive: false});
+
+    viewport.addEventListener('touchend', (e) => {
+        if (isDragging && Date.now() - canvas.clickTime < 200) {
+            // 如果触摸时间很短，判定为贴钻
+            addSticker(e.changedTouches[0]);
+        }
+        isDragging = false;
+    });
+
+    // 鼠标滚轮缩放
+    viewport.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        zoomAt(e.clientX, e.clientY, scale * delta);
+        updateTransform();
+    }, {passive: false});
+
+    function zoomAt(clientX, clientY, newScale) {
+        newScale = Math.max(0.1, Math.min(newScale, 10)); // 限制缩放范围
+        const rect = viewport.getBoundingClientRect();
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
+
+        // 计算图片相对鼠标的偏移，实现原点缩放
+        offsetX = mouseX - (mouseX - offsetX) * (newScale / scale);
+        offsetY = mouseY - (mouseY - offsetY) * (newScale / scale);
+        scale = newScale;
+    }
+
+    function updateTransform() {
+        canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function addSticker(touch) {
         if(!mainImg.src) return;
-        
-        const rect = canvas.getBoundingClientRect();
-        // 这里的关键：点击位置需要根据当前的 CSS scale 进行还原
-        const x = (e.clientX - rect.left) / currentZoom * (canvas.width / (rect.width / currentZoom));
-        const y = (e.clientY - rect.top) / currentZoom * (canvas.height / (rect.height / currentZoom));
-        
+        const rect = viewport.getBoundingClientRect();
+        // 核心：逆向计算出在原始图片上的像素坐标
+        const x = (touch.clientX - rect.left - offsetX) / scale;
+        const y = (touch.clientY - rect.top - offsetY) / scale;
+
         records.push({
-            x: x,
-            y: y,
+            x: x, y: y,
             idx: curIdx,
             color: document.getElementById('colorPicker').value,
             size: parseInt(document.getElementById('sizeSlider').value)
@@ -293,52 +211,47 @@
         draw();
     }
 
+    // --- 绘制逻辑（保持之前修复好的等比例） ---
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
-        
         records.forEach(r => {
             const sImg = stickers[r.idx];
             if(!sImg.complete) return;
+            const ratio = sImg.width / sImg.height;
+            let drawW = ratio > 1 ? r.size : r.size * ratio;
+            let drawH = ratio > 1 ? r.size / ratio : r.size;
 
             const offCanvas = document.createElement('canvas');
             const offCtx = offCanvas.getContext('2d');
-            offCanvas.width = r.size;
-            offCanvas.height = r.size;
-
-            offCtx.drawImage(sImg, 0, 0, r.size, r.size);
+            offCanvas.width = drawW; offCanvas.height = drawH;
+            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "multiply";
             offCtx.fillStyle = r.color;
-            offCtx.fillRect(0, 0, r.size, r.size);
+            offCtx.fillRect(0, 0, drawW, drawH);
             offCtx.globalCompositeOperation = "destination-in";
-            offCtx.drawImage(sImg, 0, 0, r.size, r.size);
-            
-            ctx.shadowBlur = r.size / 10;
-            ctx.shadowColor = r.color;
-            ctx.drawImage(offCanvas, r.x - r.size/2, r.y - r.size/2);
-            ctx.shadowBlur = 0;
+            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+            ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
         });
     }
 
+    // 工具函数
+    function getDistance(touches) {
+        return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+    }
+    function getCenter(touches) {
+        return { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
+    }
     function undo() { records.pop(); draw(); }
-    
     function download() {
         if(!mainImg.src) return;
-        const now = new Date();
-        const timeStr = now.getTime(); // 使用毫秒戳绝对不会重复
         const link = document.createElement('a');
-        link.download = `Diamond_Work_${timeStr}.png`;
+        link.download = `pancake_art_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
-
-    document.getElementById('sizeSlider').oninput = function() {
-        document.getElementById('sizeVal').innerText = this.value;
-    };
-    document.getElementById('colorPicker').oninput = function() {
-        document.getElementById('colorHex').innerText = this.value.toUpperCase();
-        this.parentElement.style.backgroundColor = this.value;
-    };
+    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; };
+    document.getElementById('colorPicker').oninput = function() { document.getElementById('colorHex').innerText = this.value.toUpperCase(); };
 </script>
 </body>
 </html>
