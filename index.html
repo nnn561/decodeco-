@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Final Pancake Sticker Book</title>
+    <title>Perfect Pancake Sticker Book</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
@@ -26,6 +26,7 @@
         .cloud:after, .cloud:before { content: ''; position: absolute; background: #fff; border-radius: 100px; }
         .c1 { width: 120px; height: 45px; top: 15%; animation: moveClouds 30s linear infinite; }
         .c2 { width: 180px; height: 70px; top: 50%; animation: moveClouds 45s linear infinite; opacity: 0.4; }
+        .c3 { width: 100px; height: 40px; top: 80%; animation: moveClouds 25s linear infinite; }
         @keyframes moveClouds { from { left: -200px; } to { left: 100vw; } }
 
         .title-header {
@@ -33,68 +34,64 @@
             text-shadow: 2px 2px 0px var(--pink-accent);
         }
 
-        /* 厚度書本 */
- book-container { 
-    width: 95%; /* 稍微缩小一点点防止贴边 
-    max-width: 440px; 
-    background: var(--book-cover); 
-    padding: 15px; 
-    border-radius: 10px 40px 40px 10px;
-    margin: 15px auto; 
-    box-shadow: 
-        -4px 0 0px #e097aa,
-        -8px 0 0px #d48a9d, 
-        10px 15px 40px rgba(214, 51, 132, 0.2);
-    position: relative; 
-    display: flex; 
-    flex-direction: column;
-    box-sizing: border-box; 
-}
+        /* 修正：居中的厚度書本 */
+        .book-container { 
+            width: 95%; max-width: 440px; background: var(--book-cover); 
+            padding: 15px; border-radius: 10px 40px 40px 10px;
+            margin: 10px auto; /* 強制水平居中 */
+            box-shadow: 
+                -4px 0 0px #e097aa, 
+                -8px 0 0px #d48a9d, 
+                10px 15px 40px rgba(214, 51, 132, 0.2);
+            position: relative; display: flex; flex-direction: column;
+            box-sizing: border-box;
+        }
 
+        .top-page, .bottom-page { 
+            background: var(--page-white); flex: 1; min-height: 320px; 
+            padding: 15px; position: relative; box-shadow: inset 0 0 15px rgba(0,0,0,0.02);
+        }
+        .top-page { border-radius: 8px 15px 0 0; border-bottom: 1px solid #eee; display: flex; flex-direction: column; align-items: center;}
+        .bottom-page { border-radius: 0 0 15px 8px; display: flex; flex-direction: column; }
 
         /* 線圈 */
         .notebook-rings { height: 40px; display: flex; justify-content: space-around; padding: 0 25px; z-index: 20; margin: -20px 0; }
         .ring-set { display: flex; flex-direction: column; align-items: center; }
         .hole { width: 10px; height: 10px; background: #ddd; border-radius: 50%; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.2); }
-        .ring { width: 12px; height: 45px; background: linear-gradient(to right, #777, #bbb, #777); border-radius: 6px; margin: -5px 0; }
+        .ring { width: 12px; height: 45px; background: linear-gradient(to right, #777, #bbb, #777); border-radius: 6px; margin: -5px 0; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
 
-        /* 1. 貼紙佈局調整：一排三個，且圖示變小 */
+        /* 貼紙佈局：一排三個，圖示調小 */
         .sticker-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; /* 增加間距 */
-            margin-bottom: 15px; 
-            width: 80%; /* 限制整體寬度，讓貼紙看起來更小精緻 */
-            padding: 10px;
+            gap: 12px; margin-bottom: 15px; 
+            width: 85%; padding: 10px;
         }
         .sticker-item { 
             width: 100%; aspect-ratio: 1; border-radius: 12px; cursor: pointer; 
             border: 1.5px solid #f0f0f0; background: #fff; object-fit: contain; 
-            padding: 5px; /* 增加內部留白，進一步縮小圖示 */
-            box-sizing: border-box;
-            transition: 0.2s;
+            padding: 10px; /* 增加留白縮小圖示 */
+            box-sizing: border-box; transition: 0.2s;
         }
-        .sticker-item.active { border-color: var(--pink-accent); transform: scale(1.05); background: #fffafb; box-shadow: 0 2px 10px rgba(255,133,162,0.2); }
+        .sticker-item.active { border-color: var(--pink-accent); transform: scale(1.05); background: #fffafb; }
 
         /* 功能按鈕 */
         .top-action-bar { display: flex; gap: 8px; margin-top: 15px; width: 100%;}
         .top-action-bar button { 
             flex: 1; padding: 10px 5px; border: none; border-radius: 12px; 
             color: white; font-weight: bold; cursor: pointer; font-size: 11px; background: var(--pink-accent);
-            box-shadow: 0 2px 0 rgba(0,0,0,0.05);
         }
         .btn-undo { background: #ffabbd !important; }
         .btn-random { background: #ffccbb !important; }
-        button:active { transform: translateY(1px); box-shadow: none; }
 
-        /* 數值與名稱顯示 */
+        /* 數值標籤 */
         .controls { display: flex; align-items: center; gap: 10px; margin-top: 10px; width: 100%;}
-        .current-color-dot { width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
+        .current-color-dot { width: 42px; height: 42px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
         .slider-group { flex: 1; display: flex; flex-direction: column; gap: 8px; }
         .slider-item { display: flex; flex-direction: column; gap: 1px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; }
-        input[type=range] { width: 100%; accent-color: var(--pink-accent); margin: 0; height: 15px;}
+        input[type=range] { width: 100%; accent-color: var(--pink-accent); margin: 0; }
 
-        /* 畫布區域 */
+        /* 畫布 */
         .canvas-area {
             flex: 1; position: relative; border: 2px dashed #ffcad4; border-radius: 15px; 
             margin: 10px 0; display: flex; align-items: center; justify-content: center;
@@ -105,16 +102,14 @@
         .canvas-area.has-img { border: none; background: transparent; }
         .canvas-area.has-img .plus-icon { display: none; }
 
-        /* 歷史顏色與色環 */
-        .history-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; min-height: 25px; }
-        .history-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; transition: 0.2s;}
-        .history-dot:hover { transform: scale(1.1); }
-
+        /* 色盤彈窗 */
         #pickerContainer {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: white; padding: 25px; border-radius: 25px; z-index: 101; text-align: center; width: 280px;
             box-shadow: 0 10px 50px rgba(0,0,0,0.2);
         }
+        .history-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; min-height: 25px; }
+        .history-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
         .color-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 15px; }
         .dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
@@ -122,7 +117,7 @@
 </head>
 <body>
 
-<div class="cloud c1"></div><div class="cloud c2"></div>
+<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
 <div class="overlay" id="overlay"></div>
 
 <div class="title-header">pancake sticker book</div>
@@ -130,7 +125,6 @@
 <div class="book-container">
     <div class="top-page">
         <div class="sticker-grid" id="stickerGrid"></div>
-        
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div class="slider-group">
@@ -144,7 +138,6 @@
                 </div>
             </div>
         </div>
-
         <div class="top-action-bar">
             <button class="btn-undo" onclick="smartUndo()">撤銷動作</button>
             <button class="btn-random" onclick="generateRandomDiamonds()">隨機鑽石</button>
@@ -173,9 +166,8 @@
     <div style="font-size: 12px; color: #888; margin-bottom: 5px;">歷史顏色 (History)</div>
     <div class="history-row" id="historyColors"></div>
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
-    <div style="font-size: 12px; color: #888; margin-top: 10px; margin-bottom: 5px;">默認顏色</div>
     <div class="color-row" id="presets"></div>
-    <button onclick="closePicker()" style="margin-top:20px; background:var(--pink-accent); width:100%; border-radius: 15px; height: 45px; color:white; border:none; font-weight:bold; cursor:pointer; font-size: 14px;">完成</button>
+    <button onclick="closePicker()" style="margin-top:20px; background:var(--pink-accent); width:100%; border-radius: 15px; height: 45px; color:white; border:none; font-weight:bold; cursor:pointer;">完成</button>
 </div>
 
 <script>
@@ -185,9 +177,7 @@
     const dropZone = document.getElementById('dropZone');
     
     let mainImg = new Image(), stickers = [], records = [], curIdx = 0;
-    let currentColor = "#FFB7B2", preRenderedSticker = null;
-    let historyList = []; // 歷史選色
-    let randomClickCount = 0; // 隨機鑽石點擊計數器
+    let currentColor = "#FFB7B2", preRenderedSticker = null, historyList = [], randomClickCount = 0;
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
 
     async function init() {
@@ -209,15 +199,10 @@
         updatePreRender();
     }
 
-    // 修正比例邏輯（sticker2 等非正方形貼紙）
     function updatePreRender() {
         const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
-        const size = 300; 
-        const ratio = sImg.width / sImg.height;
-        // 保持原始比例
-        let dw = ratio > 1 ? size : size * ratio;
-        let dh = ratio > 1 ? size / ratio : size;
-
+        const size = 300; const ratio = sImg.width / sImg.height;
+        let dw = ratio > 1 ? size : size * ratio, dh = ratio > 1 ? size / ratio : size;
         const oc = document.createElement('canvas'); const ox = oc.getContext('2d');
         oc.width = dw; oc.height = dh;
         ox.drawImage(sImg, 0, 0, dw, dh);
@@ -226,7 +211,6 @@
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
     }
 
-    // 上傳邏輯
     dropZone.onclick = (e) => { if (!mainImg.src || e.target !== canvas) imgInput.click(); };
     imgInput.onchange = (e) => {
         const file = e.target.files[0]; if(!file) return;
@@ -242,7 +226,6 @@
         reader.readAsDataURL(file);
     };
 
-    // 繪畫與撤銷邏輯
     let isDrawing = false;
     const getPos = (e) => {
         const r = canvas.getBoundingClientRect();
@@ -255,9 +238,7 @@
         const now = Date.now();
         const sVal = parseInt(document.getElementById('sizeSlider').value);
         const rVal = (parseInt(document.getElementById('rotateSlider').value)*Math.PI)/180;
-        
         const rec = { x: p.x, y: p.y, img: preRenderedSticker, size: sVal, angle: rVal, time: now };
-
         if (records.length === 0 || (now - records[records.length-1][records[records.length-1].length-1].time > 100)) {
             records.push([rec]);
         } else {
@@ -279,50 +260,28 @@
         records.flat().forEach(r => {
             const ratio = r.img.width / r.img.height;
             let dw = ratio > 1 ? r.size : r.size * ratio;
-            let dwH = ratio > 1 ? r.size / ratio : r.size;
+            let dh = ratio > 1 ? r.size / ratio : r.size;
             ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.angle);
-            ctx.drawImage(r.img, -dw/2, -dwH/2, dw, dwH); ctx.restore();
+            ctx.drawImage(r.img, -dw/2, -dh/2, dw, dh); ctx.restore();
         });
     }
 
     function smartUndo() { if (records.length > 0) { records.pop(); draw(); } }
 
-    // 2. 隨機鑽石升級邏輯
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
-        randomClickCount++; // 增加點擊計數
-        
-        const count = 12; // 生成數量
-        const group = [];
-        
+        randomClickCount++;
+        const count = 12, group = [];
         for (let i = 0; i < count; i++) {
             const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
-            
-            // 要求1：大小嚴格控制在 100 到 300 之間
-            const size = 100 + Math.random() * 200; 
-            
-            // 要求2：按三次隨機鑽石後，相同顏色的不同鑽變成不同顏色的不同鑽
-            let diamondColor = currentColor;
-            if (randomClickCount >= 4) {
-                // 從第4次開始，使用隨機 HSL 顏色，HSL 非常適合生成色彩鮮豔且明度接近的顏色
-                // H: 0-360, S: 70-90%, L: 75-85% (確保是亮色馬卡龍系)
-                diamondColor = `hsl(${Math.random()*360}, 80%, 80%)`;
-            } else if (randomClickCount > 1 && randomClickCount <= 3) {
-                // 1-3次之間，為了增加一點變化，可以偶爾隨機使用馬卡龍色系中的一個
-                if (Math.random() > 0.5) {
-                    diamondColor = macaronColors[Math.floor(Math.random()*macaronColors.length)];
-                }
-            }
-
+            const size = 100 + Math.random() * 200; // 大小 100-300
+            let color = (randomClickCount >= 4) ? `hsl(${Math.random()*360}, 80%, 80%)` : currentColor;
             const sImg = stickers[Math.floor(Math.random()*stickers.length)];
             const tc = document.createElement('canvas'); const tx = tc.getContext('2d');
             const ratio = sImg.width / sImg.height;
-            // 保持比例預渲染
             tc.width = 150 * (ratio > 1 ? 1 : ratio); tc.height = 150 * (ratio > 1 ? 1/ratio : 1);
             tx.drawImage(sImg, 0, 0, tc.width, tc.height);
-            tx.globalCompositeOperation = "multiply"; 
-            tx.fillStyle = diamondColor; // 使用計算出的顏色
-            tx.fillRect(0,0,tc.width,tc.height);
+            tx.globalCompositeOperation = "multiply"; tx.fillStyle = color; tx.fillRect(0,0,tc.width,tc.height);
             tx.globalCompositeOperation = "destination-in"; tx.drawImage(sImg, 0, 0, tc.width, tc.height);
             const ri = new Image(); ri.src = tc.toDataURL();
             group.push({ x, y, img: ri, size, angle: Math.random()*Math.PI*2, time: Date.now() });
@@ -330,11 +289,9 @@
         records.push(group); draw();
     }
 
-    // Slider 數值更新
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; };
     document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; };
 
-    // 歷史顏色處理
     const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor });
     colorPicker.on('color:change', (color) => {
         currentColor = color.hexString;
@@ -343,30 +300,20 @@
     });
 
     document.getElementById('colorBtn').onclick = () => {
-        updateHistoryUI();
+        const hBox = document.getElementById('historyColors'); hBox.innerHTML = '';
+        historyList.forEach(c => {
+            const d = document.createElement('div'); d.className = 'history-dot'; d.style.backgroundColor = c;
+            d.onclick = () => colorPicker.color.set(c); hBox.appendChild(d);
+        });
         document.getElementById('pickerContainer').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
     };
 
-    function updateHistoryUI() {
-        const hBox = document.getElementById('historyColors');
-        hBox.innerHTML = '';
-        historyList.forEach(c => {
-            const d = document.createElement('div'); d.className = 'history-dot'; d.style.backgroundColor = c;
-            d.onclick = () => colorPicker.color.set(c);
-            hBox.appendChild(d);
-        });
-    }
-
     function closePicker() {
-        if (!historyList.includes(currentColor)) {
-            historyList.unshift(currentColor);
-            if (historyList.length > 6) historyList.pop();
-        }
+        if (!historyList.includes(currentColor)) { historyList.unshift(currentColor); if (historyList.length > 6) historyList.pop(); }
         document.getElementById('pickerContainer').style.display = 'none';
         document.getElementById('overlay').style.display = 'none';
-        // 每次重新選色後，重置隨機鑽石的計數器，重新開始計算色彩變化
-        randomClickCount = 0; 
+        randomClickCount = 0;
     }
 
     function download() { if(!mainImg.src) return; const link = document.createElement('a'); link.download = 'handbook.png'; link.href = canvas.toDataURL(); link.click(); }
