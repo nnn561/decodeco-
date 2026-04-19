@@ -58,7 +58,7 @@
             filter: drop-shadow(0 0 5px rgba(255, 133, 162, 0.5));
         }
 
-        .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: nowrap; }
+        .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
         .current-color-dot {
             width: 45px; height: 45px; border-radius: 50%; border: 3px solid white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
@@ -95,8 +95,10 @@
         .btn-undo { background: #ffabbd; }
         .btn-save { background: var(--text-pink); }
 
-        /* 滑块标签样式 */
-        .slider-label { font-size: 10px; font-weight: bold; color: #ff85a2; margin-right: 5px; min-width: 28px; }
+        /* 滑块相关样式 */
+        .slider-row { display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+        .slider-label { font-size: 10px; font-weight: bold; color: #ff85a2; min-width: 28px; }
+        .slider-num { font-size: 10px; font-family: monospace; color: #aaa; min-width: 25px; text-align: right; }
     </style>
 </head>
 <body>
@@ -117,14 +119,16 @@
                 </div>
             </div>
             
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div style="display: flex; align-items: center;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div class="slider-row">
                     <span class="slider-label">SIZE</span>
-                    <input type="range" id="sizeSlider" min="5" max="300" value="70" style="width: 75px; accent-color:#ff85a2;">
+                    <input type="range" id="sizeSlider" min="5" max="300" value="70" style="width: 70px; accent-color:#ff85a2;">
+                    <span class="slider-num" id="sizeVal">70</span>
                 </div>
-                <div style="display: flex; align-items: center;">
+                <div class="slider-row">
                     <span class="slider-label">ROT</span>
-                    <input type="range" id="rotateSlider" min="0" max="360" value="0" style="width: 75px; accent-color:#ff85a2;">
+                    <input type="range" id="rotateSlider" min="0" max="360" value="0" style="width: 70px; accent-color:#ff85a2;">
+                    <span class="slider-num" id="rotVal">0°</span>
                 </div>
             </div>
         </div>
@@ -164,11 +168,21 @@
     const imgInput = document.getElementById('imgInput');
     const dropZone = document.getElementById('dropZone');
     
+    // UI 元素
+    const sizeSlider = document.getElementById('sizeSlider');
+    const rotateSlider = document.getElementById('rotateSlider');
+    const sizeValLabel = document.getElementById('sizeVal');
+    const rotValLabel = document.getElementById('rotVal');
+
     let mainImg = new Image();
     let stickers = [];
     let records = [];
     let curIdx = 0;
     let currentColor = "#FFB7B2";
+
+    // 实时更新数值显示
+    sizeSlider.oninput = function() { sizeValLabel.innerText = this.value; };
+    rotateSlider.oninput = function() { rotValLabel.innerText = this.value + "°"; };
 
     const colorPicker = new iro.ColorPicker("#iroPicker", {
         width: 200, color: currentColor,
@@ -271,9 +285,8 @@
             x: (e.clientX - rect.left) * scaleX,
             y: (e.clientY - rect.top) * scaleY,
             idx: curIdx, color: currentColor,
-            size: parseInt(document.getElementById('sizeSlider').value),
-            // 获取旋转角度并转为弧度
-            angle: (parseInt(document.getElementById('rotateSlider').value) * Math.PI) / 180,
+            size: parseInt(sizeSlider.value),
+            angle: (parseInt(rotateSlider.value) * Math.PI) / 180,
             time: now
         });
         draw();
@@ -308,7 +321,7 @@
             
             ctx.save();
             ctx.translate(r.x, r.y);
-            ctx.rotate(r.angle || 0); // 应用 0-360 度对应的弧度
+            ctx.rotate(r.angle || 0);
             ctx.drawImage(offCanvas, -drawW/2, -drawH/2);
             ctx.restore();
         });
