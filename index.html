@@ -196,15 +196,38 @@
         const r = canvas.getBoundingClientRect();
         return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) };
     };
+
     const startP = (e) => { if(mainImg.src) { isDrawing = true; paint(e); } };
+
     const paint = (e) => {
         if(!isDrawing || !preRenderedSticker) return;
         const p = getPos(e);
-        const rec = { x: p.x, y: p.y, img: preRenderedSticker, size: parseInt(sizeSlider.value), angle: (parseInt(rotateSlider.value)*Math.PI)/180 };
-        if (records.length === 0 || !Array.isArray(records[records.length-1])) records.push([rec]);
-        else records[records.length-1].push(rec);
+        const now = Date.now();
+        const rec = { 
+            x: p.x, 
+            y: p.y, 
+            img: preRenderedSticker, 
+            size: parseInt(sizeSlider.value), 
+            angle: (parseInt(rotateSlider.value)*Math.PI)/180,
+            time: now 
+        };
+
+        // 智能分組邏輯：如果距離上一個點小於 100ms，就歸為同一組撤銷
+        if (records.length === 0) {
+            records.push([rec]);
+        } else {
+            const lastGroup = records[records.length - 1];
+            const lastPoint = lastGroup[lastGroup.length - 1];
+            
+            if (lastPoint && (now - lastPoint.time < 100)) {
+                lastGroup.push(rec);
+            } else {
+                records.push([rec]);
+            }
+        }
         drawSingle(rec);
     };
+
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startP(e.touches[0]); }, {passive: false});
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); paint(e.touches[0]); }, {passive: false});
     canvas.addEventListener('touchend', () => isDrawing = false);
@@ -240,27 +263,16 @@
             tx.globalCompositeOperation = "multiply"; tx.fillStyle = color; tx.fillRect(0,0,150,150);
             tx.globalCompositeOperation = "destination-in"; tx.drawImage(sImg, 0, 0, 150, 150);
             const ri = new Image(); ri.src = tc.toDataURL();
-            line.push({ x, y, img: ri, size, angle });
+            line.push({ x, y, img: ri, size, angle, time: Date.now() });
         }
         records.push(line); draw();
     }
 
     function smartUndo() {
-    if (records.length === 0) return;
-
-    //
-    let lastAction = records.pop();
-
-    // 
-    while (records.length > 0 && 
-           (lastAction.time - records[records.length - 1].time < 50)) {
-        lastAction = records.pop(); // 继续往前删
+        if (records.length === 0) return;
+        records.pop(); // 直接彈出最後一組（包含快速連點或隨機生成的鑽石）
+        draw(); 
     }
-
-    draw(); // 
-}
-
-
 
     sizeSlider.oninput = () => document.getElementById('sizeVal').innerText = sizeSlider.value;
     rotateSlider.oninput = () => document.getElementById('rotVal').innerText = rotateSlider.value + "°";
