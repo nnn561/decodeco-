@@ -14,24 +14,25 @@
         }
 
         body { 
-            font-family: "Comic Sans MS", "curstive", sans-serif; 
+            font-family: "Comic Sans MS", "curstive", "Microsoft YaHei", sans-serif; 
             background: #ffeef4; 
             margin: 0; padding: 10px; 
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
+        /* 顶部标题 */
         .title-header {
             font-size: 28px; color: var(--text-pink); font-weight: bold; margin: 10px 0;
             text-shadow: 2px 2px 0px #fff;
+            letter-spacing: 1px;
         }
 
-        /* 增强层次感的书本 */
+        /* 有层次感的书本 */
         .book-container { 
             width: 100%; max-width: 480px; 
             background: var(--book-pink); 
             padding: 12px; border-radius: 15px 30px 30px 15px;
-            /* 模拟纸张层叠效果 */
             box-shadow: 
                 2px 0 0 white,
                 4px 0 0 var(--book-pink),
@@ -48,38 +49,50 @@
         .top-page { border-radius: 10px 20px 5px 5px; }
         .bottom-page { border-radius: 5px 5px 20px 10px; min-height: 280px; }
 
+        /* 线圈样式 */
         .notebook-rings {
             height: 25px; display: flex; justify-content: space-around;
             padding: 0 20px; position: relative; z-index: 10; margin: -5px 0;
         }
-        .ring { width: 8px; height: 30px; background: var(--ring-color); border-radius: 4px; }
+        .ring { width: 8px; height: 30px; background: var(--ring-color); border-radius: 4px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
 
+        /* 贴纸网格 */
         .sticker-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 5px; }
         .sticker-item { 
             width: 100%; aspect-ratio: 1; border-radius: 8px; cursor: pointer; 
             transition: 0.2s; object-fit: contain; background: #fff; border: 1px solid #f0f0f0;
         }
-        /* 钻石点击：仅倾斜发光，不产生阴影 */
         .sticker-item.active { 
             border-color: var(--text-pink); transform: rotate(-10deg) scale(1.1);
             filter: drop-shadow(0 0 5px rgba(255, 133, 162, 0.5));
         }
 
+        /* 控制区 */
         .controls { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
         .current-color-dot {
             width: 45px; height: 45px; border-radius: 50%; border: 3px solid white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
         }
 
+        /* 画框区域：点击+号上传 */
         .canvas-area {
             position: relative; margin: 10px 0; border: 2px dashed #ffcad4;
-            border-radius: 10px; min-height: 200px; display: flex; align-items: center; justify-content: center;
+            border-radius: 15px; min-height: 250px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             background-color: #fffafb; cursor: pointer; overflow: hidden;
+            transition: background-color 0.2s;
         }
-        #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; }
-        .upload-tip { position: absolute; color: #ffabbd; font-size: 13px; pointer-events: none; }
+        #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; z-index: 5; }
+        
+        /* +号图标 */
+        .plus-icon { font-size: 60px; color: #ffabbd; font-weight: bold; line-height: 1; pointer-events: none; }
+        .upload-tip { color: #ffabbd; font-size: 14px; pointer-events: none; font-weight: bold; margin-top: 5px; }
 
-        /* 弹窗样式 */
+        /* 有图后的隐藏逻辑 */
+        .canvas-area.has-img { border: none; background-color: transparent; }
+        .canvas-area.has-img .plus-icon, .canvas-area.has-img .upload-tip { display: none; }
+
+        /* 弹窗 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 90; }
         #pickerContainer {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -116,7 +129,7 @@
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 12px; font-weight: bold; color: #888;">SIZE:</span>
-                <input type="range" id="sizeSlider" min="40" max="500" value="70" style="width: 80px; accent-color:#ff85a2;">
+                <input type="range" id="sizeSlider" min="5" max="300" value="70" style="width: 80px; accent-color:#ff85a2;">
             </div>
         </div>
     </div>
@@ -128,7 +141,8 @@
 
     <div class="bottom-page">
         <div class="canvas-area" id="dropZone">
-            <span class="upload-tip" id="uploadTip">点击此处上传底图</span>
+            <div class="plus-icon" id="plusIcon">+</div>
+            <span class="upload-tip" id="uploadTip">点击上载图片</span>
             <canvas id="myCanvas"></canvas>
         </div>
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
@@ -138,15 +152,16 @@
             <button class="btn-save" onclick="download()">保存</button>
         </div>
     </div>
+</div>
 
 <div id="pickerContainer">
-    <div style="font-size: 14px; color: #888; margin-bottom: 10px;">历史选色</div>
+    <div style="font-size: 13px; color: #888; margin-bottom: 8px;">历史选色</div>
     <div class="recent-colors" id="recentColors"></div>
     
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
     
     <div class="macaron-preset" id="presets"></div>
-    <button onclick="closePicker()" style="margin-top:15px; background:var(--text-pink); width:100%; border-radius: 12px;">确定</button>
+    <button onclick="closePicker()" style="margin-top:15px; background:var(--text-pink); width:100%; border-radius: 12px;">OK</button>
 </div>
 
 <script>
@@ -160,9 +175,8 @@
     let records = [];
     let curIdx = 0;
     let currentColor = "#FFB7B2";
-    let lastClickTime = 0; // 记录上次点击贴纸的时间
 
-    // --- 色环初始化 ---
+    // --- 颜色选择逻辑 ---
     const colorPicker = new iro.ColorPicker("#iroPicker", {
         width: 200, color: currentColor,
         layout: [{ component: iro.ui.Wheel }]
@@ -174,7 +188,6 @@
         document.getElementById('hexLabel').innerText = currentColor.toUpperCase();
     });
 
-    // 历史与马卡龙预设
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
     const presetContainer = document.getElementById('presets');
     const recentContainer = document.getElementById('recentColors');
@@ -199,40 +212,6 @@
         if(recentContainer.children.length > 6) recentContainer.lastChild.remove();
     }
 
-    // --- 逻辑还原 ---
-    dropZone.onclick = () => imgInput.click();
-    imgInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (f) => {
-            mainImg = new Image();
-            mainImg.onload = () => {
-                canvas.width = mainImg.width; canvas.height = mainImg.height;
-                document.getElementById('uploadTip').style.display = 'none';
-                dropZone.style.border = 'none';
-                records = []; draw();
-            };
-            mainImg.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
-
-    for(let i=1; i<=6; i++) {
-        const img = new Image();
-        img.src = `sticker${i}.png`; 
-        stickers.push(img);
-        const imgEl = document.createElement('img');
-        imgEl.src = img.src;
-        imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-        imgEl.onclick = () => {
-            curIdx = i - 1;
-            document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
-            imgEl.classList.add('active');
-        };
-        document.getElementById('stickerGrid').appendChild(imgEl);
-    }
-
     document.getElementById('colorBtn').onclick = () => {
         document.getElementById('pickerContainer').style.display = 'block';
         document.getElementById('overlay').style.display = 'block';
@@ -244,7 +223,48 @@
     }
     document.getElementById('overlay').onclick = closePicker;
 
-    // --- 贴纸交互与智能撤销 ---
+    // --- 上传逻辑：点击整个区域 ---
+    dropZone.onclick = (e) => {
+        // 如果还没图，点哪都上传；有图了，点画布边缘空白处上传
+        if (!mainImg.src || e.target === dropZone) {
+            imgInput.click();
+        }
+    };
+
+    imgInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            mainImg = new Image();
+            mainImg.onload = () => {
+                canvas.width = mainImg.width; canvas.height = mainImg.height;
+                dropZone.classList.add('has-img');
+                records = []; draw();
+            };
+            mainImg.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    // --- 贴纸初始化 ---
+    for(let i=1; i<=6; i++) {
+        const img = new Image();
+        img.src = `sticker${i}.png`; 
+        stickers.push(img);
+        const imgEl = document.createElement('img');
+        imgEl.src = img.src;
+        imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
+        imgEl.onclick = (e) => {
+            e.stopPropagation();
+            curIdx = i - 1;
+            document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
+            imgEl.classList.add('active');
+        };
+        document.getElementById('stickerGrid').appendChild(imgEl);
+    }
+
+    // --- 绘画交互 ---
     let isDrawing = false;
     canvas.onmousedown = (e) => { isDrawing = true; handleInput(e); };
     canvas.onmousemove = (e) => { if(isDrawing) handleInput(e); };
@@ -265,23 +285,22 @@
             y: (e.clientY - rect.top) * scaleY,
             idx: curIdx, color: currentColor,
             size: parseInt(document.getElementById('sizeSlider').value),
-            time: now // 记录时间戳用于连点撤销
+            time: now
         });
-        lastClickTime = now;
         draw();
     }
 
-    // 智能撤销逻辑
+    // 批量撤销
     function smartUndo() {
         if (records.length === 0) return;
         const last = records.pop();
-        // 如果倒数第二个记录和上个记录间隔小于 500ms，则继续撤销
         while (records.length > 0 && (last.time - records[records.length-1].time < 500)) {
             records.pop();
         }
         draw();
     }
 
+    // 绘图核心
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
@@ -302,7 +321,7 @@
             offCtx.globalCompositeOperation = "destination-in";
             offCtx.drawImage(sImg, 0, 0, drawW, drawH);
             
-            // 彻底去除 ctx.shadow 阴影代码
+            // 无阴影绘制
             ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
         });
     }
@@ -310,7 +329,7 @@
     function download() {
         if(!mainImg.src) return;
         const link = document.createElement('a');
-        link.download = `pancake_sticker.png`;
+        link.download = `pancake_art_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
