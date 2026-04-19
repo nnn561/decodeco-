@@ -125,4 +125,176 @@
         <div class="sticker-grid" id="stickerGrid"></div>
 
         <div class="color-section">
-            <div class="
+            <div class="macaron-preset" id="presets">
+                </div>
+            
+            <div class="color-row">
+                <span style="font-size: 14px; color: var(--text-gray);">点击调色:</span>
+                <div class="current-color-dot" id="colorBtn"></div>
+                <input type="range" id="sizeSlider" min="10" max="300" value="70" style="width: 100px;">
+                <span id="sizeVal" style="font-size: 14px; color: var(--text-gray);">70</span>
+            </div>
+        </div>
+
+        <div id="pickerContainer">
+            <div id="iroPicker"></div>
+            <button onclick="closePicker()" style="margin-top:10px; background:#ff85a2; width:100%;">确定</button>
+        </div>
+
+        <canvas id="myCanvas"></canvas>
+        
+        <div class="footer-btns">
+            <button class="btn-undo" onclick="undo()">撤销</button>
+            <button class="btn-save" onclick="download()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    let mainImg = new Image();
+    let stickers = [];
+    let records = [];
+    let curIdx = 0;
+    let currentColor = "#00E5FF";
+
+    // 马卡龙预设色系
+    const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
+    const presetContainer = document.getElementById('presets');
+    macaronColors.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = 'preset-dot';
+        dot.style.backgroundColor = c;
+        dot.onclick = () => {
+            currentColor = c;
+            updateColorUI();
+            colorPicker.color.set(c);
+        };
+        presetContainer.appendChild(dot);
+    });
+
+    // 初始化色环
+    const colorPicker = new iro.ColorPicker("#iroPicker", {
+        width: 200, color: currentColor,
+        layout: [{ component: iro.ui.Wheel }]
+    });
+
+    colorPicker.on('color:change', (color) => {
+        currentColor = color.hexString;
+        updateColorUI();
+    });
+
+    function updateColorUI() {
+        document.getElementById('colorBtn').style.backgroundColor = currentColor;
+    }
+
+    // 弹出控制
+    document.getElementById('colorBtn').onclick = () => {
+        document.getElementById('pickerContainer').style.display = 'block';
+        document.getElementById('overlay').style.display = 'block';
+    };
+    function closePicker() {
+        document.getElementById('pickerContainer').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+    }
+    document.getElementById('overlay').onclick = closePicker;
+
+    // 初始化贴纸
+    for(let i=1; i<=6; i++) {
+        const img = new Image();
+        img.src = `sticker${i}.png`; 
+        stickers.push(img);
+        const imgEl = document.createElement('img');
+        imgEl.src = img.src;
+        imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
+        imgEl.onclick = function() {
+            curIdx = i - 1;
+            document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+        };
+        document.getElementById('stickerGrid').appendChild(imgEl);
+    }
+
+    // 画布逻辑还原
+    document.getElementById('imgInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            mainImg = new Image();
+            mainImg.onload = () => {
+                canvas.width = mainImg.width;
+                canvas.height = mainImg.height;
+                records = [];
+                draw();
+            };
+            mainImg.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
+    let isDrawing = false;
+    canvas.onmousedown = (e) => { isDrawing = true; handleInput(e); };
+    canvas.onmousemove = (e) => { if(isDrawing) handleInput(e); };
+    window.onmouseup = () => { isDrawing = false; };
+
+    canvas.ontouchstart = (e) => { e.preventDefault(); isDrawing = true; handleInput(e.touches[0]); };
+    canvas.ontouchmove = (e) => { e.preventDefault(); if(isDrawing) handleInput(e.touches[0]); };
+    canvas.ontouchend = () => { isDrawing = false; };
+
+    function handleInput(e) {
+        if(!mainImg.src) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        records.push({
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top) * scaleY,
+            idx: curIdx,
+            color: currentColor,
+            size: parseInt(document.getElementById('sizeSlider').value)
+        });
+        draw();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
+        records.forEach(r => {
+            const sImg = stickers[r.idx];
+            if(!sImg.complete) return;
+            const ratio = sImg.width / sImg.height;
+            let drawW = ratio > 1 ? r.size : r.size * ratio;
+            let drawH = ratio > 1 ? r.size / ratio : r.size;
+
+            const offCanvas = document.createElement('canvas');
+            const offCtx = offCanvas.getContext('2d');
+            offCanvas.width = drawW; offCanvas.height = drawH;
+            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+            offCtx.globalCompositeOperation = "multiply";
+            offCtx.fillStyle = r.color;
+            offCtx.fillRect(0, 0, drawW, drawH);
+            offCtx.globalCompositeOperation = "destination-in";
+            offCtx.drawImage(sImg, 0, 0, drawW, drawH);
+            
+            ctx.shadowBlur = r.size/10; ctx.shadowColor = r.color;
+            ctx.drawImage(offCanvas, r.x - drawW/2, r.y - drawH/2);
+            ctx.shadowBlur = 0;
+        });
+    }
+
+    function undo() { records.pop(); draw(); }
+    function download() {
+        if(!mainImg.src) return;
+        const link = document.createElement('a');
+        link.download = `pancake_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+    document.getElementById('sizeSlider').oninput = function() {
+        document.getElementById('sizeVal').innerText = this.value;
+    };
+</script>
+</body>
+</html>
