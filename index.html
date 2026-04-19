@@ -245,7 +245,20 @@
         records.push(line); draw();
     }
 
-    function smartUndo() { records.pop(); draw(); }
+    function smartUndo() {
+    if (records.length === 0) return;
+
+    // 先弹出最后一个动作
+    const lastAction = records.pop();
+
+    while (records.length > 0 && 
+           (lastAction.time - records[records.length - 1].time < 100)) {
+        records.pop();
+    }
+
+    draw(); 
+}
+
 
     sizeSlider.oninput = () => document.getElementById('sizeVal').innerText = sizeSlider.value;
     rotateSlider.oninput = () => document.getElementById('rotVal').innerText = rotateSlider.value + "°";
