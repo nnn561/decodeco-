@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book - Ultimate</title>
+    <title>Pancake Sticker Book - Aspect Ratio Fix</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
@@ -42,7 +42,6 @@
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
         .bottom-action-bar button { flex: 1; padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 12px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
         
-        /* 調色盤增強 */
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 260px; }
         .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
@@ -61,7 +60,7 @@
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="text-to-sticker-area">
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成贴纸">
+                <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
             <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
@@ -72,9 +71,9 @@
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石（和贴纸中钻石大小联动）</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小（联动贴纸中钻石大小）</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
-                <div class="slider-label"><span>贴纸角度</span><span id="rotVal">0°</span></div>
+                <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
             </div>
         </div>
@@ -103,7 +102,7 @@
     <div class="color-swatches" id="historySwatches"></div>
     <div class="swatch-title">初始颜色</div>
     <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:10px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">确认</button>
+    <button onclick="closePicker()" style="margin-top:10px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">确定</button>
 </div>
 
 <script>
@@ -111,7 +110,7 @@
     const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
     let mainImg = new Image(), stickers = [], records = [], textLayers = [];
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
-    let isDragging = false, colorHistory = [];
+    let isDragging = false, colorHistory = [], stickerRatio = 1; // 新增：保存當前貼紙比例
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
@@ -119,11 +118,19 @@
         for(let i=1; i<=6; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
             const imgEl = document.createElement('img'); imgEl.src = img.src; imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-            imgEl.onclick = () => { curIdx = i-1; document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active')); imgEl.classList.add('active'); updatePreRender(); };
+            imgEl.onload = () => {
+                // 如果圖片加載慢，這裡確保點擊時能拿到比例
+                imgEl.onclick = () => { 
+                    curIdx = i-1; 
+                    document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
+                    imgEl.classList.add('active'); 
+                    updatePreRender(); 
+                };
+            };
             document.getElementById('stickerGrid').appendChild(imgEl);
         }
         initSwatches();
-        updatePreRender();
+        setTimeout(updatePreRender, 500); // 初始延遲確保圖片加載
     }
 
     function initSwatches() {
@@ -135,18 +142,32 @@
         });
     }
 
+    // 重寫：自適應比例預渲染
     function updatePreRender() {
-        const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
+        const sImg = stickers[curIdx]; 
+        if (!sImg || !sImg.complete) return;
+
+        // 核心：計算比例
+        stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
+        
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        oc.width = oc.height = 100; ox.drawImage(sImg, 0, 0, 100, 100);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,100,100);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, 100, 100);
-        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
+        // 根據比例設定寬高，基準長邊為 100
+        if (stickerRatio >= 1) {
+            oc.width = 100; oc.height = 100 / stickerRatio;
+        } else {
+            oc.width = 100 * stickerRatio; oc.height = 100;
+        }
+
+        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
+        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        
+        preRenderedSticker = new Image();
+        preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
     function updateDensityLabel(val) {
-        // 修改密度等級：原本的極多(6)->少，現在的極密(12)->極多
         const labels = { "6":"少", "8":"中", "10":"多", "12":"極多" };
         document.getElementById('densityVal').innerText = labels[val] || "少";
     }
@@ -167,7 +188,6 @@
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
 
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
-        // 密度等級映射：slider 6->Step 5, slider 12->Step 2 (確保高密度)
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         
@@ -178,24 +198,42 @@
             }
         }
         
-        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6 };
+        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
-        // 修改：輸入文字不消失 (不執行清空框動作)
     }
 
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
         let g = [];
-        for(let i=0; i<15; i++) g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, size: Math.random()*50+30, angle: Math.random()*Math.PI*2 });
+        for(let i=0; i<15; i++) {
+            const size = Math.random()*50+30;
+            g.push({ 
+                x: Math.random()*canvas.width, y: Math.random()*canvas.height, 
+                img: preRenderedSticker, 
+                sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), 
+                sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), 
+                angle: Math.random()*Math.PI*2 
+            });
+        }
         records.push(g); draw();
     }
 
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); mainCtx.drawImage(r.img, -r.size/2, -r.size/2, r.size, r.size); mainCtx.restore(); });
+        
+        records.flat().forEach(r => { 
+            mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
+            mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); mainCtx.restore(); 
+        });
+
         textLayers.forEach(l => {
-            l.points.forEach(p => mainCtx.drawImage(l.img, l.x + p.dx * l.scale - l.dotSize/2, l.y + p.dy * l.scale - l.dotSize/2, l.dotSize, l.dotSize));
+            // 文字貼紙中的每個鑽石也要保持比例
+            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio);
+            const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
+            l.points.forEach(p => {
+                mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
+            });
             if(l === selectedLayer) {
                 const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
                 mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
@@ -211,7 +249,16 @@
         let found = null;
         textLayers.forEach(l => { if(Math.abs(p.x-l.x) < 80*l.scale && Math.abs(p.y-l.y) < 40*l.scale) found=l; });
         if(found) { selectedLayer = found; isDragging = true; }
-        else { selectedLayer = null; records.push([{ x:p.x, y:p.y, img:preRenderedSticker, size:parseInt(document.getElementById('sizeSlider').value), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); }
+        else { 
+            selectedLayer = null; 
+            const size = parseInt(document.getElementById('sizeSlider').value);
+            records.push([{ 
+                x:p.x, y:p.y, img:preRenderedSticker, 
+                sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio),
+                sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1),
+                angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 
+            }]); 
+        }
         draw();
     });
 
@@ -223,21 +270,15 @@
 
     const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor, layout: [{ component: iro.ui.Wheel }] });
     colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; 
-        document.getElementById('colorBtn').style.backgroundColor = currentColor; 
-        const preview = document.getElementById('colorPreview');
-        preview.style.backgroundColor = currentColor;
-        preview.innerText = currentColor;
+        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        const preview = document.getElementById('colorPreview'); preview.style.backgroundColor = currentColor; preview.innerText = currentColor;
         updatePreRender(); 
     });
 
     document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
     
     function closePicker() { 
-        if(!colorHistory.includes(currentColor)) {
-            colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop();
-            updateHistory();
-        }
+        if(!colorHistory.includes(currentColor)) { colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop(); updateHistory(); }
         document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; 
     }
 
