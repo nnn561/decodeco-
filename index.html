@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic 3D Sticker Book</title>
+    <title>Realistic 3D Sticker Book - Full Version</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
             --book-cover: #fabecc;
             --page-white: #ffffff;
             --pink-accent: #ff85a2;
-            --ring-gray: #7d7d7d; /* 更深、更真實的線圈顏色 */
+            --ring-gray: #7d7d7d;
         }
 
         body { 
@@ -19,158 +19,92 @@
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; background-color: #ffeef4; 
             overflow-x: hidden;
-            position: relative;
         }
 
-        /* 雲朵背景 */
         .cloud { position: fixed; background: #fff; border-radius: 100px; opacity: 0.6; pointer-events: none; z-index: -1; }
         .cloud:after, .cloud:before { content: ''; position: absolute; background: #fff; border-radius: 100px; }
         .c1 { width: 120px; height: 45px; top: 15%; animation: moveClouds 30s linear infinite; }
         .c2 { width: 180px; height: 70px; top: 50%; animation: moveClouds 45s linear infinite; opacity: 0.4; }
-        .c3 { width: 100px; height: 40px; top: 80%; animation: moveClouds 25s linear infinite; }
         @keyframes moveClouds { from { left: -200px; } to { left: 100vw; } }
 
         .title-header {
             font-size: 26px; color: #fff; font-weight: bold; margin-bottom: 25px;
-            text-shadow: 2px 2px 0px var(--pink-accent), 4px 4px 10px rgba(0,0,0,0.1);
-            animation: floating 3s ease-in-out infinite;
+            text-shadow: 2px 2px 0px var(--pink-accent);
         }
-        @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-        /* 1. 書本立體感（外殼統一立體） */
+        /* 1. 立體書本容器 */
         .book-container { 
             width: 98%; max-width: 420px; 
             background: var(--book-cover); 
-            padding: 10px; /* 縮小一點點 padding */
-            border-radius: 15px 40px 40px 15px;
+            padding: 10px; border-radius: 15px 40px 40px 15px;
             margin: 10px auto;
-            /* 模擬厚蓋板 */
-            box-shadow: 
-                2px 5px 0px rgba(0,0,0,0.05), /* 底厚 */
-                5px 10px 15px rgba(0,0,0,0.1), /* 外陰影 */
-                inset -2px -2px 10px rgba(0,0,0,0.1), /* 內陰影增強質感 */
-                20px 25px 50px rgba(214, 51, 132, 0.2); /* 夢幻粉色氛圍 */
-            position: relative; 
-            display: flex; flex-direction: column;
-            box-sizing: border-box;
-            gap: 0; /* 確保中縫沒有額外 gap */
+            box-shadow: 2px 5px 0px rgba(0,0,0,0.05), 5px 10px 15px rgba(0,0,0,0.1), 20px 25px 50px rgba(214, 51, 132, 0.2);
+            position: relative; display: flex; flex-direction: column;
         }
 
-        /* 1. 白色書页立體感 */
+        /* 1. 書頁立體感與分開距離 */
         .top-page, .bottom-page { 
-            background: var(--page-white); 
-            padding: 18px 12px; /* 增加 padding */
-            position: relative; 
-            display: flex; flex-direction: column; align-items: center;
-            box-sizing: border-box;
-            /* 白色頁面的立體陰影 */
-            box-shadow: 
-                inset 1px 1px 10px rgba(0,0,0,0.03), /* 紙張隆起 */
-                1px 3px 6px rgba(0,0,0,0.08); /* 紙張底陰影 */
+            background: var(--page-white); padding: 18px 12px; 
+            position: relative; display: flex; flex-direction: column; align-items: center;
+            box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03), 1px 3px 6px rgba(0,0,0,0.08);
         }
         .top-page { border-radius: 12px 25px 0 0; border-bottom: 1px solid #f0f0f0; }
-        
-        /* 線圈穿孔細節 */
-        .top-page::after, .bottom-page::after {
-            content: '';
-            position: absolute; left: 0; width: 100%; height: 10px;
-            background-image: radial-gradient(circle, #ddd 30%, transparent 40%);
-            background-size: 50px 50px; background-repeat: repeat-x;
-        }
-        .top-page::after { bottom: -5px; }
-        .bottom-page::after { top: -5px; }
+        .bottom-page { border-radius: 0 0 25px 12px; flex: 1; min-height: 280px; margin-top: 15px; }
 
-        /* 2. 拉開距離的下半頁 */
-        .bottom-page { 
-            border-radius: 0 0 25px 12px; 
-            flex: 1; min-height: 280px; 
-            margin-top: 15px; /* 最關鍵：拉開分頁距離 */
-        }
+        .notebook-rings { height: 25px; display: flex; justify-content: space-around; padding: 0 20px; z-index: 20; position: relative; margin: -20px 0; }
+        .ring { width: 9px; height: 50px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2), 3px 5px 8px rgba(0,0,0,0.15); }
 
-        /* 2. 真實啞光線圈 */
-        .notebook-rings { 
-            height: 25px; /* 線圈不需要太高 */
-            display: flex; justify-content: space-around; 
-            padding: 0 20px; z-index: 20; 
-            position: relative;
-            margin: -20px 0; /* 線圈壓住上下兩頁 */
-            pointer-events: none;
-        }
-        .ring { 
-            width: 9px; height: 50px; /* 線圈穿透感 */
-            background: var(--ring-gray); 
-            border-radius: 5px; 
-            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2), 3px 5px 8px rgba(0,0,0,0.15); /* 啞光立體感 */
-        }
-
-        /* 貼紙佈局：一排三個，圖示調小保持精緻 */
-        .sticker-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; margin-bottom: 5px; 
-            width: 85%; padding: 5px;
-        }
-        .sticker-item { 
-            width: 100%; aspect-ratio: 1; border-radius: 10px; cursor: pointer; 
-            border: 1.5px solid #f0f0f0; background: #fff; object-fit: contain; 
-            padding: 8px; /* 內部留白縮小圖示 */
-            box-sizing: border-box; transition: 0.2s;
-        }
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 85%; }
+        .sticker-item { width: 100%; aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 1.5px solid #f0f0f0; background: #fff; object-fit: contain; padding: 8px; box-sizing: border-box; }
         .sticker-item.active { border-color: var(--pink-accent); transform: scale(1.03); background: #fffafb; }
 
-        /* 3. 按鈕區往上調一點，貼近控制項 */
-        .top-action-bar { display: flex; gap: 8px; margin-top: 10px; width: 100%; margin-bottom: 10px;}
-        .top-action-bar button { 
-            flex: 1; padding: 10px 5px; border: none; border-radius: 12px; 
-            color: white; font-weight: bold; cursor: pointer; font-size: 11px; background: var(--pink-accent);
-            box-shadow: 0 2px 0 rgba(0,0,0,0.05); transition: 0.2s;
-        }
+        /* 新增：文字轉貼紙輸入區佈局 */
+        .text-to-sticker-area { width: 100%; margin-top: 5px; margin-bottom: 15px; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; }
+        .text-input-group { display: flex; gap: 5px; margin-top: 5px; }
+        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 10px; padding: 8px; outline: none; font-size: 13px; }
+        .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 10px; padding: 0 12px; font-weight: bold; cursor: pointer; }
+
+        .top-action-bar { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
+        .top-action-bar button { flex: 1; padding: 10px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; background: var(--pink-accent); }
         .btn-undo { background: #ffabbd !important; }
         .btn-random { background: #ffccbb !important; }
-        button:active { transform: translateY(1px); box-shadow: none; }
 
-        /* 數值標籤保持 */
         .controls { display: flex; align-items: center; gap: 10px; margin-top: 5px; width: 100%;}
         .current-color-dot { width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
         .slider-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-        .slider-item { display: flex; flex-direction: column; gap: 1px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; }
-        input[type=range] { width: 100%; accent-color: var(--pink-accent); margin: 0; height: 15px;}
+        input[type=range] { width: 100%; accent-color: var(--pink-accent); }
 
-        /* 畫布和上傳 + 號保持不變 */
-        .canvas-area {
-            flex: 1; position: relative; border: 2px dashed #ffcad4; border-radius: 15px; 
-            margin: 10px 0; display: flex; align-items: center; justify-content: center;
-            background-color: #fffafb; cursor: pointer; overflow: hidden;
-            box-shadow: inset 0 0 10px rgba(255,133,162,0.05); /* 畫布內淡淡的質感 */
-        }
+        .canvas-area { flex: 1; position: relative; border: 2px dashed #ffcad4; border-radius: 15px; margin: 10px 0; display: flex; align-items: center; justify-content: center; background-color: #fffafb; cursor: pointer; overflow: hidden; }
         #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; z-index: 5; }
         .plus-icon { font-size: 50px; color: #ffabbd; pointer-events: none; }
-        .canvas-area.has-img { border: none; background: transparent; }
         .canvas-area.has-img .plus-icon { display: none; }
 
-        /* 歷史顏色彈窗保持不變 */
-        #pickerContainer {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: white; padding: 25px; border-radius: 25px; z-index: 101; text-align: center; width: 280px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.2);
-        }
+        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 101; text-align: center; width: 280px; box-shadow: 0 10px 50px rgba(0,0,0,0.2); }
         .history-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; min-height: 25px; }
-        .history-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; transition: 0.2s;}
-        .history-dot:hover { transform: scale(1.1); }
+        .history-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
         .color-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 15px; }
-        .dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid white; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
     </style>
 </head>
 <body>
 
-<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+<div class="cloud c1"></div><div class="cloud c2"></div>
 <div class="overlay" id="overlay"></div>
 <div class="title-header">pancake sticker book</div>
 
 <div class="book-container">
     <div class="top-page">
         <div class="sticker-grid" id="stickerGrid"></div>
+
+        <div class="text-to-sticker-area">
+            <div class="slider-label"><span>文字/Emoji 轉鑽石排列</span></div>
+            <div class="text-input-group">
+                <input type="text" id="stickerTextInput" placeholder="輸入文字或Emoji">
+                <button onclick="generateTextStickers()">生成</button>
+            </div>
+        </div>
         
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
@@ -187,18 +121,14 @@
         </div>
 
         <div class="top-action-bar">
-            <button class="btn-undo" onclick="smartUndo()">撤销动作</button>
-            <button class="btn-random" onclick="generateRandomDiamonds()">随机钻石</button>
-            <button class="btn-save" onclick="download()">保存手帐</button>
+            <button class="btn-undo" onclick="smartUndo()">撤銷動作</button>
+            <button class="btn-random" onclick="generateRandomDiamonds()">隨機鑽石</button>
+            <button class="btn-save" onclick="download()">保存手帳</button>
         </div>
     </div>
 
     <div class="notebook-rings">
-        <script>
-            for(let i=0; i<6; i++) {
-                document.write(`<div class="ring-set"><div class="ring"></div></div>`);
-            }
-        </script>
+        <script>for(let i=0; i<6; i++) { document.write(`<div class="ring-set"><div class="ring"></div></div>`); }</script>
     </div>
 
     <div class="bottom-page">
@@ -211,11 +141,11 @@
 </div>
 
 <div id="pickerContainer">
-    <div style="font-size: 12px; color: #888; margin-bottom: 5px;">历史颜色 (History)</div>
+    <div style="font-size: 11px; color: #888; margin-bottom: 5px;">歷史顏色</div>
     <div class="history-row" id="historyColors"></div>
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
     <div class="color-row" id="presets"></div>
-    <button onclick="closePicker()" style="margin-top:20px; background:var(--pink-accent); width:100%; border-radius: 15px; height: 45px; color:white; border:none; font-weight:bold; cursor:pointer; font-size: 14px;">完成</button>
+    <button onclick="closePicker()" style="margin-top:20px; background:var(--pink-accent); width:100%; border-radius: 15px; height: 45px; color:white; border:none; font-weight:bold;">完成</button>
 </div>
 
 <script>
@@ -225,9 +155,7 @@
     const dropZone = document.getElementById('dropZone');
     
     let mainImg = new Image(), stickers = [], records = [], curIdx = 0;
-    let currentColor = "#FFB7B2", preRenderedSticker = null;
-    let historyList = []; // 歷史選色
-    let randomClickCount = 0; // 隨機鑽石計數器
+    let currentColor = "#FFB7B2", preRenderedSticker = null, historyList = [], randomClickCount = 0;
     const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
 
     async function init() {
@@ -254,82 +182,86 @@
         const size = 300; const ratio = sImg.width / sImg.height;
         let dw = ratio > 1 ? size : size * ratio, dh = ratio > 1 ? size / ratio : size;
         const oc = document.createElement('canvas'); const ox = oc.getContext('2d');
-        oc.width = dw; oc.height = dh;
-        ox.drawImage(sImg, 0, 0, dw, dh);
+        oc.width = dw; oc.height = dh; ox.drawImage(sImg, 0, 0, dw, dh);
         ox.globalCompositeOperation = "multiply"; ox.fillStyle = currentColor; ox.fillRect(0, 0, dw, dh);
         ox.globalCompositeOperation = "destination-in"; ox.drawImage(sImg, 0, 0, dw, dh);
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
     }
 
-    // 上傳邏輯
+    // 文字轉鑽石貼紙核心邏輯
+    function generateTextStickers() {
+        if (!mainImg.src) { alert("請先點擊下方空白處上傳背景圖哦！"); return; }
+        const text = document.getElementById('stickerTextInput').value;
+        if (!text) return;
+        const fontSize = 50; const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+        tempCanvas.width = text.length * fontSize + 20; tempCanvas.height = fontSize + 20;
+        tempCtx.font = `bold ${fontSize}px Arial`; tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
+        tempCtx.fillStyle = 'black'; tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
+        const imgData = tempCtx.getImageData(0,0,tempCanvas.width,tempCanvas.height).data;
+        const step = 6, group = [], baseSize = parseInt(document.getElementById('sizeSlider').value) / 6;
+        for (let y=0; y<tempCanvas.height; y+=step) {
+            for (let x=0; x<tempCanvas.width; x+=step) {
+                if (imgData[(y*tempCanvas.width+x)*4 + 3] > 128) {
+                    group.push({
+                        x: (canvas.width/2) - (tempCanvas.width*1.5) + (x*3.5),
+                        y: (canvas.height/2) - (tempCanvas.height*1.5) + (y*3.5),
+                        img: preRenderedSticker, size: baseSize + Math.random()*3, angle: Math.random()*0.2, time: Date.now()
+                    });
+                }
+            }
+        }
+        if(group.length>0) { records.push(group); draw(); document.getElementById('stickerTextInput').value=''; }
+    }
+
     dropZone.onclick = (e) => { if (!mainImg.src || e.target !== canvas) imgInput.click(); };
     imgInput.onchange = (e) => {
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
         reader.onload = (f) => {
             mainImg = new Image();
-            mainImg.onload = () => {
-                canvas.width = mainImg.width; canvas.height = mainImg.height;
-                dropZone.classList.add('has-img'); records = []; draw();
-            };
+            mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); records = []; draw(); };
             mainImg.src = f.target.result;
         };
         reader.readAsDataURL(file);
     };
 
-    // 繪畫與撤銷邏輯保持
     let isDrawing = false;
-    const getPos = (e) => {
-        const r = canvas.getBoundingClientRect();
-        return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) };
-    };
+    const getPos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) }; };
     const paint = (e) => {
         if(!mainImg.src || !preRenderedSticker) return;
-        const p = getPos(e);
-        const now = Date.now();
+        const p = getPos(e); const now = Date.now();
         const sVal = parseInt(document.getElementById('sizeSlider').value);
         const rVal = (parseInt(document.getElementById('rotateSlider').value)*Math.PI)/180;
         const rec = { x: p.x, y: p.y, img: preRenderedSticker, size: sVal, angle: rVal, time: now };
-        if (records.length === 0 || (now - records[records.length-1][records[records.length-1].length-1].time > 100)) {
-            records.push([rec]);
-        } else {
-            records[records.length - 1].push(rec);
-        }
+        if (records.length === 0 || (now - records[records.length-1][records[records.length-1].length-1].time > 100)) records.push([rec]);
+        else records[records.length - 1].push(rec);
         draw();
     };
-    canvas.onmousedown = (e) => { isDrawing = true; paint(e); };
-    canvas.onmousemove = (e) => { if(isDrawing) paint(e); };
-    window.onmouseup = () => isDrawing = false;
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); isDrawing = true; paint(e.touches[0]); }, {passive: false});
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); if(isDrawing) paint(e.touches[0]); }, {passive: false});
-    canvas.addEventListener('touchend', () => isDrawing = false);
+    canvas.onmousedown=(e)=>{isDrawing=true; paint(e);}; canvas.onmousemove=(e)=>{if(isDrawing) paint(e);}; window.onmouseup=()=>isDrawing=false;
+    canvas.addEventListener('touchstart',(e)=>{e.preventDefault(); isDrawing=true; paint(e.touches[0]);},{passive:false});
+    canvas.addEventListener('touchmove',(e)=>{e.preventDefault(); if(isDrawing) paint(e.touches[0]);},{passive:false});
+    canvas.addEventListener('touchend',()=>isDrawing=false);
 
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        if(mainImg.src) ctx.drawImage(mainImg, 0, 0);
+        ctx.clearRect(0,0,canvas.width,canvas.height); if(mainImg.src) ctx.drawImage(mainImg,0,0);
         records.flat().forEach(r => {
-            const ratio = r.img.width / r.img.height;
-            let dw = ratio > 1 ? r.size : r.size * ratio;
-            let dh = ratio > 1 ? r.size / ratio : r.size;
-            ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.angle);
-            ctx.drawImage(r.img, -dw/2, -dh/2, dw, dh); ctx.restore();
+            const ratio = r.img.width/r.img.height; let dw = ratio > 1 ? r.size : r.size*ratio, dh = ratio > 1 ? r.size/ratio : r.size;
+            ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.angle); ctx.drawImage(r.img, -dw/2, -dh/2, dw, dh); ctx.restore();
         });
     }
     function smartUndo() { if (records.length > 0) { records.pop(); draw(); } }
-    
-    // 隨機鑽石邏輯（大小 40-200，點擊 4 次以上變成彩色）
+
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
-        randomClickCount++;
-        const count = 12, group = [];
+        randomClickCount++; const count = 12, group = [];
         for (let i = 0; i < count; i++) {
             const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
-            const size = 100 + Math.random() * 200; // 要求：大小在 40-200 之間
+            const size = 100 + Math.random() * 200;
             let color = (randomClickCount >= 4) ? `hsl(${Math.random()*360}, 80%, 80%)` : currentColor;
             const sImg = stickers[Math.floor(Math.random()*stickers.length)];
             const tc = document.createElement('canvas'); const tx = tc.getContext('2d');
-            const ratio = sImg.width / sImg.height;
-            tc.width = 150 * (ratio > 1 ? 1 : ratio); tc.height = 150 * (ratio > 1 ? 1/ratio : 1);
+            const ratio = sImg.width/sImg.height; tc.width = 150 * (ratio > 1 ? 1 : ratio); tc.height = 150 * (ratio > 1 ? 1/ratio : 1);
             tx.drawImage(sImg, 0, 0, tc.width, tc.height);
             tx.globalCompositeOperation = "multiply"; tx.fillStyle = color; tx.fillRect(0,0,tc.width,tc.height);
             tx.globalCompositeOperation = "destination-in"; tx.drawImage(sImg, 0, 0, tc.width, tc.height);
@@ -345,21 +277,15 @@
     colorPicker.on('color:change', (color) => { currentColor = color.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; updatePreRender(); });
     document.getElementById('colorBtn').onclick = () => {
         const hBox = document.getElementById('historyColors'); hBox.innerHTML = '';
-        historyList.forEach(c => {
-            const d = document.createElement('div'); d.className = 'history-dot'; d.style.backgroundColor = c;
-            d.onclick = () => colorPicker.color.set(c); hBox.appendChild(d);
-        });
-        document.getElementById('pickerContainer').style.display = 'block';
-        document.getElementById('overlay').style.display = 'block';
+        historyList.forEach(c => { const d = document.createElement('div'); d.className = 'history-dot'; d.style.backgroundColor = c; d.onclick = () => colorPicker.color.set(c); hBox.appendChild(d); });
+        document.getElementById('pickerContainer').style.display = 'block'; document.getElementById('overlay').style.display = 'block';
     };
     function closePicker() {
         if (!historyList.includes(currentColor)) { historyList.unshift(currentColor); if (historyList.length > 6) historyList.pop(); }
-        document.getElementById('pickerContainer').style.display = 'none';
-        document.getElementById('overlay').style.display = 'none';
-        randomClickCount = 0; // 重置計數
+        document.getElementById('pickerContainer').style.display = 'none'; document.getElementById('overlay').style.display = 'none';
+        randomClickCount = 0;
     }
     function download() { if(!mainImg.src) return; const link = document.createElement('a'); link.download = 'handbook.png'; link.href = canvas.toDataURL(); link.click(); }
-    
     init();
 </script>
 </body>
