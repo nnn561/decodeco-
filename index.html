@@ -3,44 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book - Final Fix</title>
+    <title>Pancake Sticker Book - Ultimate</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; 
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; background-color: #ffeef4; 
-        }
-
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffeef4; }
         .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
 
-        .book-container { 
-            width: 94%; max-width: 420px; background: var(--book-cover); 
-            padding: 12px; border-radius: 15px 40px 40px 15px; 
-            box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2);
-            position: relative; display: flex; flex-direction: column; margin: 0 auto;
-        }
-
-        .top-page, .bottom-page { 
-            background: var(--page-white); padding: 15px; position: relative; 
-            display: flex; flex-direction: column; align-items: center; width: 100%;
-            box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03);
-        }
+        .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
+        .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
         .top-page { border-radius: 12px 25px 0 0; z-index: 2; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
-
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        /* 貼紙圖示居中與發光傾斜 */
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 15px; justify-items: center; }
-        .sticker-item { 
-            width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain;
-        }
+        .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; }
         .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
 
@@ -55,19 +34,20 @@
         .controls { display: flex; align-items: center; gap: 12px; width: 100%; }
         .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
 
-        .canvas-area { 
-            flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; 
-            background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px;
-        }
+        .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; }
         #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; }
         .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; z-index: 1; }
         .canvas-area.has-img .plus-icon { display: none; }
 
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
         .bottom-action-bar button { flex: 1; padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 12px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
-        .bottom-action-bar button:active { transform: translateY(2px); box-shadow: none; }
-
-        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); }
+        
+        /* 調色盤增強 */
+        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 260px; }
+        .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
+        .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
+        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 10px; }
+        .swatch { width: 30px; height: 30px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
     </style>
 </head>
@@ -81,13 +61,13 @@
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="text-to-sticker-area">
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="輸入顏文字 (づ｡◕‿‿◕｡)づ">
+                <input type="text" id="stickerTextInput" placeholder="輸入顏文字 (づ｡◕‿◕｡)づ">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
             <div class="slider-label"><span>文字縮放</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="100" value="30">
-            <div class="slider-label"><span>鑽石密度 (少→多)</span><span id="densityVal">中</span></div>
-            <input type="range" id="densitySlider" min="2" max="12" value="2" step="2" oninput="updateDensityLabel(this.value)">
+            <div class="slider-label"><span>鑽石密度</span><span id="densityVal">少</span></div>
+            <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
@@ -99,11 +79,9 @@
             </div>
         </div>
     </div>
-
     <div class="spine-area">
         <script>for(let i=0; i<6; i++) document.write('<div class="ring"></div>');</script>
     </div>
-
     <div class="bottom-page">
         <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
             <div class="plus-icon">+</div>
@@ -119,8 +97,13 @@
 </div>
 
 <div id="pickerContainer">
+    <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
-    <button onclick="closePicker()" style="margin-top:15px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px;">完成</button>
+    <div class="swatch-title">歷史顏色</div>
+    <div class="color-swatches" id="historySwatches"></div>
+    <div class="swatch-title">馬卡龍色系</div>
+    <div class="color-swatches" id="presetSwatches"></div>
+    <button onclick="closePicker()" style="margin-top:10px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">確定</button>
 </div>
 
 <script>
@@ -128,20 +111,28 @@
     const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
     let mainImg = new Image(), stickers = [], records = [], textLayers = [];
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
-    let isDragging = false;
+    let isDragging = false, colorHistory = [];
+
+    const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
         for(let i=1; i<=6; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
             const imgEl = document.createElement('img'); imgEl.src = img.src; imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-            imgEl.onclick = () => { 
-                curIdx = i-1; 
-                document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
-                imgEl.classList.add('active'); updatePreRender(); 
-            };
+            imgEl.onclick = () => { curIdx = i-1; document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active')); imgEl.classList.add('active'); updatePreRender(); };
             document.getElementById('stickerGrid').appendChild(imgEl);
         }
+        initSwatches();
         updatePreRender();
+    }
+
+    function initSwatches() {
+        const container = document.getElementById('presetSwatches');
+        macaronColors.forEach(c => {
+            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
+            s.onclick = () => colorPicker.color.set(c);
+            container.appendChild(s);
+        });
     }
 
     function updatePreRender() {
@@ -155,16 +146,14 @@
     }
 
     function updateDensityLabel(val) {
-        const labels = { "2":"中", "4":"多", "6":"極多", "8":"超高", "10":"密集", "12":"極密" };
-        document.getElementById('densityVal').innerText = labels[val] || "密集";
+        // 修改密度等級：原本的極多(6)->少，現在的極密(12)->極多
+        const labels = { "6":"少", "8":"中", "10":"多", "12":"極多" };
+        document.getElementById('densityVal').innerText = labels[val] || "少";
     }
 
-    // 修復後的生成函數
     function generateTextStickers() {
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        
-        // 如果預渲染還沒好，強制做一次
         if (!preRenderedSticker) updatePreRender();
 
         const fSize = 60;
@@ -172,38 +161,26 @@
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         const tw = tempCtx.measureText(text).width + 80;
         tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
-        
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
         tempCtx.fillStyle = 'black';
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
 
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+        // 密度等級映射：slider 6->Step 5, slider 12->Step 2 (確保高密度)
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
-        const step = Math.max(2, 14 - sliderVal); 
+        const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         
         const points = [];
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                const alpha = imgData[(y * tempCanvas.width + x) * 4 + 3];
-                if (alpha > 120) {
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
-                }
+                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
             }
         }
         
-        if (points.length === 0) { alert("生成失敗，請嘗試其他文字"); return; }
-
-        const newLayer = { 
-            points, x: canvas.width / 2, y: canvas.height / 2, 
-            scale: parseInt(document.getElementById('textScaleSlider').value) / 10, 
-            img: preRenderedSticker, 
-            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6 
-        };
-        textLayers.push(newLayer);
-        selectedLayer = newLayer;
-        draw();
-        document.getElementById('stickerTextInput').value = '';
+        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6 };
+        textLayers.push(newLayer); selectedLayer = newLayer; draw();
+        // 修改：輸入文字不消失 (不執行清空框動作)
     }
 
     function generateRandomDiamonds() {
@@ -216,18 +193,9 @@
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        
-        // 畫散裝鑽石
-        records.flat().forEach(r => {
-            mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
-            mainCtx.drawImage(r.img, -r.size/2, -r.size/2, r.size, r.size); mainCtx.restore();
-        });
-
-        // 畫文字貼紙
+        records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); mainCtx.drawImage(r.img, -r.size/2, -r.size/2, r.size, r.size); mainCtx.restore(); });
         textLayers.forEach(l => {
-            l.points.forEach(p => {
-                mainCtx.drawImage(l.img, l.x + p.dx * l.scale - l.dotSize/2, l.y + p.dy * l.scale - l.dotSize/2, l.dotSize, l.dotSize);
-            });
+            l.points.forEach(p => mainCtx.drawImage(l.img, l.x + p.dx * l.scale - l.dotSize/2, l.y + p.dy * l.scale - l.dotSize/2, l.dotSize, l.dotSize));
             if(l === selectedLayer) {
                 const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
                 mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
@@ -236,56 +204,58 @@
         });
     }
 
-    const getPos = (e) => {
-        const r = canvas.getBoundingClientRect();
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
-    };
+    const getPos = (e) => { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) }; };
 
     canvas.addEventListener('touchstart', (e) => {
         const p = getPos(e); if(!mainImg.src) return;
         let found = null;
         textLayers.forEach(l => { if(Math.abs(p.x-l.x) < 80*l.scale && Math.abs(p.y-l.y) < 40*l.scale) found=l; });
         if(found) { selectedLayer = found; isDragging = true; }
-        else { 
-            selectedLayer = null; 
-            records.push([{ x:p.x, y:p.y, img:preRenderedSticker, size:parseInt(document.getElementById('sizeSlider').value), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); 
-        }
+        else { selectedLayer = null; records.push([{ x:p.x, y:p.y, img:preRenderedSticker, size:parseInt(document.getElementById('sizeSlider').value), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); }
         draw();
     });
 
-    canvas.addEventListener('touchmove', (e) => {
-        if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); }
-        e.preventDefault();
-    }, {passive:false});
-
+    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); } e.preventDefault(); }, {passive:false});
     canvas.addEventListener('touchend', () => isDragging=false);
 
-    document.getElementById('sizeSlider').oninput = function() { 
-        document.getElementById('sizeVal').innerText = this.value; 
-        if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } 
-    };
-    document.getElementById('textScaleSlider').oninput = function() { 
-        document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); 
-        if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } 
-    };
+    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
+    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
 
-    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor });
-    colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; updatePreRender(); });
+    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor, layout: [{ component: iro.ui.Wheel }] });
+    colorPicker.on('color:change', (c) => { 
+        currentColor = c.hexString; 
+        document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        const preview = document.getElementById('colorPreview');
+        preview.style.backgroundColor = currentColor;
+        preview.innerText = currentColor;
+        updatePreRender(); 
+    });
+
     document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
-    function closePicker() { document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
+    
+    function closePicker() { 
+        if(!colorHistory.includes(currentColor)) {
+            colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop();
+            updateHistory();
+        }
+        document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; 
+    }
+
+    function updateHistory() {
+        const h = document.getElementById('historySwatches'); h.innerHTML = '';
+        colorHistory.forEach(c => {
+            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
+            s.onclick = () => colorPicker.color.set(c); h.appendChild(s);
+        });
+    }
+
     function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else records.pop(); draw(); }
-    function download() { const link = document.createElement('a'); link.download='pancake_book.png'; link.href=canvas.toDataURL(); link.click(); }
+    function download() { const link = document.createElement('a'); link.download='pancake.png'; link.href=canvas.toDataURL(); link.click(); }
     
     imgInput.onchange = (e) => {
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
-        reader.onload = (f) => { 
-            mainImg = new Image();
-            mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; 
-            mainImg.src = f.target.result; 
-        };
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
         reader.readAsDataURL(file);
     };
     init();
