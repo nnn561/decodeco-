@@ -3,88 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Realistic 3D Sticker Book - Full Version</title>
+    <title>Pancake Sticker Book - Interactive</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
-        :root {
-            --book-cover: #fabecc;
-            --page-white: #ffffff;
-            --pink-accent: #ff85a2;
-            --ring-gray: #7d7d7d;
-        }
-
-        body { 
-            font-family: "Comic Sans MS", "curstive", "Microsoft YaHei", sans-serif; 
-            margin: 0; padding: 15px 10px; 
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; background-color: #ffeef4; 
-            overflow-x: hidden;
-        }
-
+        :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; }
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffeef4; overflow-x: hidden; }
+        
+        /* 雲朵背景 */
         .cloud { position: fixed; background: #fff; border-radius: 100px; opacity: 0.6; pointer-events: none; z-index: -1; }
         .cloud:after, .cloud:before { content: ''; position: absolute; background: #fff; border-radius: 100px; }
         .c1 { width: 120px; height: 45px; top: 15%; animation: moveClouds 30s linear infinite; }
-        .c2 { width: 180px; height: 70px; top: 50%; animation: moveClouds 45s linear infinite; opacity: 0.4; }
+        .c2 { width: 180px; height: 70px; top: 50%; animation: moveClouds 45s linear infinite; }
         @keyframes moveClouds { from { left: -200px; } to { left: 100vw; } }
 
-        .title-header {
-            font-size: 26px; color: #fff; font-weight: bold; margin-bottom: 25px;
-            text-shadow: 2px 2px 0px var(--pink-accent);
-        }
+        .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 0px var(--pink-accent); }
 
-        /* 1. 立體書本容器 */
+        /* 書本立體感 */
         .book-container { 
-            width: 98%; max-width: 420px; 
-            background: var(--book-cover); 
-            padding: 10px; border-radius: 15px 40px 40px 15px;
-            margin: 10px auto;
-            box-shadow: 2px 5px 0px rgba(0,0,0,0.05), 5px 10px 15px rgba(0,0,0,0.1), 20px 25px 50px rgba(214, 51, 132, 0.2);
+            width: 98%; max-width: 420px; background: var(--book-cover); 
+            padding: 10px; border-radius: 15px 40px 40px 15px; margin: 0 auto;
+            box-shadow: 2px 5px 0px rgba(0,0,0,0.05), 5px 10px 15px rgba(0,0,0,0.1), 10px 20px 40px rgba(214, 51, 132, 0.2);
             position: relative; display: flex; flex-direction: column;
         }
 
-        /* 1. 書頁立體感與分開距離 */
         .top-page, .bottom-page { 
-            background: var(--page-white); padding: 18px 12px; 
-            position: relative; display: flex; flex-direction: column; align-items: center;
-            box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03), 1px 3px 6px rgba(0,0,0,0.08);
+            background: var(--page-white); padding: 15px; position: relative; 
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03), 1px 2px 5px rgba(0,0,0,0.1);
         }
         .top-page { border-radius: 12px 25px 0 0; border-bottom: 1px solid #f0f0f0; }
-        .bottom-page { border-radius: 0 0 25px 12px; flex: 1; min-height: 280px; margin-top: 15px; }
+        .bottom-page { border-radius: 0 0 25px 12px; flex: 1; min-height: 300px; margin-top: 15px; }
 
+        /* 線圈距離 */
         .notebook-rings { height: 25px; display: flex; justify-content: space-around; padding: 0 20px; z-index: 20; position: relative; margin: -20px 0; }
-        .ring { width: 9px; height: 50px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2), 3px 5px 8px rgba(0,0,0,0.15); }
+        .ring { width: 9px; height: 50px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2); }
 
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 85%; }
-        .sticker-item { width: 100%; aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 1.5px solid #f0f0f0; background: #fff; object-fit: contain; padding: 8px; box-sizing: border-box; }
-        .sticker-item.active { border-color: var(--pink-accent); transform: scale(1.03); background: #fffafb; }
+        /* 貼紙網格 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; width: 90%; }
+        .sticker-item { width: 100%; aspect-ratio: 1; border-radius: 10px; cursor: pointer; border: 1.5px solid #f0f0f0; background: #fff; padding: 8px; box-sizing: border-box; }
+        .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
 
-        /* 新增：文字轉貼紙輸入區佈局 */
-        .text-to-sticker-area { width: 100%; margin-top: 5px; margin-bottom: 15px; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; }
-        .text-input-group { display: flex; gap: 5px; margin-top: 5px; }
-        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 10px; padding: 8px; outline: none; font-size: 13px; }
-        .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 10px; padding: 0 12px; font-weight: bold; cursor: pointer; }
+        /* 文字生成區 */
+        .text-to-sticker-area { width: 100%; margin: 5px 0 15px 0; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; box-sizing: border-box; }
+        .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
+        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; }
+        .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
 
-        .top-action-bar { display: flex; gap: 8px; margin-top: 10px; width: 100%; }
-        .top-action-bar button { flex: 1; padding: 10px 5px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; background: var(--pink-accent); }
-        .btn-undo { background: #ffabbd !important; }
-        .btn-random { background: #ffccbb !important; }
-
-        .controls { display: flex; align-items: center; gap: 10px; margin-top: 5px; width: 100%;}
-        .current-color-dot { width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
-        .slider-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        /* 控制項 */
+        .controls { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .current-color-dot { width: 45px; height: 45px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
+        .slider-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; }
         input[type=range] { width: 100%; accent-color: var(--pink-accent); }
 
-        .canvas-area { flex: 1; position: relative; border: 2px dashed #ffcad4; border-radius: 15px; margin: 10px 0; display: flex; align-items: center; justify-content: center; background-color: #fffafb; cursor: pointer; overflow: hidden; }
-        #myCanvas { max-width: 100%; height: auto; display: block; touch-action: none; z-index: 5; }
-        .plus-icon { font-size: 50px; color: #ffabbd; pointer-events: none; }
+        .top-action-bar { display: flex; gap: 8px; margin-top: 15px; width: 100%; }
+        .top-action-bar button { flex: 1; padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); }
+
+        /* 畫布 */
+        .canvas-area { flex: 1; position: relative; border: 2px dashed #ffcad4; border-radius: 15px; margin: 10px 0; background: #fffafb; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #myCanvas { max-width: 100%; height: auto; touch-action: none; z-index: 5; }
+        .plus-icon { font-size: 50px; color: #ffabbd; position: absolute; pointer-events: none; }
         .canvas-area.has-img .plus-icon { display: none; }
 
-        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 101; text-align: center; width: 280px; box-shadow: 0 10px 50px rgba(0,0,0,0.2); }
-        .history-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; min-height: 25px; }
-        .history-dot { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #eee; cursor: pointer; }
-        .color-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 15px; }
-        .dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid white; }
+        /* 色盤 */
+        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; width: 260px; box-shadow: 0 10px 50px rgba(0,0,0,0.2); text-align: center;}
+        .history-row { display: flex; gap: 5px; justify-content: center; margin-bottom: 10px; }
+        .history-dot { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
     </style>
 </head>
@@ -99,10 +83,13 @@
         <div class="sticker-grid" id="stickerGrid"></div>
 
         <div class="text-to-sticker-area">
-            <div class="slider-label"><span>文字/Emoji 轉鑽石排列</span></div>
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="輸入文字或Emoji">
+                <input type="text" id="stickerTextInput" placeholder="輸入文字/Emoji">
                 <button onclick="generateTextStickers()">生成</button>
+            </div>
+            <div class="slider-item">
+                <div class="slider-label"><span>鑽石密度 (更小越密)</span><span id="densityVal">6</span></div>
+                <input type="range" id="densitySlider" min="3" max="12" value="6" oninput="document.getElementById('densityVal').innerText=this.value">
             </div>
         </div>
         
@@ -121,14 +108,14 @@
         </div>
 
         <div class="top-action-bar">
-            <button class="btn-undo" onclick="smartUndo()">撤銷動作</button>
-            <button class="btn-random" onclick="generateRandomDiamonds()">隨機鑽石</button>
-            <button class="btn-save" onclick="download()">保存手帳</button>
+            <button style="background:#ffabbd" onclick="smartUndo()">撤銷動作</button>
+            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">隨機鑽石</button>
+            <button onclick="download()">保存手帳</button>
         </div>
     </div>
 
     <div class="notebook-rings">
-        <script>for(let i=0; i<6; i++) { document.write(`<div class="ring-set"><div class="ring"></div></div>`); }</script>
+        <script>for(let i=0; i<6; i++) document.write('<div class="ring"></div>');</script>
     </div>
 
     <div class="bottom-page">
@@ -141,151 +128,118 @@
 </div>
 
 <div id="pickerContainer">
-    <div style="font-size: 11px; color: #888; margin-bottom: 5px;">歷史顏色</div>
     <div class="history-row" id="historyColors"></div>
-    <div id="iroPicker" style="display: flex; justify-content: center;"></div>
-    <div class="color-row" id="presets"></div>
-    <button onclick="closePicker()" style="margin-top:20px; background:var(--pink-accent); width:100%; border-radius: 15px; height: 45px; color:white; border:none; font-weight:bold;">完成</button>
+    <div id="iroPicker"></div>
+    <button onclick="closePicker()" style="margin-top:15px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px;">完成</button>
 </div>
 
 <script>
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    const imgInput = document.getElementById('imgInput');
-    const dropZone = document.getElementById('dropZone');
-    
-    let mainImg = new Image(), stickers = [], records = [], curIdx = 0;
-    let currentColor = "#FFB7B2", preRenderedSticker = null, historyList = [], randomClickCount = 0;
-    const macaronColors = ['#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F3B0C3'];
+    const canvas = document.getElementById('myCanvas'), ctx = canvas.getContext('2d');
+    const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
+    let mainImg = new Image(), stickers = [], records = [], textLayers = [], curIdx = 0;
+    let currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
 
     async function init() {
         for(let i=1; i<=6; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
             const imgEl = document.createElement('img'); imgEl.src = img.src; imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-            imgEl.onclick = (e) => {
-                e.stopPropagation(); curIdx = i - 1;
-                document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active'));
-                imgEl.classList.add('active'); updatePreRender();
-            };
+            imgEl.onclick = () => { curIdx = i - 1; document.querySelectorAll('.sticker-item').forEach(el => el.classList.remove('active')); imgEl.classList.add('active'); updatePreRender(); };
             document.getElementById('stickerGrid').appendChild(imgEl);
         }
-        const presetBox = document.getElementById('presets');
-        macaronColors.forEach(c => {
-            const d = document.createElement('div'); d.className = 'dot'; d.style.backgroundColor = c;
-            d.onclick = () => colorPicker.color.set(c); presetBox.appendChild(d);
-        });
         updatePreRender();
     }
 
     function updatePreRender() {
-        const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
-        const size = 300; const ratio = sImg.width / sImg.height;
-        let dw = ratio > 1 ? size : size * ratio, dh = ratio > 1 ? size / ratio : size;
-        const oc = document.createElement('canvas'); const ox = oc.getContext('2d');
-        oc.width = dw; oc.height = dh; ox.drawImage(sImg, 0, 0, dw, dh);
-        ox.globalCompositeOperation = "multiply"; ox.fillStyle = currentColor; ox.fillRect(0, 0, dw, dh);
-        ox.globalCompositeOperation = "destination-in"; ox.drawImage(sImg, 0, 0, dw, dh);
+        const sImg = stickers[curIdx]; if (!sImg.complete) return;
+        const size = 200, ratio = sImg.width / sImg.height;
+        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
+        oc.width = ratio > 1 ? size : size * ratio; oc.height = ratio > 1 ? size / ratio : size;
+        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        ox.globalCompositeOperation = "multiply"; ox.fillStyle = currentColor; ox.fillRect(0, 0, oc.width, oc.height);
+        ox.globalCompositeOperation = "destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
+        if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
-    // 文字轉鑽石貼紙核心邏輯
     function generateTextStickers() {
-        if (!mainImg.src) { alert("請先點擊下方空白處上傳背景圖哦！"); return; }
-        const text = document.getElementById('stickerTextInput').value;
-        if (!text) return;
-        const fontSize = 50; const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
-        tempCanvas.width = text.length * fontSize + 20; tempCanvas.height = fontSize + 20;
+        if (!mainImg.src) return alert("請先點擊下方+號上傳底圖");
+        const text = document.getElementById('stickerTextInput').value; if (!text) return;
+        const fontSize = 50, tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+        tempCanvas.width = text.length * fontSize + 40; tempCanvas.height = fontSize + 40;
         tempCtx.font = `bold ${fontSize}px Arial`; tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
         tempCtx.fillStyle = 'black'; tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         const imgData = tempCtx.getImageData(0,0,tempCanvas.width,tempCanvas.height).data;
-        const step = 6, group = [], baseSize = parseInt(document.getElementById('sizeSlider').value) / 6;
+        const step = parseInt(document.getElementById('densitySlider').value), points = [];
         for (let y=0; y<tempCanvas.height; y+=step) {
             for (let x=0; x<tempCanvas.width; x+=step) {
-                if (imgData[(y*tempCanvas.width+x)*4 + 3] > 128) {
-                    group.push({
-                        x: (canvas.width/2) - (tempCanvas.width*1.5) + (x*3.5),
-                        y: (canvas.height/2) - (tempCanvas.height*1.5) + (y*3.5),
-                        img: preRenderedSticker, size: baseSize + Math.random()*3, angle: Math.random()*0.2, time: Date.now()
-                    });
-                }
+                if (imgData[(y*tempCanvas.width+x)*4 + 3] > 128) points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
             }
         }
-        if(group.length>0) { records.push(group); draw(); document.getElementById('stickerTextInput').value=''; }
+        if(points.length > 0) {
+            const layer = { points, x: canvas.width/2, y: canvas.height/2, scale: 3, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value)/6 };
+            textLayers.push(layer); selectedLayer = layer; draw(); document.getElementById('stickerTextInput').value = '';
+        }
     }
 
-    dropZone.onclick = (e) => { if (!mainImg.src || e.target !== canvas) imgInput.click(); };
+    dropZone.onclick = () => { if (!mainImg.src) imgInput.click(); };
     imgInput.onchange = (e) => {
-        const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
-        reader.onload = (f) => {
-            mainImg = new Image();
-            mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); records = []; draw(); };
-            mainImg.src = f.target.result;
-        };
-        reader.readAsDataURL(file);
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
+        reader.readAsDataURL(e.target.files[0]);
     };
-
-    let isDrawing = false;
-    const getPos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) }; };
-    const paint = (e) => {
-        if(!mainImg.src || !preRenderedSticker) return;
-        const p = getPos(e); const now = Date.now();
-        const sVal = parseInt(document.getElementById('sizeSlider').value);
-        const rVal = (parseInt(document.getElementById('rotateSlider').value)*Math.PI)/180;
-        const rec = { x: p.x, y: p.y, img: preRenderedSticker, size: sVal, angle: rVal, time: now };
-        if (records.length === 0 || (now - records[records.length-1][records[records.length-1].length-1].time > 100)) records.push([rec]);
-        else records[records.length - 1].push(rec);
-        draw();
-    };
-    canvas.onmousedown=(e)=>{isDrawing=true; paint(e);}; canvas.onmousemove=(e)=>{if(isDrawing) paint(e);}; window.onmouseup=()=>isDrawing=false;
-    canvas.addEventListener('touchstart',(e)=>{e.preventDefault(); isDrawing=true; paint(e.touches[0]);},{passive:false});
-    canvas.addEventListener('touchmove',(e)=>{e.preventDefault(); if(isDrawing) paint(e.touches[0]);},{passive:false});
-    canvas.addEventListener('touchend',()=>isDrawing=false);
 
     function draw() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); if(mainImg.src) ctx.drawImage(mainImg,0,0);
-        records.flat().forEach(r => {
-            const ratio = r.img.width/r.img.height; let dw = ratio > 1 ? r.size : r.size*ratio, dh = ratio > 1 ? r.size/ratio : r.size;
-            ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.angle); ctx.drawImage(r.img, -dw/2, -dh/2, dw, dh); ctx.restore();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(mainImg.src) ctx.drawImage(mainImg,0,0);
+        records.flat().forEach(r => renderSticker(r.img, r.x, r.y, r.size, r.angle));
+        textLayers.forEach(layer => {
+            if(layer === selectedLayer) { ctx.strokeStyle = "rgba(255,133,162,0.4)"; ctx.setLineDash([5,5]); ctx.strokeRect(layer.x-60, layer.y-30, 120, 60); ctx.setLineDash([]); }
+            layer.points.forEach(p => renderSticker(layer.img, layer.x + p.dx * layer.scale, layer.y + p.dy * layer.scale, layer.dotSize, 0));
         });
     }
-    function smartUndo() { if (records.length > 0) { records.pop(); draw(); } }
 
-    function generateRandomDiamonds() {
-        if (!mainImg.src) return;
-        randomClickCount++; const count = 12, group = [];
-        for (let i = 0; i < count; i++) {
-            const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
-            const size = 100 + Math.random() * 200;
-            let color = (randomClickCount >= 4) ? `hsl(${Math.random()*360}, 80%, 80%)` : currentColor;
-            const sImg = stickers[Math.floor(Math.random()*stickers.length)];
-            const tc = document.createElement('canvas'); const tx = tc.getContext('2d');
-            const ratio = sImg.width/sImg.height; tc.width = 150 * (ratio > 1 ? 1 : ratio); tc.height = 150 * (ratio > 1 ? 1/ratio : 1);
-            tx.drawImage(sImg, 0, 0, tc.width, tc.height);
-            tx.globalCompositeOperation = "multiply"; tx.fillStyle = color; tx.fillRect(0,0,tc.width,tc.height);
-            tx.globalCompositeOperation = "destination-in"; tx.drawImage(sImg, 0, 0, tc.width, tc.height);
-            const ri = new Image(); ri.src = tc.toDataURL();
-            group.push({ x, y, img: ri, size, angle: Math.random()*Math.PI*2, time: Date.now() });
-        }
-        records.push(group); draw();
+    function renderSticker(img, x, y, size, angle) {
+        const ratio = img.width/img.height; let dw = ratio>1?size:size*ratio, dh = ratio>1?size/ratio:size;
+        ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.drawImage(img, -dw/2, -dh/2, dw, dh); ctx.restore();
     }
 
-    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; };
-    document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; };
-    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor });
-    colorPicker.on('color:change', (color) => { currentColor = color.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; updatePreRender(); });
-    document.getElementById('colorBtn').onclick = () => {
-        const hBox = document.getElementById('historyColors'); hBox.innerHTML = '';
-        historyList.forEach(c => { const d = document.createElement('div'); d.className = 'history-dot'; d.style.backgroundColor = c; d.onclick = () => colorPicker.color.set(c); hBox.appendChild(d); });
-        document.getElementById('pickerContainer').style.display = 'block'; document.getElementById('overlay').style.display = 'block';
+    let isDrawing = false, isDragging = false;
+    const getPos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX-r.left)*(canvas.width/r.width), y: (e.clientY-r.top)*(canvas.height/r.height) }; };
+    
+    canvas.addEventListener('touchstart', (e) => {
+        const p = getPos(e.touches[0]); let found = false;
+        textLayers.forEach(l => { if(Math.abs(p.x-l.x)<80 && Math.abs(p.y-l.y)<40) { selectedLayer = l; isDragging = true; found = true; } });
+        if(!found) { selectedLayer = null; isDrawing = true; addPoint(p); }
+        draw();
+    }, {passive: false});
+
+    canvas.addEventListener('touchmove', (e) => {
+        const p = getPos(e.touches[0]);
+        if(isDragging && selectedLayer) { selectedLayer.x = p.x; selectedLayer.y = p.y; draw(); }
+        else if(isDrawing) { addPoint(p); draw(); }
+        e.preventDefault();
+    }, {passive: false});
+
+    canvas.addEventListener('touchend', () => { isDrawing = isDragging = false; });
+
+    function addPoint(p) {
+        const r = { x: p.x, y: p.y, img: preRenderedSticker, size: parseInt(document.getElementById('sizeSlider').value), angle: (parseInt(document.getElementById('rotateSlider').value)*Math.PI)/180 };
+        if(records.length === 0 || Date.now() - records[records.length-1][0].time > 500) records.push([r]);
+        else records[records.length-1].push(r);
+    }
+
+    document.getElementById('sizeSlider').oninput = function() { 
+        document.getElementById('sizeVal').innerText = this.value; 
+        if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); }
     };
-    function closePicker() {
-        if (!historyList.includes(currentColor)) { historyList.unshift(currentColor); if (historyList.length > 6) historyList.pop(); }
-        document.getElementById('pickerContainer').style.display = 'none'; document.getElementById('overlay').style.display = 'none';
-        randomClickCount = 0;
-    }
-    function download() { if(!mainImg.src) return; const link = document.createElement('a'); link.download = 'handbook.png'; link.href = canvas.toDataURL(); link.click(); }
+    document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; };
+
+    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor });
+    colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; updatePreRender(); });
+    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; };
+    function closePicker() { document.getElementById('pickerContainer').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; }
+    function smartUndo() { if(textLayers.length>0) textLayers.pop(); else records.pop(); selectedLayer = null; draw(); }
+    function download() { if(!mainImg.src) return; const link = document.createElement('a'); link.download = 'book.png'; link.href = canvas.toDataURL(); link.click(); }
     init();
 </script>
 </body>
