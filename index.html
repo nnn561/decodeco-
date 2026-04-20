@@ -3,25 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book - Final Polish</title>
+    <title>Pancake Sticker Book - Perfected</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
-        
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body { 
-            font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 20px 0; 
+            font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; 
             display: flex; flex-direction: column; align-items: center; 
             min-height: 100vh; background-color: #ffeef4; 
         }
 
-        .title-header { font-size: 26px; color: #fff; font-weight: bold; margin-bottom: 20px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
+        .title-header { font-size: 26px; color: #fff; font-weight: bold; margin-bottom: 15px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
 
-        /* 頁面絕對居中容器 */
         .book-container { 
             width: 92%; max-width: 420px; background: var(--book-cover); 
-            padding: 15px; border-radius: 15px 40px 40px 15px; 
+            padding: 12px; border-radius: 15px 40px 40px 15px; 
             box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2);
             position: relative; display: flex; flex-direction: column; margin: 0 auto;
         }
@@ -34,28 +31,25 @@
         .top-page { border-radius: 12px 25px 0 0; z-index: 2; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
 
-        /* 中間翻頁過渡區 & 線圈 */
         .spine-area {
             height: 30px; background: var(--spine-pink); width: 100%;
             position: relative; z-index: 5; margin: -5px 0;
             display: flex; justify-content: space-around; align-items: center;
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.05), inset 0 -5px 10px rgba(0,0,0,0.05);
         }
-        .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); margin-top: -2px; }
+        .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        /* 貼紙圖示稍微調大 */
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 15px; }
+        /* 貼紙圖示居中與特效 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 15px; justify-items: center; }
         .sticker-item { 
-            width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; box-sizing: border-box; cursor: pointer;
+            width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer;
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain;
         }
-        .sticker-item:active { transform: rotate(15deg) scale(1.1); box-shadow: 0 0 15px var(--pink-accent); border-color: var(--pink-accent); }
+        .sticker-item:active { transform: rotate(15deg) scale(1.2); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
 
-        /* UI 控制件 */
         .text-to-sticker-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
         .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
-        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
+        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
 
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
@@ -64,7 +58,6 @@
         .controls { display: flex; align-items: center; gap: 12px; width: 100%; }
         .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
 
-        /* 畫布區 + 號 */
         .canvas-area { 
             flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; 
             position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px;
@@ -91,18 +84,18 @@
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="text-to-sticker-area">
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="輸入文字 (づ｡◕‿◕｡)づ">
+                <input type="text" id="stickerTextInput" placeholder="輸入顏文字 (づ｡◕‿◕｡)づ">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
             <div class="slider-label"><span>文字整體縮放</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="100" value="30">
-            <div class="slider-label"><span>鑽石密度 (少→多)</span><span id="densityVal">6</span></div>
-            <input type="range" id="densitySlider" min="2" max="12" value="6" step="2" oninput="document.getElementById('densityVal').innerText=this.value">
+            <div class="slider-label"><span>鑽石密度 (少→多)</span><span id="densityVal">中</span></div>
+            <input type="range" id="densitySlider" min="2" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>單顆大小</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>鑽石大小 (連動生成貼紙)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>旋轉角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -115,7 +108,7 @@
     </div>
 
     <div class="bottom-page">
-        <div class="canvas-area" id="dropZone" onclick="handleAreaClick(event)">
+        <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
             <div class="plus-icon">+</div>
             <canvas id="myCanvas"></canvas>
         </div>
@@ -147,8 +140,7 @@
             imgEl.onclick = () => { 
                 curIdx = i-1; 
                 document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
-                imgEl.classList.add('active'); 
-                updatePreRender(); 
+                imgEl.classList.add('active'); updatePreRender(); 
             };
             document.getElementById('stickerGrid').appendChild(imgEl);
         }
@@ -165,68 +157,53 @@
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
-    // 文字生成核心邏輯（修復版）
-    function generateTextStickers() {
-        if (!mainImg.src) { imgInput.click(); return; }
-        const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        
-        const fSize = 60;
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
-        const tw = tempCtx.measureText(text).width + 40;
-        
-        tempCanvas.width = tw; tempCanvas.height = fSize * 2;
-        tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
-        tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        tempCtx.fillStyle = 'black';
-        tempCtx.fillText(text, tempCanvas.width / 2, tempCanvas.height / 2);
+    function updateDensityLabel(val) {
+        const labels = { "2":"極高", "4":"多", "6":"中", "8":"少", "10":"極少", "12":"稀疏" };
+        document.getElementById('densityVal').innerText = labels[val] || val;
+    }
 
+    function generateTextStickers() {
+        if (!mainImg.src) return imgInput.click();
+        const text = document.getElementById('stickerTextInput').value; if (!text) return;
+        const fSize = 60; const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
+        tempCtx.font = `bold ${fSize}px Arial`;
+        const tw = tempCtx.measureText(text).width + 60;
+        tempCanvas.width = tw; tempCanvas.height = fSize * 2;
+        tempCtx.font = `bold ${fSize}px Arial`; tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
+        tempCtx.fillStyle = 'black'; tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
+        // 密度修正：slider越往右(2)，step越小，點越多
         const step = parseInt(document.getElementById('densitySlider').value);
         const points = [];
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) {
-                    points.push({ dx: x - tempCanvas.width / 2, dy: y - tempCanvas.height / 2 });
-                }
+                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
             }
         }
-        
         const layer = { 
             points, x: canvas.width / 2, y: canvas.height / 2, 
             scale: parseInt(document.getElementById('textScaleSlider').value) / 10, 
             img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6 
         };
-        textLayers.push(layer); selectedLayer = layer;
-        draw();
-        document.getElementById('stickerTextInput').value = '';
+        textLayers.push(layer); selectedLayer = layer; draw();
     }
 
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
         const count = 15; let g = [];
-        for(let i=0; i<count; i++){
-            g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, size: Math.random()*50+30, angle: Math.random()*Math.PI*2 });
-        }
+        for(let i=0; i<count; i++) g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, size: Math.random()*50+30, angle: Math.random()*Math.PI*2 });
         records.push(g); draw();
     }
-
-    function handleAreaClick(e) { if(!mainImg.src) imgInput.click(); }
 
     function draw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) ctx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        
         records.flat().forEach(r => {
             ctx.save(); ctx.translate(r.x, r.y); ctx.rotate(r.angle || 0);
             ctx.drawImage(r.img, -r.size/2, -r.size/2, r.size, r.size); ctx.restore();
         });
-
         textLayers.forEach(l => {
-            l.points.forEach(p => {
-                ctx.drawImage(l.img, l.x + p.dx * l.scale - l.dotSize/2, l.y + p.dy * l.scale - l.dotSize/2, l.dotSize, l.dotSize);
-            });
+            l.points.forEach(p => ctx.drawImage(l.img, l.x + p.dx * l.scale - l.dotSize/2, l.y + p.dy * l.scale - l.dotSize/2, l.dotSize, l.dotSize));
             if(l === selectedLayer) {
                 const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
                 ctx.strokeStyle="#ff85a2"; ctx.setLineDash([5,5]); ctx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
@@ -261,15 +238,21 @@
 
     canvas.addEventListener('touchend', () => isDragging=false);
 
-    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
+    // 關鍵功能：滑塊連動調整選中的生成貼紙
+    document.getElementById('sizeSlider').oninput = function() { 
+        document.getElementById('sizeVal').innerText = this.value; 
+        if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } 
+    };
     document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; };
-    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
+    document.getElementById('textScaleSlider').oninput = function() { 
+        document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); 
+        if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } 
+    };
 
     const colorPicker = new iro.ColorPicker("#iroPicker", { width: 180, color: currentColor });
     colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; updatePreRender(); });
     document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
     function closePicker() { document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
-    
     function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else records.pop(); draw(); }
     function download() { const link = document.createElement('a'); link.download='sticker_book.png'; link.href=canvas.toDataURL(); link.click(); }
     
@@ -278,10 +261,7 @@
         const reader = new FileReader();
         reader.onload = (f) => { 
             mainImg = new Image();
-            mainImg.onload = () => { 
-                canvas.width = mainImg.width; canvas.height = mainImg.height; 
-                dropZone.classList.add('has-img'); draw(); 
-            }; 
+            mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; 
             mainImg.src = f.target.result; 
         };
         reader.readAsDataURL(file);
