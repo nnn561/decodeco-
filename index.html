@@ -61,20 +61,20 @@
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="text-to-sticker-area">
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="輸入顏文字 (づ｡◕‿◕｡)づ">
+                <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成贴纸">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="slider-label"><span>文字縮放</span><span id="textScaleVal">3.0</span></div>
+            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="100" value="30">
-            <div class="slider-label"><span>鑽石密度</span><span id="densityVal">少</span></div>
+            <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
             <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>鑽石大小 (連動選中文字)</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石（和贴纸中钻石大小联动）</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
-                <div class="slider-label"><span>旋轉角度</span><span id="rotVal">0°</span></div>
+                <div class="slider-label"><span>贴纸角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
             </div>
         </div>
@@ -88,8 +88,8 @@
             <canvas id="myCanvas"></canvas>
         </div>
         <div class="bottom-action-bar">
-            <button style="background:#ffabbd" onclick="smartUndo()">撤銷</button>
-            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">隨機鑽石</button>
+            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
+            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">随机钻石</button>
             <button onclick="download()">保存</button>
         </div>
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
@@ -99,11 +99,11 @@
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
-    <div class="swatch-title">歷史顏色</div>
+    <div class="swatch-title">历史颜色</div>
     <div class="color-swatches" id="historySwatches"></div>
-    <div class="swatch-title">馬卡龍色系</div>
+    <div class="swatch-title">初始颜色</div>
     <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:10px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">確定</button>
+    <button onclick="closePicker()" style="margin-top:10px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">确认</button>
 </div>
 
 <script>
