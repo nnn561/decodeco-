@@ -18,10 +18,15 @@
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 15px; justify-items: center; }
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
         .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; }
         .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
+
+        /* 翻页按钮样式 */
+        .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
+        .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .page-ctrl button.active { background: var(--pink-accent); color: white; }
 
         .text-to-sticker-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
         .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
@@ -42,7 +47,6 @@
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
         .bottom-action-bar button { flex: 1; padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 12px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
         
-        /* 調色盤增強：色環 + 亮度條 */
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 280px; }
         .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
@@ -59,6 +63,11 @@
 <div class="book-container">
     <div class="top-page">
         <div class="sticker-grid" id="stickerGrid"></div>
+        <div class="page-ctrl">
+            <button id="pageBtn1" class="active" onclick="renderStickers(1)">第一页</button>
+            <button id="pageBtn2" onclick="renderStickers(2)">下一页</button>
+        </div>
+        
         <div class="text-to-sticker-area">
             <div class="text-input-group">
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
@@ -99,7 +108,6 @@
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
-    
     <div class="swatch-title">历史颜色</div>
     <div class="color-swatches" id="historySwatches"></div>
     <div class="swatch-title">初始颜色</div>
@@ -117,21 +125,38 @@
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
-        for(let i=1; i<=6; i++) {
+        // 预加载前9张图
+        for(let i=1; i<=9; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
-            const imgEl = document.createElement('img'); imgEl.src = img.src; imgEl.className = 'sticker-item' + (i===1 ? ' active' : '');
-            imgEl.onload = () => {
-                imgEl.onclick = () => { 
-                    curIdx = i-1; 
-                    document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
-                    imgEl.classList.add('active'); 
-                    updatePreRender(); 
-                };
-            };
-            document.getElementById('stickerGrid').appendChild(imgEl);
         }
+        renderStickers(1); // 默认渲染第一页
         initSwatches();
         setTimeout(updatePreRender, 500);
+    }
+
+    function renderStickers(page) {
+        const grid = document.getElementById('stickerGrid');
+        grid.innerHTML = '';
+        
+        // 设置按钮激活状态
+        document.getElementById('pageBtn1').classList.toggle('active', page === 1);
+        document.getElementById('pageBtn2').classList.toggle('active', page === 2);
+
+        const start = page === 1 ? 1 : 7;
+        const end = page === 1 ? 6 : 9;
+
+        for(let i=start; i<=end; i++) {
+            const imgEl = document.createElement('img');
+            imgEl.src = `sticker${i}.png`;
+            imgEl.className = 'sticker-item' + (curIdx === i-1 ? ' active' : '');
+            imgEl.onclick = () => { 
+                curIdx = i-1; 
+                document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
+                imgEl.classList.add('active'); 
+                updatePreRender(); 
+            };
+            grid.appendChild(imgEl);
+        }
     }
 
     function initSwatches() {
@@ -230,13 +255,12 @@
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
     document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
 
-    // --- 色環與亮度條核心代碼 ---
     const colorPicker = new iro.ColorPicker("#iroPicker", {
         width: 200,
         color: currentColor,
         layout: [
-            { component: iro.ui.Wheel },   // 色環
-            { component: iro.ui.Slider, options: { sliderType: 'value' } } // 亮度條 (由深變淺)
+            { component: iro.ui.Wheel },
+            { component: iro.ui.Slider, options: { sliderType: 'value' } }
         ]
     });
 
