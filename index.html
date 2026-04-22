@@ -23,7 +23,6 @@
         .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
 
-        /* 翻页按钮样式 */
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
         .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .page-ctrl button.active { background: var(--pink-accent); color: white; }
@@ -45,7 +44,7 @@
         .canvas-area.has-img .plus-icon { display: none; }
 
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
-        .bottom-action-bar button { flex: 1; padding: 12px 5px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 12px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
+        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
         
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 280px; }
         .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
@@ -98,7 +97,8 @@
         </div>
         <div class="bottom-action-bar">
             <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">随机钻石</button>
+            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">随机</button>
+            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
             <button onclick="download()">保存</button>
         </div>
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
@@ -125,11 +125,10 @@
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
-        // 预加载前9张图
         for(let i=1; i<=9; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
         }
-        renderStickers(1); // 默认渲染第一页
+        renderStickers(1);
         initSwatches();
         setTimeout(updatePreRender, 500);
     }
@@ -137,14 +136,10 @@
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
-        
-        // 设置按钮激活状态
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
-
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
-
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
             imgEl.src = `sticker${i}.png`;
@@ -222,6 +217,13 @@
         records.push(g); draw();
     }
 
+    function clearAll() {
+        if(records.length === 0 && textLayers.length === 0) return;
+        if(confirm("确定要清空所有已添加的贴纸吗？")) {
+            records = []; textLayers = []; selectedLayer = null; draw();
+        }
+    }
+
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
@@ -256,30 +258,21 @@
     document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
 
     const colorPicker = new iro.ColorPicker("#iroPicker", {
-        width: 200,
-        color: currentColor,
-        layout: [
-            { component: iro.ui.Wheel },
-            { component: iro.ui.Slider, options: { sliderType: 'value' } }
-        ]
+        width: 200, color: currentColor,
+        layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ]
     });
 
     colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; 
-        document.getElementById('colorBtn').style.backgroundColor = currentColor; 
-        const preview = document.getElementById('colorPreview'); 
-        preview.style.backgroundColor = currentColor; 
-        preview.innerText = currentColor;
-        updatePreRender(); 
+        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        const preview = document.getElementById('colorPreview'); preview.style.backgroundColor = currentColor; 
+        preview.innerText = currentColor; updatePreRender(); 
     });
 
     document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
-    
     function closePicker() { 
         if(!colorHistory.includes(currentColor)) { colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop(); updateHistory(); }
         document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; 
     }
-
     function updateHistory() {
         const h = document.getElementById('historySwatches'); h.innerHTML = '';
         colorHistory.forEach(c => {
