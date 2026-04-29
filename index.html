@@ -3,58 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book </title>
+    <title>Pancake Sticker Book</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffeef4; }
         .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
-
         .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
         .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
         .top-page { border-radius: 12px 25px 0 0; z-index: 2; min-height: 300px; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
-
-        /* 贴纸区域固定高度，确保显示 */
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; min-height: 140px; margin-bottom: 5px; justify-items: center; align-content: start; }
-        .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; display: block; }
-        .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
-        .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
-
+        .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s; object-fit: contain; }
+        .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; transform: scale(1.1); }
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
-        .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; }
         .page-ctrl button.active { background: var(--pink-accent); color: white; }
-
         .text-to-sticker-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
         .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
-        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
+        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; font-size: 14px; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
-
-        .emoji-opt { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-bottom: 5px; }
-        .emoji-opt input { cursor: pointer; width: 14px; height: 14px; accent-color: var(--pink-accent); }
-
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
-        input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
-
+        input[type=range] { accent-color: var(--pink-accent); width: 100%; }
         .controls { display: flex; align-items: center; gap: 12px; width: 100%; }
-        .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
-
-        .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; }
+        .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; min-height: 200px; }
         #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; }
-        .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; z-index: 1; }
+        .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; }
         .canvas-area.has-img .plus-icon { display: none; }
-
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
-        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
-        
+        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); }
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 280px; }
-        .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
-        .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
-        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
-        .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
     </style>
 </head>
@@ -67,36 +49,27 @@
     <div class="top-page">
         <div class="sticker-grid" id="stickerGrid"></div>
         <div class="page-ctrl">
-            <button id="pageBtn1" class="active" onclick="renderStickers(1)">第一页</button>
-            <button id="pageBtn2" onclick="renderStickers(2)">下一页</button>
+            <button id="pageBtn1" class="active" onclick="renderStickers(1)">第一頁</button>
+            <button id="pageBtn2" onclick="renderStickers(2)">下一頁</button>
         </div>
-        
         <div class="text-to-sticker-area">
             <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
+                <input type="text" id="stickerTextInput" placeholder="輸入文字生成貼紙">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="emoji-opt">
-                <input type="checkbox" id="useEmojiColor">
-                <label for="useEmojiColor">使用文字/Emoji本身颜色</label>
-            </div>
-            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
+            <div class="slider-label"><span>貼紙大小</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="100" value="30">
-            <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
-            <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小（联动贴纸中钻石大小）</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>鑽石大小</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
-                <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
-                <input type="range" id="rotateSlider" min="0" max="360" value="0">
             </div>
         </div>
     </div>
     <div class="spine-area">
-        <script>for(let i=0; i<6; i++) document.write('<div class="ring"></div>');</script>
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div>
     </div>
     <div class="bottom-page">
         <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
@@ -104,9 +77,8 @@
             <canvas id="myCanvas"></canvas>
         </div>
         <div class="bottom-action-bar">
-            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">随机</button>
-            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
+            <button onclick="smartUndo()">撤銷</button>
+            <button onclick="clearAll()">清空</button>
             <button onclick="download()">保存</button>
         </div>
         <input type="file" id="imgInput" accept="image/*" style="display: none;">
@@ -114,13 +86,8 @@
 </div>
 
 <div id="pickerContainer">
-    <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
-    <div class="swatch-title">历史颜色</div>
-    <div class="color-swatches" id="historySwatches"></div>
-    <div class="swatch-title">初始颜色</div>
-    <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:12px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold; font-size:14px;">确定</button>
+    <button onclick="closePicker()" style="margin-top:12px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px;">確定</button>
 </div>
 
 <script>
@@ -128,194 +95,113 @@
     const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
     let mainImg = new Image(), stickers = [], records = [], textLayers = [];
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
-    let isDragging = false, colorHistory = [], stickerRatio = 1;
+    let isDragging = false;
 
-    const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
+    // *** 這裡修改為你的實際倉庫地址 ***
+    const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
 
-    // 强力初始化：增加防止缓存的时间戳，并循环确认渲染
     async function init() {
         let loaded = 0;
-        const timestamp = new Date().getTime(); // 防止缓存
         for(let i=1; i<=9; i++) {
             const img = new Image();
+            img.crossOrigin = "anonymous"; // 避免跨域問題
             img.onload = () => {
                 loaded++;
-                if(loaded === 9) {
-                    console.log("所有贴纸加载成功");
-                    renderStickers(1);
-                    updatePreRender();
-                }
+                if(loaded === 9) renderStickers(1);
             };
-            img.onerror = () => {
-                console.error("贴纸加载失败:", `sticker${i}.png`);
-                // 失败重试
-                setTimeout(() => { img.src = `sticker${i}.png?v=${timestamp}`; }, 1000);
-            };
-            img.src = `sticker${i}.png?v=${timestamp}`;
+            // 嘗試讀取 .png，如果失敗請檢查 GitHub 上是否為大寫 .PNG
+            img.src = `${baseUrl}sticker${i}.png`;
             stickers.push(img);
         }
-        initSwatches();
-        
-        // 双保险：如果2秒后还没渲染出来，强行再渲染一次
-        setTimeout(() => {
-            if (document.getElementById('stickerGrid').innerHTML === "") {
-                renderStickers(1);
-            }
-        }, 2000);
     }
 
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
-        document.getElementById('pageBtn1').classList.toggle('active', page === 1);
-        document.getElementById('pageBtn2').classList.toggle('active', page === 2);
-        
-        const start = page === 1 ? 1 : 7;
+        const start = page === 1 ? 0 : 6;
         const end = page === 1 ? 6 : 9;
-        
-        for(let i=start; i<=end; i++) {
-            const stickerObj = stickers[i-1];
-            if(!stickerObj) continue;
-            
+        for(let i=start; i<end; i++) {
             const imgEl = document.createElement('img');
-            imgEl.src = stickerObj.src;
-            imgEl.className = 'sticker-item' + (curIdx === i-1 ? ' active' : '');
-            imgEl.alt = "sticker";
-            imgEl.onclick = () => { 
-                curIdx = i-1; 
+            imgEl.src = stickers[i].src;
+            imgEl.className = 'sticker-item' + (curIdx === i ? ' active' : '');
+            imgEl.onclick = () => {
+                curIdx = i;
                 document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
-                imgEl.classList.add('active'); 
-                updatePreRender(); 
+                imgEl.classList.add('active');
+                updatePreRender();
             };
             grid.appendChild(imgEl);
         }
-    }
-
-    function initSwatches() {
-        const container = document.getElementById('presetSwatches');
-        macaronColors.forEach(c => {
-            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
-            s.onclick = () => colorPicker.color.set(c);
-            container.appendChild(s);
-        });
+        updatePreRender();
     }
 
     function updatePreRender() {
-        const sImg = stickers[curIdx]; 
-        if (!sImg || sImg.naturalWidth === 0) {
-            // 如果图片没准备好，等0.1秒再试
-            setTimeout(updatePreRender, 100);
-            return;
-        }
-        stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
+        const sImg = stickers[curIdx];
+        if(!sImg.complete) return;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
-        else { oc.width = 100 * stickerRatio; oc.height = 100; }
-        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        oc.width = 100; oc.height = 100;
+        ox.drawImage(sImg, 0, 0, 100, 100);
+        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,100,100);
+        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, 100, 100);
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
-        if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
-    }
-
-    function updateDensityLabel(val) {
-        const labels = { "6":"少", "8":"中", "10":"多", "12":"极多" };
-        document.getElementById('densityVal').innerText = labels[val] || "少";
-    }
-
-    function generateTextStickers() {
-        if (!mainImg.src) return imgInput.click();
-        const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        if (!preRenderedSticker) updatePreRender();
-        const useEmojiColor = document.getElementById('useEmojiColor').checked;
-        const fSize = 60;
-        const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
-        tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
-        const tw = tempCtx.measureText(text).width + 80;
-        tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
-        tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
-        tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        tempCtx.fillStyle = 'black';
-        tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
-        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
-        const sliderVal = parseInt(document.getElementById('densitySlider').value);
-        const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
-        const points = [];
-        for (let y = 0; y < tempCanvas.height; y += step) {
-            for (let x = 0; x < tempCanvas.width; x += step) {
-                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) {
-                    let pointColorImg = preRenderedSticker;
-                    if (useEmojiColor) {
-                        const r = imgData[(y * tempCanvas.width + x) * 4];
-                        const g = imgData[(y * tempCanvas.width + x) * 4 + 1];
-                        const b = imgData[(y * tempCanvas.width + x) * 4 + 2];
-                        const colorHex = `rgb(${r},${g},${b})`;
-                        const sImg = stickers[curIdx];
-                        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-                        if (stickerRatio >= 1) { oc.width = 40; oc.height = 40 / stickerRatio; }
-                        else { oc.width = 40 * stickerRatio; oc.height = 40; }
-                        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-                        ox.globalCompositeOperation="multiply"; ox.fillStyle=colorHex; ox.fillRect(0,0,oc.width,oc.height);
-                        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-                        pointColorImg = new Image(); pointColorImg.src = oc.toDataURL();
-                    }
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, customImg: useEmojiColor ? pointColorImg : null });
-                }
-            }
-        }
-        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio, isEmojiColor: useEmojiColor };
-        textLayers.push(newLayer); selectedLayer = newLayer; draw();
-    }
-
-    function generateRandomDiamonds() {
-        if (!mainImg.src) return;
-        let g = [];
-        for(let i=0; i<15; i++) {
-            const size = Math.random()*50+30;
-            g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle: Math.random()*Math.PI*2 });
-        }
-        records.push(g); draw();
-    }
-
-    function clearAll() {
-        if(records.length === 0 && textLayers.length === 0) return;
-        if(confirm("确定要清空所有已添加的贴纸吗？")) {
-            records = []; textLayers = []; selectedLayer = null; draw();
-        }
     }
 
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); mainCtx.restore(); });
+        records.flat().forEach(r => {
+            mainCtx.drawImage(r.img, r.x - r.size/2, r.y - r.size/2, r.size, r.size);
+        });
         textLayers.forEach(l => {
-            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
-            l.points.forEach(p => { 
-                const drawImg = (l.isEmojiColor && p.customImg) ? p.customImg : l.img;
-                mainCtx.drawImage(drawImg, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh); 
+            l.points.forEach(p => {
+                mainCtx.drawImage(l.img, l.x + p.dx * l.scale, l.y + p.dy * l.scale, l.dotSize, l.dotSize);
             });
-            if(l === selectedLayer) {
-                const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
-                mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
-                mainCtx.setLineDash([]); mainCtx.fillStyle="#ff85a2"; mainCtx.beginPath(); mainCtx.arc(l.x+bw, l.y+bh, 10, 0, Math.PI*2); mainCtx.fill();
-            }
         });
     }
 
-    const getPos = (e) => { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) }; };
+    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor });
+    colorPicker.on('color:change', (c) => { 
+        currentColor = c.hexString; 
+        document.getElementById('colorBtn').style.backgroundColor = currentColor;
+        updatePreRender();
+    });
+
+    document.getElementById('colorBtn').onclick = () => { 
+        document.getElementById('pickerContainer').style.display='block'; 
+        document.getElementById('overlay').style.display='block'; 
+    };
+    function closePicker() { 
+        document.getElementById('pickerContainer').style.display='none'; 
+        document.getElementById('overlay').style.display='none'; 
+    }
+
+    imgInput.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            mainImg.onload = () => {
+                canvas.width = mainImg.width; canvas.height = mainImg.height;
+                dropZone.classList.add('has-img'); draw();
+            };
+            mainImg.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     canvas.addEventListener('touchstart', (e) => {
-        const p = getPos(e); if(!mainImg.src) return;
-        let found = null;
-        textLayers.forEach(l => { if(Math.abs(p.x-l.x) < 80*l.scale && Math.abs(p.y-l.y) < 40*l.scale) found=l; });
-        if(found) { selectedLayer = found; isDragging = true; }
-        else { 
-            selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
-            records.push([{ x:p.x, y:p.y, img:preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); 
-        }
+        const r = canvas.getBoundingClientRect();
+        const x = (e.touches[0].clientX - r.left) * (canvas.width / r.width);
+        const y = (e.touches[0].clientY - r.top) * (canvas.height / r.height);
+        const size = parseInt(document.getElementById('sizeSlider').value);
+        records.push([{ x, y, img: preRenderedSticker, size }]);
         draw();
     });
-    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); } e.preventDefault(); }, {passive:false});
-    canvas.addEventListener('touchend', () => isDragging=false);
 
-    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
-    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10
+    function smartUndo() { records.pop(); draw(); }
+    function clearAll() { records = []; textLayers = []; draw(); }
+    function download() { const link = document.createElement('a'); link.download='pancake.png'; link.href=canvas.toDataURL(); link.click(); }
+
+    init();
+</script>
+</body>
+</html>
