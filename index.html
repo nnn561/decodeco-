@@ -53,7 +53,6 @@
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
         
-        /* 新增：原色复选框样式 */
         .color-mode-switch { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
         .color-mode-switch input { cursor: pointer; width: 16px; height: 16px; }
     </style>
@@ -73,7 +72,7 @@
         
         <div class="text-to-sticker-area">
             <div class="color-mode-switch">
-                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji/文字本身颜色</label>
+                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji本身颜色</label>
             </div>
             <div class="text-input-group">
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
@@ -130,15 +129,20 @@
     let isDragging = false, colorHistory = [], stickerRatio = 1;
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
+    
+    // 使用你 GitHub 的原始地址，确保跨平台都能加载
+    const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
 
     async function init() {
-        // 修改：循环上限改为12
         for(let i=1; i<=12; i++) {
-            const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
+            const img = new Image(); 
+            img.crossOrigin = "anonymous"; // 必须添加，否则无法换色
+            img.src = `${baseUrl}sticker${i}.png`; 
+            stickers.push(img);
         }
         renderStickers(1);
         initSwatches();
-        setTimeout(updatePreRender, 500);
+        setTimeout(updatePreRender, 1000); // 增加一点等待网络加载的时间
     }
 
     function renderStickers(page) {
@@ -147,11 +151,10 @@
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
         const start = page === 1 ? 1 : 7;
-        // 修改：第二页上限改为12
         const end = page === 1 ? 6 : 12;
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
-            imgEl.src = `sticker${i}.png`;
+            imgEl.src = `${baseUrl}sticker${i}.png`;
             imgEl.className = 'sticker-item' + (curIdx === i-1 ? ' active' : '');
             imgEl.onclick = () => { 
                 curIdx = i-1; 
@@ -207,7 +210,6 @@
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         
-        // 新增逻辑：提取原色
         const useOriginal = document.getElementById('useOriginalColor').checked;
         const points = [];
         for (let y = 0; y < tempCanvas.height; y += step) {
@@ -250,7 +252,6 @@
         textLayers.forEach(l => {
             const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
             l.points.forEach(p => { 
-                // 修改：如果点有颜色则使用原色滤镜绘制
                 if (p.color) {
                     const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
                     tempC.width = dw; tempC.height = dh;
@@ -307,5 +308,4 @@
     function updateHistory() {
         const h = document.getElementById('historySwatches'); h.innerHTML = '';
         colorHistory.forEach(c => {
-            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
-            s
+            
