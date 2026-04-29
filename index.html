@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book - Pro Color</title>
+    <title>Pancake Sticker Book </title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
@@ -32,10 +32,6 @@
         .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
 
-        /* 新增：Emoji/原色勾選框樣式 */
-        .mode-switch { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
-        .mode-switch input { width: 16px; height: 16px; accent-color: var(--pink-accent); cursor: pointer; }
-
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
 
@@ -56,6 +52,10 @@
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
+        
+        /* 新增样式：Emoji颜色开关 */
+        .emoji-opt { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-bottom: 5px; }
+        .emoji-opt input { cursor: pointer; width: 14px; height: 14px; accent-color: var(--pink-accent); }
     </style>
 </head>
 <body>
@@ -76,9 +76,10 @@
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <label class="mode-switch">
-                <input type="checkbox" id="emojiColorMode"> <span>使用Emoji/文字原始颜色</span>
-            </label>
+            <div class="emoji-opt">
+                <input type="checkbox" id="useEmojiColor">
+                <label for="useEmojiColor">使用文字/Emoji本身颜色</label>
+            </div>
             <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="100" value="30">
             <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
@@ -131,29 +132,20 @@
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
-    // 這裡確保載入你手機本地的 sticker1-9.png
     async function init() {
-        const loadPromises = [];
         for(let i=1; i<=9; i++) {
-            const img = new Image();
-            img.src = `sticker${i}.png`; // 這裡會讀取你手機本地資料夾的圖片
-            loadPromises.push(new Promise(resolve => {
-                img.onload = resolve;
-                img.onerror = resolve; // 避免單張失敗卡死
-            }));
-            stickers.push(img);
+            const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
         }
-        await Promise.all(loadPromises);
         renderStickers(1);
         initSwatches();
-        updatePreRender();
+        setTimeout(updatePreRender, 500);
     }
 
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
-        document.getElementById('pageBtn1').className = (page === 1 ? 'active' : '');
-        document.getElementById('pageBtn2').className = (page === 2 ? 'active' : '');
+        document.getElementById('pageBtn1').classList.toggle('active', page === 1);
+        document.getElementById('pageBtn2').classList.toggle('active', page === 2);
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
         for(let i=start; i<=end; i++) {
@@ -179,29 +171,17 @@
         });
     }
 
-    // 染色工具函數
-    function createColoredSticker(baseImg, color) {
-        if (!baseImg || baseImg.naturalWidth === 0) return null;
-        const ratio = baseImg.naturalWidth / baseImg.naturalHeight;
-        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        if (ratio >= 1) { oc.width = 100; oc.height = 100 / ratio; }
-        else { oc.width = 100 * ratio; oc.height = 100; }
-        ox.drawImage(baseImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=color; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(baseImg, 0, 0, oc.width, oc.height);
-        const newImg = new Image(); newImg.src = oc.toDataURL();
-        return newImg;
-    }
-
     function updatePreRender() {
-        const sImg = stickers[curIdx];
-        if (!sImg) return;
-        stickerRatio = sImg.naturalWidth / sImg.naturalHeight || 1;
-        preRenderedSticker = createColoredSticker(sImg, currentColor);
-        if(selectedLayer && !selectedLayer.isOriginalColor) { 
-            selectedLayer.img = preRenderedSticker; 
-            draw(); 
-        }
+        const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
+        stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
+        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
+        if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
+        else { oc.width = 100 * stickerRatio; oc.height = 100; }
+        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
+        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
+        if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
     function updateDensityLabel(val) {
@@ -212,42 +192,67 @@
     function generateTextStickers() {
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        const useOriginalColor = document.getElementById('emojiColorMode').checked;
+        if (!preRenderedSticker) updatePreRender();
         
-        const fSize = 80;
+        const useEmojiColor = document.getElementById('useEmojiColor').checked;
+        const fSize = 60;
         const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
-        const tw = tempCtx.measureText(text).width + 40;
-        tempCanvas.width = tw; tempCanvas.height = fSize * 1.5;
+        const tw = tempCtx.measureText(text).width + 80;
+        tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
+        
+        // 生成文字/Emoji
+        tempCtx.fillStyle = 'black'; 
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
-        const step = sliderVal === 6 ? 6 : sliderVal === 8 ? 5 : sliderVal === 10 ? 4 : 3;
+        const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         const points = [];
-        const sImg = stickers[curIdx];
-
+        
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                const idx = (y * tempCanvas.width + x) * 4;
-                if (imgData[idx + 3] > 120) {
-                    let pointImg = preRenderedSticker;
-                    if (useOriginalColor) {
-                        const hex = "#" + ((1 << 24) + (imgData[idx] << 16) + (imgData[idx+1] << 8) + imgData[idx+2]).toString(16).slice(1);
-                        pointImg = createColoredSticker(sImg, hex);
+                const alpha = imgData[(y * tempCanvas.width + x) * 4 + 3];
+                if (alpha > 120) {
+                    let pointColorImg = preRenderedSticker;
+                    
+                    // 如果勾选了使用原色，为当前点生成一个带有Emoji颜色的独立贴纸
+                    if (useEmojiColor) {
+                        const r = imgData[(y * tempCanvas.width + x) * 4];
+                        const g = imgData[(y * tempCanvas.width + x) * 4 + 1];
+                        const b = imgData[(y * tempCanvas.width + x) * 4 + 2];
+                        const colorHex = `rgb(${r},${g},${b})`;
+                        
+                        const sImg = stickers[curIdx];
+                        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
+                        if (stickerRatio >= 1) { oc.width = 40; oc.height = 40 / stickerRatio; }
+                        else { oc.width = 40 * stickerRatio; oc.height = 40; }
+                        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+                        ox.globalCompositeOperation="multiply"; ox.fillStyle=colorHex; ox.fillRect(0,0,oc.width,oc.height);
+                        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+                        pointColorImg = new Image(); pointColorImg.src = oc.toDataURL();
                     }
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, customImg: pointImg });
+                    
+                    points.push({ 
+                        dx: x - tempCanvas.width/2, 
+                        dy: y - tempCanvas.height/2,
+                        customImg: useEmojiColor ? pointColorImg : null 
+                    });
                 }
             }
         }
         
         const newLayer = { 
-            points, x: canvas.width / 2, y: canvas.height / 2, 
+            points, 
+            x: canvas.width / 2, 
+            y: canvas.height / 2, 
             scale: parseInt(document.getElementById('textScaleSlider').value) / 10, 
-            img: preRenderedSticker, isOriginalColor: useOriginalColor,
-            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio 
+            img: preRenderedSticker, 
+            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, 
+            ratio: stickerRatio,
+            isEmojiColor: useEmojiColor
         };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
@@ -262,24 +267,25 @@
         records.push(g); draw();
     }
 
-    function clearAll() { if(confirm("确定要清空吗？")) { records = []; textLayers = []; selectedLayer = null; draw(); } }
+    function clearAll() {
+        if(records.length === 0 && textLayers.length === 0) return;
+        if(confirm("确定要清空所有已添加的贴纸吗？")) {
+            records = []; textLayers = []; selectedLayer = null; draw();
+        }
+    }
 
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        records.flat().forEach(r => { 
-            mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); 
-            mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
-            mainCtx.restore(); 
-        });
+        records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); mainCtx.restore(); });
         textLayers.forEach(l => {
             const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
-            l.points.forEach(p => {
-                const targetImg = l.isOriginalColor ? p.customImg : l.img;
-                if(targetImg) mainCtx.drawImage(targetImg, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
+            l.points.forEach(p => { 
+                const drawImg = (l.isEmojiColor && p.customImg) ? p.customImg : l.img;
+                mainCtx.drawImage(drawImg, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh); 
             });
             if(l === selectedLayer) {
-                const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 40 * l.scale;
+                const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
                 mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
                 mainCtx.setLineDash([]); mainCtx.fillStyle="#ff85a2"; mainCtx.beginPath(); mainCtx.arc(l.x+bw, l.y+bh, 10, 0, Math.PI*2); mainCtx.fill();
             }
@@ -290,7 +296,7 @@
     canvas.addEventListener('touchstart', (e) => {
         const p = getPos(e); if(!mainImg.src) return;
         let found = null;
-        for(let i=textLayers.length-1; i>=0; i--){ let l = textLayers[i]; if(Math.abs(p.x-l.x) < 100*l.scale && Math.abs(p.y-l.y) < 50*l.scale) { found = l; break; } }
+        textLayers.forEach(l => { if(Math.abs(p.x-l.x) < 80*l.scale && Math.abs(p.y-l.y) < 40*l.scale) found=l; });
         if(found) { selectedLayer = found; isDragging = true; }
         else { 
             selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
@@ -298,16 +304,21 @@
         }
         draw();
     });
-    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); } if(mainImg.src) e.preventDefault(); }, {passive:false});
+    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); } e.preventDefault(); }, {passive:false});
     canvas.addEventListener('touchend', () => isDragging=false);
 
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
     document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
 
-    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor, layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ] });
-    colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; document.getElementById('colorPreview').innerText = currentColor; updatePreRender(); });
-    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
-    function closePicker() { if(!colorHistory.includes(currentColor)) { colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop(); updateHistory(); } document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
-    function updateHistory() {
-        const h = document.getElementById('historySwatches'); h.innerHTML = '';
-        colorHistory.forEach(c => { const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c; s.onclick = () =
+    const colorPicker = new iro.ColorPicker("#iroPicker", {
+        width: 200, color: currentColor,
+        layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ]
+    });
+
+    colorPicker.on('color:change', (c) => { 
+        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        const preview = document.getElementById('colorPreview'); preview.style.backgroundColor = currentColor; 
+        preview.innerText = currentColor; updatePreRender(); 
+    });
+
+    document.getElemen
