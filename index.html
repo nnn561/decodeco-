@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book - Pro Color</title>
+    <title>Pancake Sticker Book </title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
@@ -13,13 +13,14 @@
 
         .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
         .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
-        .top-page { border-radius: 12px 25px 0 0; z-index: 2; }
+        .top-page { border-radius: 12px 25px 0 0; z-index: 2; min-height: 300px; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; min-height: 130px; }
-        .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; }
+        /* 贴纸区域固定高度，确保显示 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; min-height: 140px; margin-bottom: 5px; justify-items: center; align-content: start; }
+        .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; display: block; }
         .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
 
@@ -131,23 +132,36 @@
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
-    // 修改后的初始化：确保图片加载后再渲染
+    // 强力初始化：增加防止缓存的时间戳，并循环确认渲染
     async function init() {
         let loaded = 0;
+        const timestamp = new Date().getTime(); // 防止缓存
         for(let i=1; i<=9; i++) {
             const img = new Image();
             img.onload = () => {
                 loaded++;
                 if(loaded === 9) {
+                    console.log("所有贴纸加载成功");
                     renderStickers(1);
                     updatePreRender();
                 }
             };
-            img.onerror = () => console.log("加载失败:", `sticker${i}.png`);
-            img.src = `sticker${i}.png`;
+            img.onerror = () => {
+                console.error("贴纸加载失败:", `sticker${i}.png`);
+                // 失败重试
+                setTimeout(() => { img.src = `sticker${i}.png?v=${timestamp}`; }, 1000);
+            };
+            img.src = `sticker${i}.png?v=${timestamp}`;
             stickers.push(img);
         }
         initSwatches();
+        
+        // 双保险：如果2秒后还没渲染出来，强行再渲染一次
+        setTimeout(() => {
+            if (document.getElementById('stickerGrid').innerHTML === "") {
+                renderStickers(1);
+            }
+        }, 2000);
     }
 
     function renderStickers(page) {
@@ -155,13 +169,18 @@
         grid.innerHTML = '';
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
+        
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
+        
         for(let i=start; i<=end; i++) {
-            const sticker = stickers[i-1];
+            const stickerObj = stickers[i-1];
+            if(!stickerObj) continue;
+            
             const imgEl = document.createElement('img');
-            imgEl.src = sticker.src; // 使用已加载对象的src
+            imgEl.src = stickerObj.src;
             imgEl.className = 'sticker-item' + (curIdx === i-1 ? ' active' : '');
+            imgEl.alt = "sticker";
             imgEl.onclick = () => { 
                 curIdx = i-1; 
                 document.querySelectorAll('.sticker-item').forEach(el=>el.classList.remove('active'));
@@ -183,7 +202,11 @@
 
     function updatePreRender() {
         const sImg = stickers[curIdx]; 
-        if (!sImg || sImg.naturalWidth === 0) return;
+        if (!sImg || sImg.naturalWidth === 0) {
+            // 如果图片没准备好，等0.1秒再试
+            setTimeout(updatePreRender, 100);
+            return;
+        }
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
@@ -295,17 +318,4 @@
     canvas.addEventListener('touchend', () => isDragging=false);
 
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
-    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
-
-    const colorPicker = new iro.ColorPicker("#iroPicker", {
-        width: 200, color: currentColor,
-        layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ]
-    });
-
-    colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
-        const preview = document.getElementById('colorPreview'); preview.style.backgroundColor = currentColor; 
-        preview.innerText = currentColor; updatePreRender(); 
-    });
-
-    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block
+    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10
