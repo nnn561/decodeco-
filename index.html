@@ -32,9 +32,9 @@
         .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
 
-        /* 新增：Emoji颜色模式开关样式 */
-        .mode-switch { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
-        .mode-switch input { width: 16px; height: 16px; accent-color: var(--pink-accent); }
+        /* 新增：保持与截图一致的勾选框样式 */
+        .mode-switch { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
+        .mode-switch input { width: 16px; height: 16px; accent-color: var(--pink-accent); cursor: pointer; }
 
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
@@ -131,22 +131,29 @@
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
+    // 核心：初始化加载 1-9 所有贴纸素材
     async function init() {
         for(let i=1; i<=9; i++) {
-            const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
+            const img = new Image(); 
+            img.src = `sticker${i}.png`; 
+            stickers.push(img);
         }
         renderStickers(1);
         initSwatches();
         setTimeout(updatePreRender, 500);
     }
 
+    // 贴纸分页逻辑
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
+        
+        // 分页范围：第一页 1-6，第二页 7-9
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
+        
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
             imgEl.src = `sticker${i}.png`;
@@ -170,7 +177,7 @@
         });
     }
 
-    // 将单张贴纸染色的工具函数
+    // 染色工具函数
     function createColoredSticker(baseImg, color) {
         if (!baseImg.complete) return null;
         const ratio = baseImg.naturalWidth / baseImg.naturalHeight;
@@ -188,10 +195,7 @@
         const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         preRenderedSticker = createColoredSticker(sImg, currentColor);
-        if(selectedLayer && !selectedLayer.isOriginalColor) { 
-            selectedLayer.img = preRenderedSticker; 
-            draw(); 
-        }
+        if(selectedLayer && !selectedLayer.isOriginalColor) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
     function updateDensityLabel(val) {
@@ -204,8 +208,7 @@
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
         const useOriginalColor = document.getElementById('emojiColorMode').checked;
         
-        if (!preRenderedSticker) updatePreRender();
-        const fSize = 80; // 提高清晰度
+        const fSize = 80;
         const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         const tw = tempCtx.measureText(text).width + 40;
@@ -213,47 +216,34 @@
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
         
-        // 渲染文本以提取颜色或形状
-        tempCtx.fillStyle = useOriginalColor ? 'white' : 'black'; // 如果用原色，背景清空
+        // 关键：渲染原文以采集色值
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 6 : sliderVal === 8 ? 5 : sliderVal === 10 ? 4 : 3;
         const points = [];
-        
         const sImg = stickers[curIdx];
 
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
                 const idx = (y * tempCanvas.width + x) * 4;
-                const alpha = imgData[idx + 3];
-                if (alpha > 120) {
+                if (imgData[idx + 3] > 120) {
                     let pointImg = preRenderedSticker;
-                    // 如果是原色模式，为每个点生成对应颜色的贴纸缓存
                     if (useOriginalColor) {
-                        const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2];
-                        const hex = "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+                        const hex = "#" + ((1 << 24) + (imgData[idx] << 16) + (imgData[idx+1] << 8) + imgData[idx+2]).toString(16).slice(1);
                         pointImg = createColoredSticker(sImg, hex);
                     }
-                    points.push({ 
-                        dx: x - tempCanvas.width/2, 
-                        dy: y - tempCanvas.height/2, 
-                        customImg: pointImg 
-                    });
+                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, customImg: pointImg });
                 }
             }
         }
         
         const newLayer = { 
-            points, 
-            x: canvas.width / 2, 
-            y: canvas.height / 2, 
+            points, x: canvas.width / 2, y: canvas.height / 2, 
             scale: parseInt(document.getElementById('textScaleSlider').value) / 10, 
-            img: preRenderedSticker, // 基础贴纸
-            isOriginalColor: useOriginalColor,
-            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, 
-            ratio: stickerRatio 
+            img: preRenderedSticker, isOriginalColor: useOriginalColor,
+            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio 
         };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
@@ -269,64 +259,36 @@
     }
 
     function clearAll() {
-        if(records.length === 0 && textLayers.length === 0) return;
-        if(confirm("确定要清空所有已添加的贴纸吗？")) {
-            records = []; textLayers = []; selectedLayer = null; draw();
-        }
+        if(confirm("确定要清空所有已添加的贴纸吗？")) { records = []; textLayers = []; selectedLayer = null; draw(); }
     }
 
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        
-        // 绘制普通贴纸
         records.flat().forEach(r => { 
-            mainCtx.save(); 
-            mainCtx.translate(r.x, r.y); 
-            mainCtx.rotate(r.angle || 0); 
+            mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); 
             mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
             mainCtx.restore(); 
         });
-
-        // 绘制文字/Emoji图层
         textLayers.forEach(l => {
-            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); 
-            const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
-            
+            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
             l.points.forEach(p => {
                 const targetImg = l.isOriginalColor ? p.customImg : l.img;
-                if(targetImg) {
-                    mainCtx.drawImage(targetImg, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                }
+                if(targetImg) mainCtx.drawImage(targetImg, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
             });
-
             if(l === selectedLayer) {
                 const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 40 * l.scale;
-                mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); 
-                mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
-                mainCtx.setLineDash([]); mainCtx.fillStyle="#ff85a2"; 
-                mainCtx.beginPath(); mainCtx.arc(l.x+bw, l.y+bh, 10, 0, Math.PI*2); mainCtx.fill();
+                mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
+                mainCtx.setLineDash([]); mainCtx.fillStyle="#ff85a2"; mainCtx.beginPath(); mainCtx.arc(l.x+bw, l.y+bh, 10, 0, Math.PI*2); mainCtx.fill();
             }
         });
     }
 
-    const getPos = (e) => { 
-        const r = canvas.getBoundingClientRect(); 
-        const cx = e.touches ? e.touches[0].clientX : e.clientX; 
-        const cy = e.touches ? e.touches[0].clientY : e.clientY; 
-        return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) }; 
-    };
-
+    const getPos = (e) => { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) }; };
     canvas.addEventListener('touchstart', (e) => {
         const p = getPos(e); if(!mainImg.src) return;
         let found = null;
-        // 简单的碰撞检测
-        for(let i=textLayers.length-1; i>=0; i--){
-            let l = textLayers[i];
-            if(Math.abs(p.x-l.x) < 100*l.scale && Math.abs(p.y-l.y) < 50*l.scale) {
-                found = l; break;
-            }
-        }
+        for(let i=textLayers.length-1; i>=0; i--){ let l = textLayers[i]; if(Math.abs(p.x-l.x) < 100*l.scale && Math.abs(p.y-l.y) < 50*l.scale) { found = l; break; } }
         if(found) { selectedLayer = found; isDragging = true; }
         else { 
             selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
@@ -334,31 +296,19 @@
         }
         draw();
     });
-
-    canvas.addEventListener('touchmove', (e) => { 
-        if(isDragging && selectedLayer) { 
-            const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); 
-        } 
-        if(mainImg.src) e.preventDefault(); 
-    }, {passive:false});
-
+    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x=p.x; selectedLayer.y=p.y; draw(); } if(mainImg.src) e.preventDefault(); }, {passive:false});
     canvas.addEventListener('touchend', () => isDragging=false);
 
-    document.getElementById('sizeSlider').oninput = function() { 
-        document.getElementById('sizeVal').innerText = this.value; 
-        if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } 
-    };
-    document.getElementById('textScaleSlider').oninput = function() { 
-        document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); 
-        if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } 
-    };
+    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
+    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
 
-    const colorPicker = new iro.ColorPicker("#iroPicker", {
-        width: 200, color: currentColor,
-        layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ]
-    });
+    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor, layout: [ { component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } } ] });
+    colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; document.getElementById('colorPreview').innerText = currentColor; updatePreRender(); });
+    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
+    function closePicker() { if(!colorHistory.includes(currentColor)) { colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop(); updateHistory(); } document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
+    function updateHistory() {
+        const h = document.getElementById('historySwatches'); h.innerHTML = '';
+        colorHistory.forEach(c => { const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c; s.onclick = () => colorPicker.color.set(c); h.appendChild(s); });
+    }
 
-    colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
-        const preview = document.getElementById('colorPreview'); preview.style.backgroundColor = currentColor; 
-        preview.innerText = currentColor; 
+    function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else re
