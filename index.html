@@ -18,14 +18,14 @@
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; }
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
         .sticker-slot { 
             width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; 
             display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
         }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        /* 确保图片缩放时在正中央 */
-        .sticker-item { max-width: 90%; max-height: 90%; object-fit: contain; flex-shrink: 0; }
+        /* 强化居中显示逻辑 */
+        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; }
 
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
         .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -79,15 +79,15 @@
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="slider-label"><span>贴纸缩放</span><span id="textScaleVal">3.0</span></div>
-            <input type="range" id="textScaleSlider" min="10" max="100" value="30">
+            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
+            <input type="range" id="textScaleSlider" min="10" max="300" value="30">
             <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
             <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小(联动贴纸中钻石大小)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -129,7 +129,7 @@
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
     let isDragging = false, colorHistory = [], stickerRatio = 1;
 
-    // 重点：使用 GitHub 原始地址，确保跨域和显示正常
+    // 维持使用 GitHub 链接确保图片显示
     const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
@@ -318,7 +318,7 @@
     
     imgInput.onchange = (e) => {
         const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload =() => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
         reader.readAsDataURL(e.target.files[0]);
     };
     init();
