@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pancake Sticker Book </title>
+    <title>Pancake Sticker Book - Pro Color</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
@@ -18,7 +18,7 @@
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
+        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; min-height: 130px; }
         .sticker-item { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; padding: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); object-fit: contain; }
         .sticker-item:active { transform: rotate(15deg) scale(1.25); box-shadow: 0 0 20px var(--pink-accent); border-color: var(--pink-accent); }
         .sticker-item.active { border-color: var(--pink-accent); background: #fffafb; }
@@ -31,6 +31,9 @@
         .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
         .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
+
+        .emoji-opt { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-bottom: 5px; }
+        .emoji-opt input { cursor: pointer; width: 14px; height: 14px; accent-color: var(--pink-accent); }
 
         .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
@@ -52,10 +55,6 @@
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
-        
-        /* 新增样式：Emoji颜色开关 */
-        .emoji-opt { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-bottom: 5px; }
-        .emoji-opt input { cursor: pointer; width: 14px; height: 14px; accent-color: var(--pink-accent); }
     </style>
 </head>
 <body>
@@ -132,13 +131,23 @@
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
+    // 修改后的初始化：确保图片加载后再渲染
     async function init() {
+        let loaded = 0;
         for(let i=1; i<=9; i++) {
-            const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
+            const img = new Image();
+            img.onload = () => {
+                loaded++;
+                if(loaded === 9) {
+                    renderStickers(1);
+                    updatePreRender();
+                }
+            };
+            img.onerror = () => console.log("加载失败:", `sticker${i}.png`);
+            img.src = `sticker${i}.png`;
+            stickers.push(img);
         }
-        renderStickers(1);
         initSwatches();
-        setTimeout(updatePreRender, 500);
     }
 
     function renderStickers(page) {
@@ -149,8 +158,9 @@
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
         for(let i=start; i<=end; i++) {
+            const sticker = stickers[i-1];
             const imgEl = document.createElement('img');
-            imgEl.src = `sticker${i}.png`;
+            imgEl.src = sticker.src; // 使用已加载对象的src
             imgEl.className = 'sticker-item' + (curIdx === i-1 ? ' active' : '');
             imgEl.onclick = () => { 
                 curIdx = i-1; 
@@ -172,7 +182,8 @@
     }
 
     function updatePreRender() {
-        const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
+        const sImg = stickers[curIdx]; 
+        if (!sImg || sImg.naturalWidth === 0) return;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
@@ -193,7 +204,6 @@
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
         if (!preRenderedSticker) updatePreRender();
-        
         const useEmojiColor = document.getElementById('useEmojiColor').checked;
         const fSize = 60;
         const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
@@ -202,29 +212,21 @@
         tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        
-        // 生成文字/Emoji
-        tempCtx.fillStyle = 'black'; 
+        tempCtx.fillStyle = 'black';
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
-        
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         const points = [];
-        
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                const alpha = imgData[(y * tempCanvas.width + x) * 4 + 3];
-                if (alpha > 120) {
+                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) {
                     let pointColorImg = preRenderedSticker;
-                    
-                    // 如果勾选了使用原色，为当前点生成一个带有Emoji颜色的独立贴纸
                     if (useEmojiColor) {
                         const r = imgData[(y * tempCanvas.width + x) * 4];
                         const g = imgData[(y * tempCanvas.width + x) * 4 + 1];
                         const b = imgData[(y * tempCanvas.width + x) * 4 + 2];
                         const colorHex = `rgb(${r},${g},${b})`;
-                        
                         const sImg = stickers[curIdx];
                         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
                         if (stickerRatio >= 1) { oc.width = 40; oc.height = 40 / stickerRatio; }
@@ -234,26 +236,11 @@
                         ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
                         pointColorImg = new Image(); pointColorImg.src = oc.toDataURL();
                     }
-                    
-                    points.push({ 
-                        dx: x - tempCanvas.width/2, 
-                        dy: y - tempCanvas.height/2,
-                        customImg: useEmojiColor ? pointColorImg : null 
-                    });
+                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, customImg: useEmojiColor ? pointColorImg : null });
                 }
             }
         }
-        
-        const newLayer = { 
-            points, 
-            x: canvas.width / 2, 
-            y: canvas.height / 2, 
-            scale: parseInt(document.getElementById('textScaleSlider').value) / 10, 
-            img: preRenderedSticker, 
-            dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, 
-            ratio: stickerRatio,
-            isEmojiColor: useEmojiColor
-        };
+        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio, isEmojiColor: useEmojiColor };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
 
@@ -321,4 +308,4 @@
         preview.innerText = currentColor; updatePreRender(); 
     });
 
-    document.getElemen
+    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block
