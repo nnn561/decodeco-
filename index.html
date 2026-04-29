@@ -52,15 +52,10 @@
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
-
-        /* 新增：Emoji原色开关样式 */
-        .color-mode-toggle { display: flex; align-items: center; justify-content: space-between; background: #fff0f3; padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; color: var(--pink-accent); font-weight: bold; }
-        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
-        .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
-        .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .toggle-slider { background-color: var(--pink-accent); }
-        input:checked + .toggle-slider:before { transform: translateX(18px); }
+        
+        /* 新增：原色复选框样式 */
+        .color-mode-switch { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
+        .color-mode-switch input { cursor: pointer; width: 16px; height: 16px; }
     </style>
 </head>
 <body>
@@ -77,6 +72,9 @@
         </div>
         
         <div class="text-to-sticker-area">
+            <div class="color-mode-switch">
+                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji/文字本身颜色</label>
+            </div>
             <div class="text-input-group">
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字生成钻石贴纸">
                 <button onclick="generateTextStickers()">生成</button>
@@ -115,13 +113,6 @@
 </div>
 
 <div id="pickerContainer">
-    <div class="color-mode-toggle">
-        <span>生成Emoji原始颜色贴纸</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="useOriginalColorToggle" onchange="updatePreRender()">
-            <span class="toggle-slider"></span>
-        </label>
-    </div>
     <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
     <div class="swatch-title">历史颜色</div>
@@ -141,7 +132,7 @@
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
-        // 修改点：初始化加载12张贴纸
+        // 修改：循环上限改为12
         for(let i=1; i<=12; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
         }
@@ -155,9 +146,9 @@
         grid.innerHTML = '';
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
-        // 修改点：定义两页的显示范围
         const start = page === 1 ? 1 : 7;
-        const end = page === 1 ? 6 : 12; // 第二页现在显示到12
+        // 修改：第二页上限改为12
+        const end = page === 1 ? 6 : 12;
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
             imgEl.src = `sticker${i}.png`;
@@ -183,20 +174,13 @@
 
     function updatePreRender() {
         const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
-        const useOriginal = document.getElementById('useOriginalColorToggle').checked;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
         else { oc.width = 100 * stickerRatio; oc.height = 100; }
-        
         ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        
-        // 修改点：根据开关决定是否染色
-        if (!useOriginal) {
-            ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-            ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        }
-        
+        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
+        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
@@ -209,10 +193,7 @@
     function generateTextStickers() {
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        
-        // 修改点：在生成前确保使用了最新的原色/染色状态
-        const useOriginal = document.getElementById('useOriginalColorToggle').checked;
-        
+        if (!preRenderedSticker) updatePreRender();
         const fSize = 60;
         const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
@@ -222,20 +203,22 @@
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
         tempCtx.fillStyle = 'black';
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
-        
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
         
+        // 新增逻辑：提取原色
+        const useOriginal = document.getElementById('useOriginalColor').checked;
         const points = [];
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                const alpha = imgData[(y * tempCanvas.width + x) * 4 + 3];
-                if (alpha > 120) {
-                    let pColor = currentColor;
-                    // 如果是原色模式，这里可以扩展获取emoji本身位置的颜色，
-                    // 但目前逻辑是基于生成的preRenderedSticker，它已经包含了原色或染色。
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
+                const idx = (y * tempCanvas.width + x) * 4;
+                if (imgData[idx + 3] > 120) {
+                    let pointColor = null;
+                    if (useOriginal) {
+                        pointColor = `rgb(${imgData[idx]},${imgData[idx+1]},${imgData[idx+2]})`;
+                    }
+                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, color: pointColor });
                 }
             }
         }
@@ -266,7 +249,19 @@
         records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); mainCtx.restore(); });
         textLayers.forEach(l => {
             const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
-            l.points.forEach(p => { mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh); });
+            l.points.forEach(p => { 
+                // 修改：如果点有颜色则使用原色滤镜绘制
+                if (p.color) {
+                    const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
+                    tempC.width = dw; tempC.height = dh;
+                    tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
+                    tempX.globalCompositeOperation="multiply"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
+                    tempX.globalCompositeOperation="destination-in"; tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
+                    mainCtx.drawImage(tempC, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
+                } else {
+                    mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh); 
+                }
+            });
             if(l === selectedLayer) {
                 const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
                 mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
@@ -310,4 +305,7 @@
         document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; 
     }
     function updateHistory() {
-        const h = document.getElementBy
+        const h = document.getElementById('historySwatches'); h.innerHTML = '';
+        colorHistory.forEach(c => {
+            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
+            s
