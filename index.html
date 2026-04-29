@@ -24,7 +24,6 @@
             display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
         }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        /* 强化居中显示逻辑 */
         .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; }
 
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
@@ -79,7 +78,7 @@
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
+            <div class="slider-label"><span>贴纸缩放</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="300" value="30">
             <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
             <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
@@ -87,7 +86,7 @@
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小(联动贴纸中钻石大小)</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -129,7 +128,6 @@
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
     let isDragging = false, colorHistory = [], stickerRatio = 1;
 
-    // 维持使用 GitHub 链接确保图片显示
     const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
@@ -178,17 +176,25 @@
         });
     }
 
+    // 核心修改：优化预渲染逻辑，解决颜色偏暗问题
     function updatePreRender() {
         const sImg = stickers[curIdx]; 
         if (!sImg || !sImg.complete || sImg.naturalWidth === 0) return;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
-        else { oc.width = 100 * stickerRatio; oc.height = 100; }
+        if (stickerRatio >= 1) { oc.width = 150; oc.height = 150 / stickerRatio; }
+        else { oc.width = 150 * stickerRatio; oc.height = 150; }
+        
+        // 使用 source-in 模式覆盖颜色，保证色彩亮度和点击时一致
+        ox.save();
         ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
+        ox.globalCompositeOperation = "source-in";
+        ox.fillStyle = currentColor;
+        ox.fillRect(0, 0, oc.width, oc.height);
+        ox.restore();
+        
+        preRenderedSticker = new Image(); 
+        preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
@@ -246,8 +252,7 @@
                         const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
                         tempC.width = dw; tempC.height = dh;
                         tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        tempX.globalCompositeOperation="multiply"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
-                        tempX.globalCompositeOperation="destination-in"; tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
+                        tempX.globalCompositeOperation="source-in"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
                         mainCtx.drawImage(tempC, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
                     }
                 } else if(l.img) {
@@ -318,7 +323,7 @@
     
     imgInput.onchange = (e) => {
         const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload =() => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
         reader.readAsDataURL(e.target.files[0]);
     };
     init();
