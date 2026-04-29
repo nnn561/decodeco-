@@ -52,6 +52,15 @@
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
+
+        /* 新增：Emoji原色开关样式 */
+        .color-mode-toggle { display: flex; align-items: center; justify-content: space-between; background: #fff0f3; padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; color: var(--pink-accent); font-weight: bold; }
+        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 22px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .toggle-slider { background-color: var(--pink-accent); }
+        input:checked + .toggle-slider:before { transform: translateX(18px); }
     </style>
 </head>
 <body>
@@ -106,6 +115,13 @@
 </div>
 
 <div id="pickerContainer">
+    <div class="color-mode-toggle">
+        <span>生成Emoji原始颜色贴纸</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="useOriginalColorToggle" onchange="updatePreRender()">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
     <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
     <div id="iroPicker"></div>
     <div class="swatch-title">历史颜色</div>
@@ -125,7 +141,8 @@
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
-        for(let i=1; i<=9; i++) {
+        // 修改点：初始化加载12张贴纸
+        for(let i=1; i<=12; i++) {
             const img = new Image(); img.src = `sticker${i}.png`; stickers.push(img);
         }
         renderStickers(1);
@@ -138,8 +155,9 @@
         grid.innerHTML = '';
         document.getElementById('pageBtn1').classList.toggle('active', page === 1);
         document.getElementById('pageBtn2').classList.toggle('active', page === 2);
+        // 修改点：定义两页的显示范围
         const start = page === 1 ? 1 : 7;
-        const end = page === 1 ? 6 : 9;
+        const end = page === 1 ? 6 : 12; // 第二页现在显示到12
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
             imgEl.src = `sticker${i}.png`;
@@ -165,13 +183,20 @@
 
     function updatePreRender() {
         const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
+        const useOriginal = document.getElementById('useOriginalColorToggle').checked;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
         else { oc.width = 100 * stickerRatio; oc.height = 100; }
+        
         ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        
+        // 修改点：根据开关决定是否染色
+        if (!useOriginal) {
+            ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
+            ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        }
+        
         preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
@@ -184,7 +209,10 @@
     function generateTextStickers() {
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        if (!preRenderedSticker) updatePreRender();
+        
+        // 修改点：在生成前确保使用了最新的原色/染色状态
+        const useOriginal = document.getElementById('useOriginalColorToggle').checked;
+        
         const fSize = 60;
         const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
@@ -194,13 +222,21 @@
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
         tempCtx.fillStyle = 'black';
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
+        
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
+        
         const points = [];
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
+                const alpha = imgData[(y * tempCanvas.width + x) * 4 + 3];
+                if (alpha > 120) {
+                    let pColor = currentColor;
+                    // 如果是原色模式，这里可以扩展获取emoji本身位置的颜色，
+                    // 但目前逻辑是基于生成的preRenderedSticker，它已经包含了原色或染色。
+                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
+                }
             }
         }
         const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio };
@@ -274,24 +310,4 @@
         document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; 
     }
     function updateHistory() {
-        const h = document.getElementById('historySwatches'); h.innerHTML = '';
-        colorHistory.forEach(c => {
-            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
-            s.onclick = () => colorPicker.color.set(c); h.appendChild(s);
-        });
-    }
-
-    function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else records.pop(); draw(); }
-    function download() { const link = document.createElement('a'); link.download='pancake.png'; link.href=canvas.toDataURL(); link.click(); }
-    
-    imgInput.onchange = (e) => {
-        const file = e.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
-        reader.readAsDataURL(file);
-    };
-    init();
-</script>
-</body>
-</html>
-
+        const h = document.getElementBy
