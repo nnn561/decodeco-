@@ -78,7 +78,7 @@
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="slider-label"><span>贴纸缩放</span><span id="textScaleVal">3.0</span></div>
+            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="300" value="30">
             <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
             <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
@@ -86,7 +86,7 @@
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小(联动贴纸中钻石大小)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
