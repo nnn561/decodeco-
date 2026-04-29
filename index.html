@@ -32,7 +32,7 @@
         .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
         .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
 
-        /* 新增：保持与截图一致的勾选框样式 */
+        /* 新增：Emoji/原色勾選框樣式 */
         .mode-switch { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--pink-accent); font-weight: bold; }
         .mode-switch input { width: 16px; height: 16px; accent-color: var(--pink-accent); cursor: pointer; }
 
@@ -131,29 +131,31 @@
 
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
-    // 核心：初始化加载 1-9 所有贴纸素材
+    // 這裡確保載入你手機本地的 sticker1-9.png
     async function init() {
+        const loadPromises = [];
         for(let i=1; i<=9; i++) {
-            const img = new Image(); 
-            img.src = `sticker${i}.png`; 
+            const img = new Image();
+            img.src = `sticker${i}.png`; // 這裡會讀取你手機本地資料夾的圖片
+            loadPromises.push(new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve; // 避免單張失敗卡死
+            }));
             stickers.push(img);
         }
+        await Promise.all(loadPromises);
         renderStickers(1);
         initSwatches();
-        setTimeout(updatePreRender, 500);
+        updatePreRender();
     }
 
-    // 贴纸分页逻辑
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
-        document.getElementById('pageBtn1').classList.toggle('active', page === 1);
-        document.getElementById('pageBtn2').classList.toggle('active', page === 2);
-        
-        // 分页范围：第一页 1-6，第二页 7-9
+        document.getElementById('pageBtn1').className = (page === 1 ? 'active' : '');
+        document.getElementById('pageBtn2').className = (page === 2 ? 'active' : '');
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 9;
-        
         for(let i=start; i<=end; i++) {
             const imgEl = document.createElement('img');
             imgEl.src = `sticker${i}.png`;
@@ -177,9 +179,9 @@
         });
     }
 
-    // 染色工具函数
+    // 染色工具函數
     function createColoredSticker(baseImg, color) {
-        if (!baseImg.complete) return null;
+        if (!baseImg || baseImg.naturalWidth === 0) return null;
         const ratio = baseImg.naturalWidth / baseImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (ratio >= 1) { oc.width = 100; oc.height = 100 / ratio; }
@@ -192,10 +194,14 @@
     }
 
     function updatePreRender() {
-        const sImg = stickers[curIdx]; if (!sImg || !sImg.complete) return;
-        stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
+        const sImg = stickers[curIdx];
+        if (!sImg) return;
+        stickerRatio = sImg.naturalWidth / sImg.naturalHeight || 1;
         preRenderedSticker = createColoredSticker(sImg, currentColor);
-        if(selectedLayer && !selectedLayer.isOriginalColor) { selectedLayer.img = preRenderedSticker; draw(); }
+        if(selectedLayer && !selectedLayer.isOriginalColor) { 
+            selectedLayer.img = preRenderedSticker; 
+            draw(); 
+        }
     }
 
     function updateDensityLabel(val) {
@@ -215,8 +221,6 @@
         tempCanvas.width = tw; tempCanvas.height = fSize * 1.5;
         tempCtx.font = `bold ${fSize}px Arial, "Microsoft YaHei"`;
         tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        
-        // 关键：渲染原文以采集色值
         tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
@@ -258,9 +262,7 @@
         records.push(g); draw();
     }
 
-    function clearAll() {
-        if(confirm("确定要清空所有已添加的贴纸吗？")) { records = []; textLayers = []; selectedLayer = null; draw(); }
-    }
+    function clearAll() { if(confirm("确定要清空吗？")) { records = []; textLayers = []; selectedLayer = null; draw(); } }
 
     function draw() {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
@@ -308,7 +310,4 @@
     function closePicker() { if(!colorHistory.includes(currentColor)) { colorHistory.unshift(currentColor); if(colorHistory.length > 6) colorHistory.pop(); updateHistory(); } document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
     function updateHistory() {
         const h = document.getElementById('historySwatches'); h.innerHTML = '';
-        colorHistory.forEach(c => { const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c; s.onclick = () => colorPicker.color.set(c); h.appendChild(s); });
-    }
-
-    function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else re
+        colorHistory.forEach(c => { const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c; s.onclick = () =
