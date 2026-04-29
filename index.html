@@ -18,14 +18,14 @@
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        /* 修复图片对齐的核心样式 */
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; }
         .sticker-slot { 
             width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; 
             display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
         }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        .sticker-item { max-width: 90%; max-height: 90%; object-fit: contain; }
+        /* 确保图片缩放时在正中央 */
+        .sticker-item { max-width: 90%; max-height: 90%; object-fit: contain; flex-shrink: 0; }
 
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
         .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -43,7 +43,7 @@
         .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
 
         .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; }
-        #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; will-change: transform; } /* 开启硬件加速 */
+        #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; will-change: transform; }
         .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; z-index: 1; }
         .canvas-area.has-img .plus-icon { display: none; }
 
@@ -129,13 +129,16 @@
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
     let isDragging = false, colorHistory = [], stickerRatio = 1;
 
+    // 重点：使用 GitHub 原始地址，确保跨域和显示正常
+    const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
     async function init() {
         for(let i=1; i<=12; i++) {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.onload = () => { if(i-1 === curIdx) updatePreRender(); };
-            img.src = `sticker${i}.png`; 
+            img.src = `${baseUrl}sticker${i}.png`; 
             stickers.push(img);
         }
         renderStickers(1);
@@ -145,15 +148,15 @@
     function renderStickers(page) {
         const grid = document.getElementById('stickerGrid');
         grid.innerHTML = '';
-        document.getElementById('pageBtn1').classList.toggle('active', page === 1);
-        document.getElementById('pageBtn2').classList.toggle('active', page === 2);
+        document.getElementById('pageBtn1').className = (page === 1 ? 'active' : '');
+        document.getElementById('pageBtn2').className = (page === 2 ? 'active' : '');
         const start = page === 1 ? 1 : 7;
         const end = page === 1 ? 6 : 12;
         for(let i=start; i<=end; i++) {
             const slot = document.createElement('div');
             slot.className = 'sticker-slot' + (curIdx === i-1 ? ' active' : '');
             const imgEl = document.createElement('img');
-            imgEl.src = `sticker${i}.png`;
+            imgEl.src = `${baseUrl}sticker${i}.png`;
             imgEl.className = 'sticker-item';
             slot.onclick = () => { 
                 curIdx = i-1; 
@@ -227,21 +230,15 @@
     function draw(isFast = false) {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        
-        // 渲染单张随机贴纸
         records.flat().forEach(r => {
             mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
             mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
             mainCtx.restore();
         });
-
-        // 渲染文字贴纸层
         textLayers.forEach(l => {
-            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); 
-            const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
+            const dw = l.dotSize * (l.ratio >= 1 ? 1 : l.ratio); const dh = l.dotSize / (l.ratio >= 1 ? l.ratio : 1);
             l.points.forEach(p => {
                 if (p.color) {
-                    // 原色模式下拖拽时简化渲染以防卡顿
                     if (isFast) {
                         mainCtx.fillStyle = p.color;
                         mainCtx.fillRect(l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
@@ -287,15 +284,12 @@
         if(isDragging && selectedLayer) {
             const p = getPos(e);
             selectedLayer.x = p.x; selectedLayer.y = p.y;
-            draw(true); // 开启快速渲染模式
+            draw(true);
         }
         e.preventDefault();
     }, {passive:false});
 
-    canvas.addEventListener('touchend', () => { 
-        if(isDragging) draw(); // 停止后画个高清的
-        isDragging = false; 
-    });
+    canvas.addEventListener('touchend', () => { if(isDragging) draw(); isDragging = false; });
 
     document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
     document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
@@ -324,9 +318,10 @@
     
     imgInput.onchange = (e) => {
         const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height；dropZone.classList.add('has-img');draw();}; mainlmg.src=f.target.result;};
-reader.readAsDataURL(e.target.files[O]);
-init();
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+    init();
 </script>
 </body>
 </html>
