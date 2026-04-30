@@ -78,7 +78,7 @@
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                 <button onclick="generateTextStickers()">生成</button>
             </div>
-            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
+            <div class="slider-label"><span>贴纸缩放</span><span id="textScaleVal">3.0</span></div>
             <input type="range" id="textScaleSlider" min="10" max="300" value="30">
             <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
             <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
@@ -86,7 +86,7 @@
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小 (与贴纸中钻石的大小联动)</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小 (独立控制选中贴纸)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -268,7 +268,9 @@
                 }
             }
         }
-        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, ratio: stickerRatio, origWidth: tw };
+        // 赋予新图层独立的 dotSize (当前滑块值)
+        const currentGlobalSize = parseInt(document.getElementById('sizeSlider').value);
+        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, ratio: stickerRatio, origWidth: tw, dotSize: currentGlobalSize };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
 
@@ -276,22 +278,17 @@
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
         
-        // 获取全局钻石大小
-        const globalDiamondSize = parseInt(document.getElementById('sizeSlider').value);
-
-        // 渲染散落的钻石
+        // 1. 渲染普通散落钻石（保持独立）
         records.flat().forEach(r => {
             mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
-            // 这里使用存入时的 sizeW/H，或者你可以改为实时跟随全局：
-            // mainCtx.drawImage(r.img, -globalDiamondSize/2, -globalDiamondSize/2, globalDiamondSize, globalDiamondSize);
             mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
             mainCtx.restore();
         });
 
-        // 渲染生成的文字/Emoji贴纸
+        // 2. 渲染生成的贴纸图层
         textLayers.forEach(l => {
-            // 联动公式：贴纸内小钻石大小跟随全局
-            const linkedDotSize = globalDiamondSize / 6;
+            // 使用图层自带的 dotSize 实现独立控制
+            const linkedDotSize = l.dotSize / 6;
             const dw = linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio); 
             const dh = linkedDotSize / (l.ratio >= 1 ? l.ratio : 1);
 
@@ -342,6 +339,9 @@
         if(found) { 
             selectedLayer = found; 
             isDragging = true; 
+            // 选中时，同步滑块数值到当前图层的值
+            document.getElementById('sizeSlider').value = found.dotSize;
+            document.getElementById('sizeVal').innerText = found.dotSize;
         } else { 
             selectedLayer = null; 
             const size = parseInt(document.getElementById('sizeSlider').value);
@@ -362,20 +362,25 @@
             selectedLayer.x = p.x; selectedLayer.y = p.y;
             draw(true);
         }
-        e.preventDefault();
+    e.preventDefault();
     }, {passive:false});
 
     canvas.addEventListener('touchend', () => { if(isDragging) draw(); isDragging = false; });
 
-    // 重点：当钻石大小滑块移动时，实时重绘整个画布，从而实现联动
+    // 核心修改：只调整选中的贴纸
     document.getElementById('sizeSlider').oninput = function() { 
-        document.getElementById('sizeVal').innerText = this.value; 
-        draw(); 
+        const val = parseInt(this.value);
+        document.getElementById('sizeVal').innerText = val; 
+        if (selectedLayer) {
+            selectedLayer.dotSize = val; // 只修改选中的那一个图层
+            draw(); 
+        }
     };
 
     document.getElementById('textScaleSlider').oninput = function() { 
-        document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); 
-        if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } 
+        const val = parseInt(this.value);
+        document.getElementById('textScaleVal').innerText = (val/10).toFixed(1); 
+        if(selectedLayer) { selectedLayer.scale = val/10; draw(); } 
     };
     
     document.getElementById('rotateSlider').oninput = function() { 
@@ -396,7 +401,7 @@
         let g = [];
         const currentSize = parseInt(document.getElementById('sizeSlider').value);
         for(let i=0; i<15; i++) {
-            const size = currentSize * (0.8 + Math.random()*0.4); // 在当前设定大小上下浮动一点，更自然
+            const size = currentSize * (0.8 + Math.random()*0.4); 
             g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle: Math.random()*Math.PI*2 });
         }
         records.push(g); draw();
