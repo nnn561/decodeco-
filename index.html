@@ -24,7 +24,6 @@
             display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
         }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        /* 强化居中显示逻辑 */
         .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; }
 
         .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
@@ -73,7 +72,7 @@
         
         <div class="text-to-sticker-area">
             <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px; font-size:12px; color:var(--pink-accent); font-weight:bold;">
-                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji本身颜色</label>
+                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji原本颜色</label>
             </div>
             <div class="text-input-group">
                 <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
@@ -129,7 +128,6 @@
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
     let isDragging = false, colorHistory = [], stickerRatio = 1;
 
-    // 维持使用 GitHub 链接确保图片显示
     const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
 
@@ -183,18 +181,59 @@
         if (!sImg || !sImg.complete || sImg.naturalWidth === 0) return;
         stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        if (stickerRatio >= 1) { oc.width = 100; oc.height = 100 / stickerRatio; }
-        else { oc.width = 100 * stickerRatio; oc.height = 100; }
+        if (stickerRatio >= 1) { oc.width = 150; oc.height = 150 / stickerRatio; }
+        else { oc.width = 150 * stickerRatio; oc.height = 150; }
+        
+        ox.save();
         ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
+        ox.globalCompositeOperation = "source-in";
+        ox.fillStyle = currentColor;
+        ox.fillRect(0, 0, oc.width, oc.height);
+        ox.restore();
+        
+        preRenderedSticker = new Image(); 
+        preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
     function updateDensityLabel(val) {
         const labels = { "6":"少", "8":"中", "10":"多", "12":"极多" };
         document.getElementById('densityVal').innerText = labels[val] || "少";
+    }
+
+    // 辅助函数：RGB转HSL，用于调高饱和度
+    function rgbToHsl(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        let max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        if (max == min) { h = s = 0; } else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return [h, s, l];
+    }
+
+    function hslToRgb(h, s, l) {
+        let r, g, b;
+        if (s == 0) { r = g = b = l; } else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1; if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
+        }
+        return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
     }
 
     function generateTextStickers() {
@@ -214,11 +253,19 @@
         const points = [];
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
+        
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
                 const idx = (y * tempCanvas.width + x) * 4;
                 if (imgData[idx + 3] > 120) {
-                    let pointColor = useOriginal ? `rgb(${imgData[idx]},${imgData[idx+1]},${imgData[idx+2]})` : null;
+                    let pointColor = null;
+                    if (useOriginal) {
+                        // 核心修改：将原始颜色的饱和度大幅调高，防止发暗
+                        let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]);
+                        s = Math.min(1.0, s * 1.8); // 提高 80% 饱和度
+                        l = Math.max(l, 0.4);       // 保证亮度不低于 40%
+                        pointColor = hslToRgb(h, s, l);
+                    }
                     points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, color: pointColor });
                 }
             }
@@ -246,8 +293,7 @@
                         const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
                         tempC.width = dw; tempC.height = dh;
                         tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        tempX.globalCompositeOperation="multiply"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
-                        tempX.globalCompositeOperation="destination-in"; tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
+                        tempX.globalCompositeOperation="source-in"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
                         mainCtx.drawImage(tempC, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
                     }
                 } else if(l.img) {
@@ -318,7 +364,7 @@
     
     imgInput.onchange = (e) => {
         const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload =() => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
+        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
         reader.readAsDataURL(e.target.files[0]);
     };
     init();
