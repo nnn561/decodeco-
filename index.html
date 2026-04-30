@@ -86,7 +86,7 @@
         <div class="controls">
             <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
             <div style="flex:1">
-                <div class="slider-label"><span>钻石大小（与贴纸中钻石大小联动）</span><span id="sizeVal">80</span></div>
+                <div class="slider-label"><span>钻石大小（与贴纸中钻石的大小联动）</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="300" value="80">
                 <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -176,7 +176,6 @@
         });
     }
 
-    // 关键修正：重新启用 Multiply 模式，保持钻石质感
     function updatePreRender() {
         const sImg = stickers[curIdx]; 
         if (!sImg || !sImg.complete || sImg.naturalWidth === 0) return;
@@ -260,7 +259,6 @@
                 if (imgData[idx + 3] > 120) {
                     let pointColor = null;
                     if (useOriginal) {
-                        // 关键修正：把原始颜色饱和度拉满(2.5倍)，亮度调高，确保正片叠底后依然鲜艳
                         let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]);
                         s = Math.min(1.0, s * 2.5); 
                         l = Math.min(0.9, l * 1.3); 
@@ -270,7 +268,8 @@
                 }
             }
         }
-        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio };
+        // 记录原始宽度，用于后续缩小判定
+        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, dotSize: parseInt(document.getElementById('sizeSlider').value) / 6, ratio: stickerRatio, origWidth: tw };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
 
@@ -290,7 +289,6 @@
                         mainCtx.fillStyle = p.color;
                         mainCtx.fillRect(l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
                     } else {
-                        // 这里的渲染也改回正片叠底，保证生成出的 emoji 贴纸有钻石质感
                         const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
                         tempC.width = dw; tempC.height = dh;
                         tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
@@ -303,7 +301,7 @@
                 }
             });
             if(l === selectedLayer) {
-                const bw = (l.points.length > 50 ? 120 : 60) * l.scale, bh = 30 * l.scale;
+                const bw = (l.origWidth/2) * l.scale, bh = 30 * l.scale;
                 mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
             }
         });
@@ -319,11 +317,32 @@
     canvas.addEventListener('touchstart', (e) => {
         const p = getPos(e); if(!mainImg.src) return;
         let found = null;
-        textLayers.forEach(l => { if(Math.abs(p.x-l.x) < 80*l.scale && Math.abs(p.y-l.y) < 40*l.scale) found=l; });
-        if(found) { selectedLayer = found; isDragging = true; }
-        else { 
-            selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
-            records.push([{ x:p.x, y:p.y, img:preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); 
+        // 核心修改：大幅缩小判定范围(hitbox)。以前是80/40，现在根据实际文本宽度来定并进一步收缩
+        // 倒序遍历，保证能选中最上层的
+        for (let i = textLayers.length - 1; i >= 0; i--) {
+            const l = textLayers[i];
+            const hitW = (l.origWidth / 2) * l.scale * 0.7; // 只判定中心70%的区域
+            const hitH = 30 * l.scale * 0.7;
+            if(Math.abs(p.x - l.x) < hitW && Math.abs(p.y - l.y) < hitH) {
+                found = l;
+                break;
+            }
+        }
+
+        if(found) { 
+            selectedLayer = found; 
+            isDragging = true; 
+        } else { 
+            // 如果没点中已有图层，则在当前位置贴一个新贴纸
+            selectedLayer = null; 
+            const size = parseInt(document.getElementById('sizeSlider').value);
+            records.push([{ 
+                x:p.x, y:p.y, 
+                img:preRenderedSticker, 
+                sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), 
+                sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), 
+                angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 
+            }]); 
         }
         draw();
     });
@@ -339,8 +358,7 @@
 
     canvas.addEventListener('touchend', () => { if(isDragging) draw(); isDragging = false; });
 
-    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.dotSize = this.value/6; draw(); } };
-    document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
+    document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; if(selectedLayer) { selectedLayer.scale = this.value/10; draw(); } };
     document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; draw(); };
 
     const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor });
