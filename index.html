@@ -52,7 +52,7 @@
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 280px; }
         .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
-        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; }
+        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
     </style>
@@ -112,7 +112,7 @@
 </div>
 
 <div id="pickerContainer">
-    <div class="color-preview-bar" id="colorPreview">#FFB7B2</div>
+    <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
     <div id="iroPicker"></div>
     <div class="swatch-title">历史颜色</div>
     <div class="color-swatches" id="historySwatches"></div>
@@ -126,7 +126,7 @@
     const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
     let mainImg = new Image(), stickers = [], records = [], textLayers = [];
     let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
-    let isDragging = false, stickerRatio = 1;
+    let isDragging = false, stickerRatio = 1, colorHistory = [];
 
     const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
     const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
@@ -140,7 +140,7 @@
             stickers.push(img);
         }
         renderStickers(1);
-        initSwatches();
+        initPresetSwatches();
     }
 
     function renderStickers(page) {
@@ -148,8 +148,7 @@
         grid.innerHTML = '';
         document.getElementById('pageBtn1').className = (page === 1 ? 'active' : '');
         document.getElementById('pageBtn2').className = (page === 2 ? 'active' : '');
-        const start = page === 1 ? 1 : 7;
-        const end = page === 1 ? 6 : 12;
+        const start = page === 1 ? 1 : 7, end = page === 1 ? 6 : 12;
         for(let i=start; i<=end; i++) {
             const slot = document.createElement('div');
             slot.className = 'sticker-slot' + (curIdx === i-1 ? ' active' : '');
@@ -167,9 +166,19 @@
         }
     }
 
-    function initSwatches() {
+    function initPresetSwatches() {
         const container = document.getElementById('presetSwatches');
         macaronColors.forEach(c => {
+            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
+            s.onclick = () => colorPicker.color.set(c);
+            container.appendChild(s);
+        });
+    }
+
+    function updateHistorySwatches() {
+        const container = document.getElementById('historySwatches');
+        container.innerHTML = '';
+        colorHistory.slice().reverse().forEach(c => {
             const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
             s.onclick = () => colorPicker.color.set(c);
             container.appendChild(s);
@@ -183,16 +192,10 @@
         const oc = document.createElement('canvas'), ox = oc.getContext('2d');
         if (stickerRatio >= 1) { oc.width = 150; oc.height = 150 / stickerRatio; }
         else { oc.width = 150 * stickerRatio; oc.height = 150; }
-        
         ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; 
-        ox.fillStyle=currentColor; 
-        ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; 
-        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        
-        preRenderedSticker = new Image(); 
-        preRenderedSticker.src = oc.toDataURL();
+        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
+        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
+        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
         if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
     }
 
@@ -201,113 +204,42 @@
         document.getElementById('densityVal').innerText = labels[val] || "少";
     }
 
-    function rgbToHsl(r, g, b) {
-        r /= 255, g /= 255, b /= 255;
-        let max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-        if (max == min) { h = s = 0; } else {
-            let d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-        return [h, s, l];
-    }
-
-    function hslToRgb(h, s, l) {
-        let r, g, b;
-        if (s == 0) { r = g = b = l; } else {
-            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            const p = 2 * l - q;
-            const hue2rgb = (p, q, t) => {
-                if (t < 0) t += 1; if (t > 1) t -= 1;
-                if (t < 1/6) return p + (q - p) * 6 * t;
-                if (t < 1/2) return q;
-                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
-            };
-            r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
-        }
-        return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
-    }
-
     function generateTextStickers() {
         if (!mainImg.src) return imgInput.click();
         const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        const fSize = 60;
-        const tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
+        const fSize = 60, tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
         tempCtx.font = `bold ${fSize}px Arial`;
         const tw = tempCtx.measureText(text).width + 80;
         tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
-        tempCtx.font = `bold ${fSize}px Arial`;
-        tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        tempCtx.fillStyle = 'black';
-        tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
+        tempCtx.font = `bold ${fSize}px Arial`; tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
+        tempCtx.fillStyle = 'black'; tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
         const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
-        const useOriginal = document.getElementById('useOriginalColor').checked;
         const points = [];
         const sliderVal = parseInt(document.getElementById('densitySlider').value);
         const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
-        
         for (let y = 0; y < tempCanvas.height; y += step) {
             for (let x = 0; x < tempCanvas.width; x += step) {
-                const idx = (y * tempCanvas.width + x) * 4;
-                if (imgData[idx + 3] > 120) {
-                    let pointColor = null;
-                    if (useOriginal) {
-                        let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]);
-                        s = Math.min(1.0, s * 2.5); 
-                        l = Math.min(0.9, l * 1.3); 
-                        pointColor = hslToRgb(h, s, l);
-                    }
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, color: pointColor });
-                }
+                if (imgData[(y * tempCanvas.width + x) * 4 + 3] > 120) points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2 });
             }
         }
-        // 赋予新图层独立的 dotSize (当前滑块值)
         const currentGlobalSize = parseInt(document.getElementById('sizeSlider').value);
-        const newLayer = { points, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, img: preRenderedSticker, ratio: stickerRatio, origWidth: tw, dotSize: currentGlobalSize };
+        const newLayer = { points, x: canvas.width/2, y: canvas.height/2, scale: parseInt(document.getElementById('textScaleSlider').value)/10, img: preRenderedSticker, ratio: stickerRatio, origWidth: tw, dotSize: currentGlobalSize };
         textLayers.push(newLayer); selectedLayer = newLayer; draw();
     }
 
     function draw(isFast = false) {
         mainCtx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        
-        // 1. 渲染普通散落钻石（保持独立）
         records.flat().forEach(r => {
             mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
             mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
             mainCtx.restore();
         });
-
-        // 2. 渲染生成的贴纸图层
         textLayers.forEach(l => {
-            // 使用图层自带的 dotSize 实现独立控制
             const linkedDotSize = l.dotSize / 6;
-            const dw = linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio); 
-            const dh = linkedDotSize / (l.ratio >= 1 ? l.ratio : 1);
-
+            const dw = linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio), dh = linkedDotSize / (l.ratio >= 1 ? l.ratio : 1);
             l.points.forEach(p => {
-                if (p.color) {
-                    if (isFast) {
-                        mainCtx.fillStyle = p.color;
-                        mainCtx.fillRect(l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                    } else {
-                        const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
-                        tempC.width = dw; tempC.height = dh;
-                        tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        tempX.globalCompositeOperation="multiply"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
-                        tempX.globalCompositeOperation="destination-in"; tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        mainCtx.drawImage(tempC, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                    }
-                } else if(l.img) {
-                    mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                }
+                if(l.img) mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
             });
             if(l === selectedLayer) {
                 const bw = (l.origWidth/2) * l.scale, bh = 30 * l.scale;
@@ -318,8 +250,7 @@
 
     const getPos = (e) => {
         const r = canvas.getBoundingClientRect();
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY;
         return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
     };
 
@@ -327,88 +258,79 @@
         const p = getPos(e); if(!mainImg.src) return;
         let found = null;
         for (let i = textLayers.length - 1; i >= 0; i--) {
-            const l = textLayers[i];
-            const hitW = (l.origWidth / 2) * l.scale * 0.7; 
-            const hitH = 30 * l.scale * 0.7;
-            if(Math.abs(p.x - l.x) < hitW && Math.abs(p.y - l.y) < hitH) {
-                found = l;
-                break;
-            }
+            const l = textLayers[i], hitW = (l.origWidth / 2) * l.scale * 0.7, hitH = 30 * l.scale * 0.7;
+            if(Math.abs(p.x - l.x) < hitW && Math.abs(p.y - l.y) < hitH) { found = l; break; }
         }
-
         if(found) { 
-            selectedLayer = found; 
-            isDragging = true; 
-            // 选中时，同步滑块数值到当前图层的值
+            selectedLayer = found; isDragging = true; 
             document.getElementById('sizeSlider').value = found.dotSize;
             document.getElementById('sizeVal').innerText = found.dotSize;
         } else { 
-            selectedLayer = null; 
-            const size = parseInt(document.getElementById('sizeSlider').value);
-            records.push([{ 
-                x:p.x, y:p.y, 
-                img:preRenderedSticker, 
-                sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), 
-                sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), 
-                angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 
-            }]); 
+            selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
+            records.push([{ x:p.x, y:p.y, img:preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); 
         }
         draw();
     });
 
-    canvas.addEventListener('touchmove', (e) => {
-        if(isDragging && selectedLayer) {
-            const p = getPos(e);
-            selectedLayer.x = p.x; selectedLayer.y = p.y;
-            draw(true);
-        }
-    e.preventDefault();
-    }, {passive:false});
-
+    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x = p.x; selectedLayer.y = p.y; draw(true); } e.preventDefault(); }, {passive:false});
     canvas.addEventListener('touchend', () => { if(isDragging) draw(); isDragging = false; });
 
-    // 核心修改：只调整选中的贴纸
     document.getElementById('sizeSlider').oninput = function() { 
-        const val = parseInt(this.value);
-        document.getElementById('sizeVal').innerText = val; 
-        if (selectedLayer) {
-            selectedLayer.dotSize = val; // 只修改选中的那一个图层
-            draw(); 
-        }
+        const val = parseInt(this.value); document.getElementById('sizeVal').innerText = val; 
+        if (selectedLayer) { selectedLayer.dotSize = val; draw(); }
     };
-
     document.getElementById('textScaleSlider').oninput = function() { 
-        const val = parseInt(this.value);
-        document.getElementById('textScaleVal').innerText = (val/10).toFixed(1); 
+        const val = parseInt(this.value); document.getElementById('textScaleVal').innerText = (val/10).toFixed(1); 
         if(selectedLayer) { selectedLayer.scale = val/10; draw(); } 
     };
-    
-    document.getElementById('rotateSlider').oninput = function() { 
-        document.getElementById('rotVal').innerText = this.value + "°"; 
-        draw(); 
-    };
+    document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; draw(); };
 
+    // 色环逻辑
     const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor });
     colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        currentColor = c.hexString; 
+        document.getElementById('colorBtn').style.backgroundColor = currentColor; 
+        document.getElementById('colorPreview').innerText = currentColor;
+        document.getElementById('colorPreview').style.backgroundColor = currentColor;
         updatePreRender(); 
     });
 
-    document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display='block'; document.getElementById('overlay').style.display='block'; };
-    function closePicker() { document.getElementById('pickerContainer').style.display='none'; document.getElementById('overlay').style.display='none'; }
+    document.getElementById('colorBtn').onclick = () => { 
+        document.getElementById('pickerContainer').style.display='block'; 
+        document.getElementById('overlay').style.display='block'; 
+        updateHistorySwatches();
+    };
+
+    function closePicker() { 
+        if(!colorHistory.includes(currentColor)) {
+            colorHistory.push(currentColor);
+            if(colorHistory.length > 12) colorHistory.shift();
+        }
+        document.getElementById('pickerContainer').style.display='none'; 
+        document.getElementById('overlay').style.display='none'; 
+    }
+
     function generateRandomDiamonds() {
         if (!mainImg.src) return;
-        let g = [];
-        const currentSize = parseInt(document.getElementById('sizeSlider').value);
+        let g = []; const currentSize = parseInt(document.getElementById('sizeSlider').value);
         for(let i=0; i<15; i++) {
             const size = currentSize * (0.8 + Math.random()*0.4); 
             g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle: Math.random()*Math.PI*2 });
         }
         records.push(g); draw();
     }
+
     function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else records.pop(); draw(); }
-    function clearAll() { if(confirm("清空吗？(⁠ ⁠；⁠∀⁠；⁠)")){ textLayers=[]; records=[]; draw(); } }
-    function download() { const link = document.createElement('a'); link.download='pancake.png'; link.href=canvas.toDataURL(); link.click(); }
+    function clearAll() { if(confirm("清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)")){ textLayers=[]; records=[]; draw(); } }
+
+    function download() { 
+        const link = document.createElement('a');
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
+        link.download = `pancake_${timeStr}.png`; 
+        link.href = canvas.toDataURL(); 
+        link.click(); 
+    }
     
     imgInput.onchange = (e) => {
         const reader = new FileReader();
