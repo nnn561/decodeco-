@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+额<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -360,4 +360,223 @@ function _buildTextLayer(text) {
 
     const imgData = tx.getImageData(0, 0, tw, th).data;
     const sliderVal = parseInt(document.getElementById('densitySlider').value);
-    const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 32; const points = []; for (let y = 0; y < th; y += step) { for (let x = 0; x < tw; x += step) { const idx = (y * tw + x) * 4; if (imgData[idx + 3] > 120) { let pointColor = null; if (useOriginal) { let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]); s = Math.min(1.0, s * 2.5); l = Math.min(0.9, l * 1.3); pointColor = hslToRgb(h, s, l); } points.push({ dx: x - tw/2, dy: y - th/2, color: pointColor }); } } } if (points.length === 0) return; const dotSize = parseInt(document.getElementById('sizeSlider').value); const linkedDotSize = dotSize / 6; const dw = Math.max(1, linkedDotSize * (stickerRatio >= 1 ? 1 : stickerRatio)); const dh = Math.max(1, linkedDotSize / (stickerRatio >= 1 ? stickerRatio : 1)); const sImg = stickers[curIdx]; const colorCacheMap = {}; if (useOriginal && sImg && sImg.complete && sImg.naturalWidth) { const uniqueColors = [...new Set(points.map(p => p.color).filter(Boolean))]; uniqueColors.forEach(col => { const oc = makeColoredSticker(sImg, col, dw, dh); const ci = new Image(); ci.src = oc.toDataURL(); colorCacheMap[col] = ci; }); } const newLayer = { points, colorCacheMap, defaultImg: preRenderedSticker, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, ratio: stickerRatio, origWidth: tw, origHeight: th, dotSize, rotation: 0, }; textLayers.push(newLayer); selectedLayer = newLayer; draw(); } function generateImgStickers() { if (!mainImg.src) return imgInput.click(); if (!stickerUploadedImg) return alert('上传图片'); const tip = document.getElementById('genTip2'); tip.style.display = 'block'; setTimeout(() => { _buildImgLayer(); tip.style.display = 'none'; }, 20); } function _buildImgLayer() { const sliderVal = parseInt(document.getElementById('densitySlider2').value); const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2; const MAX = 160; const iw = stickerUploadedImg.naturalWidth, ih = stickerUploadedImg.naturalHeight; const sc = Math.min(MAX / iw, MAX / ih, 1); const sw = Math.round(iw * sc), sh = Math.round(ih * sc); const tc = document.createElement('canvas'); tc.width = sw; tc.height = sh; const tx = tc.getContext('2d'); tx.drawImage(stickerUploadedImg, 0, 0, sw, sh); const imgData = tx.getImageData(0, 0, sw, sh).data; function quantize(v){ return Math.round(v / 32) * 32; } const points = []; for (let y = 0; y < sh; y += step) { for (let x = 0; x < sw; x += step) { const idx = (y * sw + x) * 4; if (imgData[idx + 3] > 80) { const r = quantize(imgData[idx]), g = quantize(imgData[idx+1]), b = quantize(imgData[idx+2]); let [h, s, l] = rgbToHsl(r, g, b); s = Math.min(1.0, s * 1.8); l = Math.min(0.82, Math.max(0.28, l)); const col = hslToRgb(h, s, l); points.push({ dx: x - sw/2, dy: y - sh/2, color: col }); } } } if (points.length === 0) return; const dotSize = parseInt(document.getElementById('sizeSlider').value); const linkedDotSize = dotSize / 6; const dw = Math.max(1, linkedDotSize * (stickerRatio >= 1 ? 1 : stickerRatio)); const dh = Math.max(1, linkedDotSize / (stickerRatio >= 1 ? stickerRatio : 1)); const sImg = stickers[curIdx]; const colorCacheMap = {}; const uniqueColors = [...new Set(points.map(p => p.color))]; uniqueColors.forEach(col => { const oc = makeColoredSticker(sImg, col, dw, dh); const ci = new Image(); ci.src = oc.toDataURL(); colorCacheMap[col] = ci; }); const newLayer = { points, colorCacheMap, defaultImg: preRenderedSticker, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider2').value) / 10, ratio: stickerRatio, origWidth: sw, origHeight: sh, dotSize, rotation: 0, }; textLayers.push(newLayer); selectedLayer = newLayer; draw(); } function draw(isExporting) { mainCtx.clearRect(0, 0, canvas.width, canvas.height); if (mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height); records.flat().forEach(r => { mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0); if (r.glowing && !isExporting) { mainCtx.shadowColor = r.glowColor || '#ffddee'; mainCtx.shadowBlur = 22; } mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); mainCtx.restore(); }); textLayers.forEach(l => { const linkedDotSize = l.dotSize / 6; const dw = Math.max(1, linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio)); const dh = Math.max(1, linkedDotSize / (l.ratio >= 1 ? l.ratio : 1)); mainCtx.save(); mainCtx.translate(l.x, l.y); mainCtx.rotate(l.rotation || 0); l.points.forEach(p => { const img = p.color ? (l.colorCacheMap[p.color] || l.defaultImg) : l.defaultImg; if (img) mainCtx.drawImage(img, p.dx * l.scale - dw/2, p.dy * l.scale - dh/2, dw, dh); }); if (l === selectedLayer && !isExporting) { const bw = (l.origWidth / 2) * l.scale, bh = (l.origHeight / 2) * l.scale; mainCtx.strokeStyle = "#ff85a2"; mainCtx.lineWidth = 3; mainCtx.strokeRect(-bw, -bh, bw * 2, bh * 2); const dotY = bh + 18; mainCtx.beginPath(); mainCtx.arc(0, dotY, 10, 0, Math.PI * 2); mainCtx.fillStyle = "#ff85a2"; mainCtx.fill(); } mainCtx.restore(); }); } const getPos = (e) => { const r = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) }; }; function hitLayer(px, py, l) { const dx = px - l.x, dy = py - l.y, rot = -(l.rotation || 0); const lx = dx * Math.cos(rot) - dy * Math.sin(rot), ly = dx * Math.sin(rot) + dy * Math.cos(rot); return Math.abs(lx) <= (l.origWidth/2)*l.scale && Math.abs(ly) <= (l.origHeight/2)*l.scale; } canvas.addEventListener('touchstart', (e) => { if (!mainImg.src) return; const p = getPos(e); if (selectedLayer) { const rot = selectedLayer.rotation || 0; const bh = (selectedLayer.origHeight / 2) * selectedLayer.scale + 18; const dotX = selectedLayer.x + (-Math.sin(rot)) * bh, dotY = selectedLayer.y + (Math.cos(rot)) * bh; if (Math.hypot(p.x - dotX, p.y - dotY) < 25) { isRotatingLayer = true; layerCenter = { x: selectedLayer.x, y: selectedLayer.y }; rotStart.touchAngle = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x); rotStart.layerAngle = selectedLayer.rotation || 0; return; } } let found = null; for (let i = textLayers.length - 1; i >= 0; i--) { if (hitLayer(p.x, p.y, textLayers[i])) { found = textLayers[i]; break; } } if (found) { selectedLayer = found; isDraggingLayer = true; draw(); return; } selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value); const angle = parseInt(document.getElementById('rotateSlider').value) * Math.PI / 180; const sW = size * (stickerRatio >= 1 ? 1 : stickerRatio), sH = size / (stickerRatio >= 1 ? stickerRatio : 1); const rec = { x: p.x, y: p.y, img: preRenderedSticker, sizeW: sW, sizeH: sH, angle, glowing: true, glowColor: currentColor }; records.push([rec]); draw(); setTimeout(() => { rec.glowing = false; draw(); }, 600); }); canvas.addEventListener('touchmove', (e) => { const p = getPos(e); if (isRotatingLayer && selectedLayer) { const curA = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x); selectedLayer.rotation = rotStart.layerAngle + (curA - rotStart.touchAngle); draw(); } else if (isDraggingLayer && selectedLayer) { selectedLayer.x = p.x; selectedLayer.y = p.y; draw(); } e.preventDefault(); }, { passive: false }); canvas.addEventListener('touchend', () => { isDraggingLayer = false; isRotatingLayer = false; }); document.getElementById('sizeSlider').oninput = function() { document.getElementById('sizeVal').innerText = this.value; }; document.getElementById('textScaleSlider').oninput = function() { document.getElementById('textScaleVal').innerText = (this.value/10).toFixed(1); if (selectedLayer) { selectedLayer.scale = this.value/10; draw(); } }; document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; }; const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor }); colorPicker.on('color:change', (c) => { currentColor = c.hexString; document.getElementById('colorBtn').style.backgroundColor = currentColor; document.getElementById('colorPreview').innerText = currentColor; document.getElementById('colorPreview').style.backgroundColor = currentColor; updatePreRender(); }); document.getElementById('colorBtn').onclick = () => { document.getElementById('pickerContainer').style.display = 'block'; document.getElementById('overlay').style.display = 'block'; updateHistorySwatches(); }; function closePicker() { if (!colorHistory.includes(currentColor)) { colorHistory.push(currentColor); if (colorHistory.length > 12) colorHistory.shift(); } document.getElementById('pickerContainer').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; } function handleRandomClick() { randomClickCount++; clearTimeout(randomClickTimer); randomClickTimer = setTimeout(() => { if (randomClickCount > 0) _doRandom(randomClickCount); randomClickCount = 0; }, 300); } function _doRandom(count) { if (!mainImg.src) return; const useHarmony = count >= 3; const currentSize = parseInt(document.getElementById('sizeSlider').value); const g = []; for (let i = 0; i < 15; i++) { const sImg = useHarmony ? stickers[Math.floor(Math.random() * stickers.length)] : stickers[curIdx]; if (!sImg || !sImg.complete) continue; const ratio = sImg.naturalWidth / sImg.naturalHeight; const color = currentColor; const oc = makeColoredSticker(sImg, color, 100, 100); const ci = new Image(); ci.src = oc.toDataURL(); g.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, img: ci, sizeW: currentSize * (ratio >= 1 ? 1 : ratio), sizeH: currentSize / (ratio >= 1 ? ratio : 1), angle: Math.random() * Math.PI * 2 }); } records.push(g); draw(); } function updateDensityLabel(val) { document.getElementById('densityVal').innerText = {"6":"少","8":"中","10":"多","12":"极多"}[val]; } function updateDensityLabel2(val) { document.getElementById('densityVal2').innerText = {"6":"少","8":"中","10":"多","12":"极多"}[val]; } function smartUndo() { if (selectedLayer) { textLayers.pop(); selectedLayer = null; } else records.pop(); draw(); } function clearAll() { if (confirm("清空？")) { textLayers = []; records = []; draw(); } } function download() { const prev = selectedLayer; selectedLayer = null; draw(true); const link = document.createElement('a'); link.download = 'pancake.png'; link.href = canvas.toDataURL(); link.click(); selectedLayer = prev; draw(); } imgInput.onchange = (e) => { const reader = new FileReader(); reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; }; reader.readAsDataURL(e.target.files[0]); }; init(); </script> </body> </html>
+    const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3: 2;
+    const points = [];
+    for (let y = 0; y < th; y += step) {
+        for (let x = 0; x < tw; x += step) {
+            const idx = (y * tw + x) * 4;
+            if (imgData[idx + 3] > 120) {
+                let pointColor = null;
+                if (useOriginal) {
+                    let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]);
+                    s = Math.min(1.0, s * 2.5); l = Math.min(0.9, l * 1.3);
+                    pointColor = hslToRgb(h, s, l);
+                }
+                points.push({ dx: x - tw/2, dy: y - th/2, color: pointColor });
+            }
+        }
+    }
+    if (points.length === 0) return;
+    const dotSize = parseInt(document.getElementById('sizeSlider').value);
+    const linkedDotSize = dotSize / 6;
+    const dw = Math.max(1, linkedDotSize * (stickerRatio >= 1 ? 1 : stickerRatio));
+    const dh = Math.max(1, linkedDotSize / (stickerRatio >= 1 ? stickerRatio : 1));
+    const sImg = stickers[curIdx];
+    const colorCacheMap = {};
+    if (useOriginal && sImg && sImg.complete) {
+        const uniqueColors = [...new Set(points.map(p => p.color).filter(Boolean))];
+        uniqueColors.forEach(col => {
+            const oc = makeColoredSticker(sImg, col, dw, dh);
+            const ci = new Image(); ci.src = oc.toDataURL();
+            colorCacheMap[col] = ci;
+        });
+    }
+    const newLayer = { points, colorCacheMap, defaultImg: preRenderedSticker, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider').value) / 10, ratio: stickerRatio, origWidth: tw, origHeight: th, dotSize, rotation: 0 };
+    textLayers.push(newLayer);
+    selectedLayer = newLayer;
+    draw();
+}
+
+function generateImgStickers() {
+    if (!mainImg.src) return imgInput.click();
+    if (!stickerUploadedImg) return alert('请先上传贴纸参考图');
+    document.getElementById('genTip2').style.display = 'block';
+    setTimeout(() => { _buildImgLayer(); document.getElementById('genTip2').style.display = 'none'; }, 20);
+}
+
+function _buildImgLayer() {
+    const sliderVal = parseInt(document.getElementById('densitySlider2').value);
+    const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
+    const MAX = 160;
+    const iw = stickerUploadedImg.naturalWidth, ih = stickerUploadedImg.naturalHeight;
+    const sc = Math.min(MAX / iw, MAX / ih, 1);
+    const sw = Math.round(iw * sc), sh = Math.round(ih * sc);
+    const tc = document.createElement('canvas'); tc.width = sw; tc.height = sh;
+    const tx = tc.getContext('2d');
+    tx.drawImage(stickerUploadedImg, 0, 0, sw, sh);
+    const imgData = tx.getImageData(0, 0, sw, sh).data;
+    function quantize(v){ return Math.round(v / 32) * 32; }
+    const points = [];
+    for (let y = 0; y < sh; y += step) {
+        for (let x = 0; x < sw; x += step) {
+            const idx = (y * sw + x) * 4;
+            if (imgData[idx + 3] > 80) {
+                const r = quantize(imgData[idx]), g = quantize(imgData[idx+1]), b = quantize(imgData[idx+2]);
+                let [h, s, l] = rgbToHsl(r, g, b);
+                s = Math.min(1.0, s * 1.8); l = Math.min(0.82, Math.max(0.28, l));
+                const col = hslToRgb(h, s, l);
+                points.push({ dx: x - sw/2, dy: y - sh/2, color: col });
+            }
+        }
+    }
+    const dotSize = parseInt(document.getElementById('sizeSlider').value);
+    const linkedDotSize = dotSize / 6;
+    const dw = Math.max(1, linkedDotSize * (stickerRatio >= 1 ? 1 : stickerRatio));
+    const dh = Math.max(1, linkedDotSize / (stickerRatio >= 1 ? stickerRatio : 1));
+    const sImg = stickers[curIdx];
+    const colorCacheMap = {};
+    const uniqueColors = [...new Set(points.map(p => p.color))];
+    uniqueColors.forEach(col => {
+        const oc = makeColoredSticker(sImg, col, dw, dh);
+        const ci = new Image(); ci.src = oc.toDataURL();
+        colorCacheMap[col] = ci;
+    });
+    const newLayer = { points, colorCacheMap, defaultImg: preRenderedSticker, x: canvas.width / 2, y: canvas.height / 2, scale: parseInt(document.getElementById('textScaleSlider2').value) / 10, ratio: stickerRatio, origWidth: sw, origHeight: sh, dotSize, rotation: 0 };
+    textLayers.push(newLayer);
+    selectedLayer = newLayer;
+    draw();
+}
+
+function draw(isExporting) {
+    mainCtx.clearRect(0, 0, canvas.width, canvas.height);
+    if (mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
+    records.flat().forEach(r => {
+        mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
+        if (r.glowing && !isExporting) { mainCtx.shadowColor = r.glowColor || '#ffddee'; mainCtx.shadowBlur = 22; }
+        mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
+        mainCtx.restore();
+    });
+    textLayers.forEach(l => {
+        const linkedDotSize = l.dotSize / 6;
+        const dw = Math.max(1, linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio));
+        const dh = Math.max(1, linkedDotSize / (l.ratio >= 1 ? l.ratio : 1));
+        mainCtx.save(); mainCtx.translate(l.x, l.y); mainCtx.rotate(l.rotation || 0);
+        l.points.forEach(p => {
+            const img = p.color ? (l.colorCacheMap[p.color] || l.defaultImg) : l.defaultImg;
+            if (img) mainCtx.drawImage(img, p.dx * l.scale - dw/2, p.dy * l.scale - dh/2, dw, dh);
+        });
+        if (l === selectedLayer && !isExporting) {
+            const bw = (l.origWidth / 2) * l.scale, bh = (l.origHeight / 2) * l.scale;
+            mainCtx.strokeStyle = "#ff85a2"; mainCtx.lineWidth = 3;
+            mainCtx.strokeRect(-bw, -bh, bw * 2, bh * 2);
+            const dotY = bh + 18; mainCtx.beginPath(); mainCtx.arc(0, dotY, 10, 0, Math.PI * 2);
+            mainCtx.fillStyle = "#ff85a2"; mainCtx.fill();
+        }
+        mainCtx.restore();
+    });
+}
+
+const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
+};
+
+function hitLayer(px, py, l) {
+    const dx = px - l.x, dy = py - l.y, rot = -(l.rotation || 0);
+    const lx = dx * Math.cos(rot) - dy * Math.sin(rot), ly = dx * Math.sin(rot) + dy * Math.cos(rot);
+    return Math.abs(lx) <= (l.origWidth/2)*l.scale && Math.abs(ly) <= (l.origHeight/2)*l.scale;
+}
+
+canvas.addEventListener('touchstart', (e) => {
+    if (!mainImg.src) return;
+    const p = getPos(e);
+    if (selectedLayer) {
+        const rot = selectedLayer.rotation || 0;
+        const bh = (selectedLayer.origHeight / 2) * selectedLayer.scale + 18;
+        const dotX = selectedLayer.x + (-Math.sin(rot)) * bh, dotY = selectedLayer.y + (Math.cos(rot)) * bh;
+        if (Math.hypot(p.x - dotX, p.y - dotY) < 25) {
+            isRotatingLayer = true; layerCenter = { x: selectedLayer.x, y: selectedLayer.y };
+            rotStart.touchAngle = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x);
+            rotStart.layerAngle = selectedLayer.rotation || 0; return;
+        }
+    }
+    let found = null;
+    for (let i = textLayers.length - 1; i >= 0; i--) {
+        if (hitLayer(p.x, p.y, textLayers[i])) { found = textLayers[i]; break; }
+    }
+    if (found) { selectedLayer = found; isDraggingLayer = true; draw(); return; }
+    selectedLayer = null;
+    const size = parseInt(document.getElementById('sizeSlider').value);
+    const angle = parseInt(document.getElementById('rotateSlider').value) * Math.PI / 180;
+    const sW = size * (stickerRatio >= 1 ? 1 : stickerRatio), sH = size / (stickerRatio >= 1 ? stickerRatio : 1);
+    const rec = { x: p.x, y: p.y, img: preRenderedSticker, sizeW: sW, sizeH: sH, angle, glowing: true, glowColor: currentColor };
+    records.push([rec]); draw();
+    setTimeout(() => { rec.glowing = false; draw(); }, 600);
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    const p = getPos(e);
+    if (isRotatingLayer && selectedLayer) {
+        const curA = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x);
+        selectedLayer.rotation = rotStart.layerAngle + (curA - rotStart.touchAngle); draw();
+    } else if (isDraggingLayer && selectedLayer) {
+        selectedLayer.x = p.x; selectedLayer.y = p.y; draw();
+    }
+    e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { isDraggingLayer = false; isRotatingLayer = false; });
+
+const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor });
+colorPicker.on('color:change', (c) => {
+    currentColor = c.hexString;
+    document.getElementById('colorBtn').style.backgroundColor = currentColor;
+    document.getElementById('colorPreview').style.backgroundColor = currentColor;
+    updatePreRender();
+});
+
+function handleRandomClick() {
+    randomClickCount++; clearTimeout(randomClickTimer);
+    randomClickTimer = setTimeout(() => { if (randomClickCount > 0) _doRandom(randomClickCount); randomClickCount = 0; }, 300);
+}
+
+function _doRandom(count) {
+    if (!mainImg.src) return;
+    const currentSize = parseInt(document.getElementById('sizeSlider').value);
+    const g = [];
+    for (let i = 0; i < 15; i++) {
+        const sImg = stickers[curIdx];
+        if (!sImg || !sImg.complete) continue;
+        const ratio = sImg.naturalWidth / sImg.naturalHeight;
+        const oc = makeColoredSticker(sImg, currentColor, 100, 100);
+        const ci = new Image(); ci.src = oc.toDataURL();
+        g.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, img: ci, sizeW: currentSize * (ratio >= 1 ? 1 : ratio), sizeH: currentSize / (ratio >= 1 ? ratio : 1), angle: Math.random() * Math.PI * 2 });
+    }
+    records.push(g); draw();
+}
+
+function smartUndo() { if (selectedLayer) { textLayers.pop(); selectedLayer = null; } else records.pop(); draw(); }
+function clearAll() { if (confirm("确定要清空页面吗？")) { textLayers = []; records = []; draw(); } }
+function download() {
+    const prev = selectedLayer; selectedLayer = null; draw(true);
+    const link = document.createElement('a'); link.download = 'pancake_stickers.png';
+    link.href = canvas.toDataURL(); link.click();
+    selectedLayer = prev; draw();
+}
+
+imgInput.onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (f) => {
+        mainImg = new Image();
+        mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); };
+        mainImg.src = f.target.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+init();
+</script>
+</body>
+</html>
