@@ -545,21 +545,22 @@ function draw(isExporting){
             const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
             if(img)mainCtx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
         });
-        // fix3: 选中框+旋转圆点更大
+        // 选中框缩小（0.55系数贴近实际内容），旋转圆点加大
         if(l===selectedLayer&&!isExporting){
-            const bw=(l.origWidth/2)*l.scale;
-            const bh=(l.origHeight/2)*l.scale;
-            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3.5; mainCtx.setLineDash([6,4]);
+            const bw=(l.origWidth/2)*l.scale*0.55;
+            const bh=(l.origHeight/2)*l.scale*0.55;
+            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
             mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
             mainCtx.setLineDash([]);
-            // fix3: 旋转圆点加大到14px
-            const dotY=bh+22;
-            mainCtx.beginPath(); mainCtx.arc(0,dotY,14,0,Math.PI*2);
+            // 旋转圆点：r=18，触摸区40px，框正下方
+            const dotY=bh+28;
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,21,0,Math.PI*2);
+            mainCtx.fillStyle="rgba(255,255,255,0.95)"; mainCtx.fill();
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,18,0,Math.PI*2);
             mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
-            mainCtx.strokeStyle="#fff"; mainCtx.lineWidth=2.5; mainCtx.stroke();
-            mainCtx.fillStyle='#fff'; mainCtx.font='bold 16px Arial';
+            mainCtx.fillStyle='#fff'; mainCtx.font='bold 22px Arial';
             mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
-            mainCtx.fillText('↻',0,dotY);
+            mainCtx.fillText('\u21bb',0,dotY+1);
         }
         mainCtx.restore();
     });
@@ -752,8 +753,8 @@ function _doRandom(count){
 }
 
 // ============================================================
-//  Live 图：用离屏 canvas + MediaRecorder 录制 WebM 视频
-//  全程本地，无需外部库，手机几秒完成
+//  Live 图：逐帧绘制到离屏canvas → MediaRecorder录制WebM
+//  关键：不用scale变换，shadowBlur直接设像素值，setInterval同步推帧
 // ============================================================
 function generateLiveGif(){
     if(!mainImg.src){alert('请先上传图片');return;}
@@ -762,66 +763,33 @@ function generateLiveGif(){
 
     const btn=document.getElementById('liveBtn');
 
-    // 检查 MediaRecorder 支持
-    if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported){
-        _doLivePngSequence(allRecords,btn); return;
-    }
-    const mimeType=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
-        .find(m=>MediaRecorder.isTypeSupported(m));
+    const mimeType=
+        typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported
+        ? ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))
+        : null;
+
     if(!mimeType){
         _doLivePngSequence(allRecords,btn); return;
     }
 
     btn.disabled=true; btn.textContent='录制中...';
 
-    // 离屏录制用 canvas（缩小到最大600px，节省时间）
-    const MAX=600;
-    const scale=Math.min(MAX/canvas.width, MAX/canvas.height, 1);
-    const rw=Math.round(canvas.width*scale)|1;   // 保证奇偶
-    const rh=Math.round(canvas.height*scale)|1;
-    const rc=document.createElement('canvas'); rc.width=rw; rc.height=rh;
+    // 离屏canvas与主canvas同尺寸，不缩放，shadowBlur才能正确显示
+    const rc=document.createElement('canvas');
+    rc.width=canvas.width; rc.height=canvas.height;
     const rx=rc.getContext('2d');
 
-    const FPS=10;               // 录制帧率
-    const FRAME_MS=1000/FPS;
-    const GLOW_DUR=400;         // 每个钻石发光持续ms
-    const frameCount=Math.min(allRecords.length,30);
-    const totalDuration=(frameCount+2)*GLOW_DUR; // 多留2帧收尾
+    const FRAME_INTERVAL=350;   // ms每帧（每颗钻石亮一帧）
+    const frameCount=Math.min(allRecords.length,25);
+    // 多录2帧（首尾各加一帧全暗）
+    const totalFrames=frameCount+2;
 
-    const stream=rc.captureStream(FPS);
-    const chunks=[];
-    const recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:2500000});
-    recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-    recorder.onstop=()=>{
-        const blob=new Blob(chunks,{type:mimeType});
-        const url=URL.createObjectURL(blob);
-        const a=document.createElement('a');
-        const now=new Date();
-        const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-        const ext=mimeType.startsWith('video/mp4')?'mp4':'webm';
-        a.download=`pancakesticker_live_${ts}.${ext}`;
-        a.href=url; a.click();
-        URL.revokeObjectURL(url);
-        btn.disabled=false; btn.textContent='生成';
-    };
+    // 绘制一帧：glowIdx=-1表示全暗
+    function drawLiveFrame(glowIdx){
+        rx.clearRect(0,0,rc.width,rc.height);
+        if(mainImg.src) rx.drawImage(mainImg,0,0,rc.width,rc.height);
 
-    recorder.start();
-
-    // 逐帧绘制（每个钻石轮流发光一次）
-    let fi=0;
-    let startTime=performance.now();
-
-    function renderFrame(now){
-        const elapsed=now-startTime;
-        const curFrame=Math.floor(elapsed/GLOW_DUR);
-
-        rx.clearRect(0,0,rw,rh);
-        rx.save(); rx.scale(scale,scale);
-
-        // 底图
-        if(mainImg.src)rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
-
-        // 大贴纸（无选中框）
+        // 大贴纸图层
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
             const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
@@ -829,47 +797,79 @@ function generateLiveGif(){
             rx.save(); rx.translate(l.x,l.y); rx.rotate(l.rotation||0);
             l.points.forEach(p=>{
                 const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
-                if(img)rx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+                if(img) rx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
             });
             rx.restore();
         });
 
-        // 小钻石：当前帧高亮
+        // 小钻石：当前glowIdx那颗发光
         allRecords.forEach((r,ri)=>{
-            rx.save(); rx.translate(r.x,r.y); rx.rotate(r.angle||0);
-            if(ri===curFrame){
-                rx.shadowColor=r.glowColor||'#ffccdd';
-                rx.shadowBlur=30/scale; // 反缩放保持发光大小
+            rx.save();
+            rx.translate(r.x,r.y);
+            rx.rotate(r.angle||0);
+            if(ri===glowIdx){
+                // 先画两遍叠加发光：一次大blur淡光，一次小blur亮光
+                rx.shadowOffsetX=0; rx.shadowOffsetY=0;
+                rx.shadowColor=r.glowColor||'#ffe0ee';
+                rx.shadowBlur=40;
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=18;
+                rx.shadowColor='#ffffff';
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=0;
+            } else {
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
             }
-            rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
-            rx.shadowBlur=0;
             rx.restore();
         });
-
-        rx.restore();
-
-        if(elapsed<totalDuration){
-            requestAnimationFrame(renderFrame);
-        }else{
-            recorder.stop();
-        }
     }
-    requestAnimationFrame(renderFrame);
+
+    // 先画第一帧（全暗）让MediaRecorder拿到初始内容
+    drawLiveFrame(-1);
+
+    const stream=rc.captureStream(0); // fps=0，手动推帧
+    const chunks=[];
+    const recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:4000000});
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
+    recorder.onstop=()=>{
+        const blob=new Blob(chunks,{type:mimeType});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        const now=new Date();
+        const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        a.download=`pancakesticker_live_${ts}.webm`;
+        a.href=url; a.click();
+        URL.revokeObjectURL(url);
+        btn.disabled=false; btn.textContent='生成';
+    };
+
+    recorder.start();
+
+    let fi=0;  // fi=0是首帧（全暗），fi=1..frameCount是钻石帧，fi=totalFrames-1是尾帧（全暗）
+    const timer=setInterval(()=>{
+        const glowIdx=(fi===0||fi===totalFrames-1) ? -1 : fi-1;
+        drawLiveFrame(glowIdx);
+        // 手动通知stream有新帧
+        stream.getTracks()[0].requestFrame ? stream.getTracks()[0].requestFrame() : null;
+        fi++;
+        if(fi>=totalFrames){
+            clearInterval(timer);
+            setTimeout(()=>recorder.stop(),200);
+        }
+    }, FRAME_INTERVAL);
 }
 
-// 降级方案：不支持MediaRecorder时，下载关键帧PNG序列（打包zip太复杂，改为提示）
+// 降级方案（不支持MediaRecorder时）：逐帧下载PNG
 function _doLivePngSequence(allRecords,btn){
     btn.disabled=true; btn.textContent='生成中...';
     const frameCount=Math.min(allRecords.length,12);
-    const GLOW_SHADOW=26;
     let fi=0;
-
     function nextFrame(){
         if(fi>=frameCount){ btn.disabled=false; btn.textContent='生成'; return; }
         const fc=document.createElement('canvas');
         fc.width=canvas.width; fc.height=canvas.height;
         const fx=fc.getContext('2d');
-        if(mainImg.src)fx.drawImage(mainImg,0,0,fc.width,fc.height);
+        if(mainImg.src) fx.drawImage(mainImg,0,0,fc.width,fc.height);
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
             const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
@@ -877,22 +877,24 @@ function _doLivePngSequence(allRecords,btn){
             fx.save(); fx.translate(l.x,l.y); fx.rotate(l.rotation||0);
             l.points.forEach(p=>{
                 const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
-                if(img)fx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+                if(img) fx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
             });
             fx.restore();
         });
         allRecords.forEach((r,ri)=>{
             fx.save(); fx.translate(r.x,r.y); fx.rotate(r.angle||0);
-            if(ri===fi){fx.shadowColor=r.glowColor||'#ffccdd'; fx.shadowBlur=GLOW_SHADOW;}
+            if(ri===fi){
+                fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40;
+                fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                fx.shadowColor='#ffffff'; fx.shadowBlur=18;
+            }
             fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
             fx.shadowBlur=0; fx.restore();
         });
         const a=document.createElement('a');
-        const ts=String(fi+1).padStart(2,'0');
-        a.download=`pancakesticker_live_frame${ts}.png`;
+        a.download=`pancakesticker_live_frame${String(fi+1).padStart(2,'0')}.png`;
         a.href=fc.toDataURL(); a.click();
-        fi++;
-        setTimeout(nextFrame,300);
+        fi++; setTimeout(nextFrame,400);
     }
     nextFrame();
 }
