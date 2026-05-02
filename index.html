@@ -139,6 +139,7 @@
 </style>
 </div>
 <div class="overlay" id="overlay" onclick="closePicker()"></div>
+
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">当前颜色</div>
     <div id="iroPicker" style="display: flex; justify-content: center;"></div>
@@ -148,6 +149,15 @@
     <div class="color-swatches" id="historySwatches" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; min-height: 30px;"></div>
     <button onclick="closePicker()" style="margin-top:15px; background:#ff85a2; width:100%; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; cursor:pointer;">确定</button>
 </div>
+
+<script>
+    if (typeof iro === 'undefined') {
+        var s = document.createElement('script');
+        s.src = "https://cdn.jsdelivr.net/npm/@jaames/iro@5";
+        document.head.appendChild(s);
+    }
+</script>
+
 
     <div class="spine-area">
         <script>for(let i=0;i<6;i++)document.write('<div class="ring"></div>');</script>
