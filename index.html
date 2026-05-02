@@ -56,6 +56,61 @@
         .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
+/* 1. 大贴纸选中方框与旋转点 */
+.sticker-control-box {
+    position: absolute;
+    border: 3px solid #ff85a2; /* 加粗方框线 */
+    pointer-events: none;
+    box-sizing: content-box;
+    padding: 3mm; /* 边缘3mm感应区可视化（逻辑上通过JS判断） */
+    display: none;
+    z-index: 100;
+}
+.rotate-handle {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    background: #ff85a2;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: grab;
+    pointer-events: auto;
+}
+
+/* 2. 翻页书角样式 */
+.top-page { position: relative; overflow: visible; }
+.page-corner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, transparent 50%, #f8a5bc 50%);
+    cursor: pointer;
+    z-index: 20;
+    border-radius: 0 25px 0 0;
+    box-shadow: -2px 2px 5px rgba(0,0,0,0.1);
+}
+.page-corner::after {
+    content: '▼';
+    position: absolute;
+    top: 25px;
+    right: 5px;
+    font-size: 12px;
+    color: white;
+}
+
+/* 3. 钻石发光效果 */
+.diamond-glow {
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 0 15px rgba(255,133,162,0.5));
+}
+
+/* 隐藏第二页内容 */
+.page-content { display: none; width: 100%; }
+.page-content.active { display: block; }
     </style>
 </head>
 <body>
@@ -65,11 +120,22 @@
 
 <div class="book-container">
     <div class="top-page">
-        <div class="sticker-grid" id="stickerGrid"></div>
-        <div class="page-ctrl">
-            <button id="pageBtn1" class="active" onclick="renderStickers(1)">第一页</button>
-            <button id="pageBtn2" onclick="renderStickers(2)">下一页</button>
+    <div class="page-corner" onclick="toggleBookPage()" style="position: absolute; top: 0; right: 0; width: 40px; height: 40px; background: linear-gradient(135deg, transparent 50%, #f8a5bc 50%); cursor: pointer; z-index: 20; border-radius: 0 25px 0 0;">
+        <span style="position: absolute; top: 20px; right: 5px; font-size: 10px; color: white;">▼</span>
+    </div>
+    
+    <div id="pageContent1" class="page-content active">
         </div>
+
+    <div id="pageContent2" class="page-content" style="display:none; width:100%;">
+        <div class="text-to-sticker-area">
+            <p style="font-size:12px; color:var(--pink-accent); font-weight:bold; text-align:center;">上传图片生成水钻贴纸</p>
+            <button onclick="document.getElementById('rhinstoneInput').click()" style="background:var(--pink-accent); color:white; border:none; padding:12px; border-radius:10px; width:100%; font-weight:bold;">选择图片导入</button>
+            <input type="file" id="rhinstoneInput" accept="image/*" style="display:none;" onchange="handleRhinstoneUpload(event)">
+        </div>
+    </div>
+</div>
+
         
         <div class="text-to-sticker-area">
             <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px; font-size:12px; color:var(--pink-accent); font-weight:bold;">
@@ -393,6 +459,48 @@
         reader.readAsDataURL(e.target.files[0]);
     };
     init();
+// 切换页面的逻辑
+function toggleBookPage() {
+    const p1 = document.getElementById('pageContent1');
+    const p2 = document.getElementById('pageContent2');
+    const isP1 = p1.style.display !== 'none';
+    
+    p1.style.display = isP1 ? 'none' : 'block';
+    p2.style.display = isP1 ? 'block' : 'none';
+    
+    // 同步更新按钮状态
+    document.getElementById('pageBtn1').className = isP1 ? '' : 'active';
+    document.getElementById('pageBtn2').className = isP1 ? 'active' : '';
+}
+
+// 第二页：导入图片并生成水钻层
+function handleRhinstoneUpload(event) {
+    const file = event.target.files[0];
+    if (!file || !mainImg.src) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const userImg = new Image();
+        userImg.onload = () => {
+            // 这里创建一个特殊的“水钻图片层”
+            const newLayer = {
+                type: 'rhinstone',
+                img: userImg,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                scale: 0.5,
+                angle: 0,
+                origWidth: userImg.width,
+                origHeight: userImg.height
+            };
+            textLayers.push(newLayer);
+            selectedLayer = newLayer;
+            draw();
+        };
+        userImg.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 </script>
 </body>
 </html>
