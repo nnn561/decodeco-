@@ -11,388 +11,935 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffeef4; }
         .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
-
-        .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214, 51, 132, 0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
+        .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214,51,132,0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
         .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
-        .top-page { border-radius: 12px 25px 0 0; z-index: 2; }
+        .top-page { border-radius: 12px 25px 0 0; z-index: 2; overflow: hidden; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
+        /* 书角 */
+        .page-corner { position: absolute; top: 0; right: 0; width: 56px; height: 56px; cursor: pointer; z-index: 10; }
+        .page-corner::before { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 56px 56px 0; border-color: transparent var(--pink-accent) transparent transparent; filter: drop-shadow(-2px 2px 4px rgba(255,133,162,0.5)); transition: border-width 0.15s; }
+        .page-corner:active::before { border-width: 0 66px 66px 0; }
+        .page-corner-icon { position: absolute; top: 8px; right: 8px; font-size: 14px; color: white; pointer-events: none; transition: transform 0.3s; }
+        .page-corner.flipped .page-corner-icon { transform: rotate(180deg); }
+
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
-        .sticker-slot { 
-            width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; 
-            display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
-        }
+        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
         .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; }
 
-        .page-ctrl { display: flex; gap: 15px; margin-bottom: 15px; width: 100%; justify-content: center; }
-        .page-ctrl button { background: #fff; color: var(--pink-accent); border: 1px solid #ffcad4; border-radius: 6px; padding: 3px 12px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .page-ctrl button.active { background: var(--pink-accent); color: white; }
+        .page-content { width: 100%; }
+        .sticker-gen-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
+        .gen-row { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; }
+        .gen-row input[type=text] { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; height: 38px; }
+        .gen-btn { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; cursor: pointer; height: 38px; white-space: nowrap; flex-shrink: 0; }
+        .img-upload-box { flex: 1; border: 1.5px dashed #ffcad4; border-radius: 8px; padding: 6px 8px; font-size: 12px; color: #ff85a2; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; height: 38px; overflow: hidden; }
+        .img-upload-preview { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: 1.5px solid #ffcad4; display: none; flex-shrink: 0; }
+        .gen-tip { font-size: 11px; color: #ff85a2; text-align: center; padding: 2px 0; display: none; }
 
-        .text-to-sticker-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
-        .text-input-group { display: flex; gap: 5px; margin-bottom: 8px; }
-        .text-input-group input { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; }
-        .text-input-group button { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; }
-
-        .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
+        /* fix4: 上下对齐 — 使用统一的两列布局 */
+        .slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
+        .slider-row span:first-child { min-width: 56px; }
+        .slider-row span:last-child { min-width: 30px; text-align: right; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
 
-        .controls { display: flex; align-items: center; gap: 12px; width: 100%; }
-        .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; flex-shrink: 0; }
+        /* 控制区两行对齐 */
+        .controls { display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-top: 2px; }
+        .color-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 18px; }
+        .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .slider-col { flex: 1; }
 
         .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; }
-        #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; will-change: transform; }
+        #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; }
         .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; z-index: 1; }
         .canvas-area.has-img .plus-icon { display: none; }
-
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
-        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; }
-        
-        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 101; box-shadow: 0 10px 50px rgba(0,0,0,0.2); width: 280px; }
-        .color-preview-bar { width: 100%; height: 30px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 12px; }
+        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; cursor: pointer; }
+
+        /* 色环弹窗 — fix1: 确保能正常显示 */
+        #pickerContainer {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 20px;
+            z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            width: min(300px, 90vw);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .color-preview-bar { width: 100%; height: 34px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 13px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
-        .color-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
-        .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 100; }
+        .color-swatches { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
+        .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 2px solid #eee; transition: transform 0.1s; }
+        .swatch:active { transform: scale(0.9); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9998; }
+
+        /* fix6: Live图图示按钮 */
+        .live-btn-area { width: 100%; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 10px; background: #fff5f8; border-radius: 10px; border: 1px dashed #ffcad4; }
+        .live-preview-icon { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+        .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #ffcad4; }
+        .live-dot.lit { background: var(--pink-accent); box-shadow: 0 0 6px var(--pink-accent); }
+        .live-label { font-size: 11px; color: var(--pink-accent); font-weight: bold; flex: 1; }
+        .live-btn { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer; font-size: 11px; white-space: nowrap; }
+        .live-btn:disabled { background: #ffcad4; cursor: not-allowed; }
     </style>
 </head>
 <body>
-
-<div class="overlay" id="overlay"></div>
+<div class="overlay" id="overlay" onclick="closePicker()"></div>
 <div class="title-header">pancake sticker book</div>
 
 <div class="book-container">
-    <div class="top-page">
+    <div class="top-page" id="topPage">
+        <!-- 书角翻页 -->
+        <div class="page-corner" id="pageCorner" onclick="flipPage()">
+            <div class="page-corner-icon">▷</div>
+        </div>
+
         <div class="sticker-grid" id="stickerGrid"></div>
-        <div class="page-ctrl">
-            <button id="pageBtn1" class="active" onclick="renderStickers(1)">第一页</button>
-            <button id="pageBtn2" onclick="renderStickers(2)">下一页</button>
-        </div>
-        
-        <div class="text-to-sticker-area">
-            <div style="display:flex; align-items:center; gap:5px; margin-bottom:5px; font-size:12px; color:var(--pink-accent); font-weight:bold;">
-                <input type="checkbox" id="useOriginalColor"> <label for="useOriginalColor">使用Emoji本身颜色</label>
+
+        <!-- 第一页：文字/emoji 生成 -->
+        <div class="page-content" id="pageContent1">
+            <div class="sticker-gen-area">
+                <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;font-size:12px;color:var(--pink-accent);font-weight:bold;">
+                    <input type="checkbox" id="useOriginalColor"><label for="useOriginalColor">使用Emoji本身颜色</label>
+                </div>
+                <div class="gen-row">
+                    <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
+                    <button class="gen-btn" onclick="generateTextStickers()">生成</button>
+                </div>
+                <div class="gen-tip" id="genTip1">⏳ 生成中...</div>
+                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
+                <input type="range" id="textScaleSlider" min="10" max="300" value="30">
+                <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
+                <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
             </div>
-            <div class="text-input-group">
-                <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
-                <button onclick="generateTextStickers()">生成</button>
-            </div>
-            <div class="slider-label"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
-            <input type="range" id="textScaleSlider" min="10" max="300" value="30">
-            <div class="slider-label"><span>钻石密度</span><span id="densityVal">少</span></div>
-            <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
         </div>
+
+        <!-- 第二页：图片生成水钻 -->
+        <div class="page-content" id="pageContent2" style="display:none">
+            <div class="sticker-gen-area">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成水钻贴纸</div>
+                <div class="gen-row">
+                    <div class="img-upload-box" onclick="stickerImgInput.click()">
+                        <img id="imgUploadPreview" class="img-upload-preview">
+                        <span id="imgUploadLabel">📷 点击上传图片</span>
+                    </div>
+                    <button class="gen-btn" onclick="generateImgStickers()">生成</button>
+                </div>
+                <div class="gen-tip" id="genTip2">⏳ 生成中...</div>
+                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal2">3.0</span></div>
+                <input type="range" id="textScaleSlider2" min="10" max="300" value="30">
+                <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
+                <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
+                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
+            </div>
+        </div>
+
+        <!-- 颜色 + 钻石大小/角度 — fix4: 左侧色块与右侧两行滑块严格对齐 -->
         <div class="controls">
-            <div class="current-color-dot" id="colorBtn" style="background: #FFB7B2;"></div>
-            <div style="flex:1">
-                <div class="slider-label"><span>钻石大小 (联动贴纸中钻石大小)</span><span id="sizeVal">80</span></div>
-                <input type="range" id="sizeSlider" min="30" max="300" value="80">
-                <div class="slider-label"><span>钻石角度</span><span id="rotVal">0°</span></div>
+            <div class="color-col">
+                <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
+            </div>
+            <div class="slider-col">
+                <div class="slider-row"><span>钻石大小</span><span id="sizeVal">80</span></div>
+                <input type="range" id="sizeSlider" min="30" max="500" value="80">
+                <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
             </div>
         </div>
     </div>
+
     <div class="spine-area">
-        <script>for(let i=0; i<6; i++) document.write('<div class="ring"></div>');</script>
+        <script>for(let i=0;i<6;i++)document.write('<div class="ring"></div>');</script>
     </div>
+
     <div class="bottom-page">
+        <!-- fix6: Live图图示 + 按钮 -->
+        <div class="live-btn-area">
+            <div class="live-preview-icon" id="livePreviewIcon">
+                <div class="live-dot lit" id="liveDot0"></div>
+                <div class="live-dot" id="liveDot1"></div>
+                <div class="live-dot" id="liveDot2"></div>
+                <div class="live-dot" id="liveDot3"></div>
+                <div class="live-dot" id="liveDot4"></div>
+            </div>
+            <span class="live-label">按粘贴顺序依次闪光 · 生成 Live 图</span>
+            <button class="live-btn" id="liveBtn" onclick="generateLiveGif()">生成</button>
+        </div>
+
         <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
             <div class="plus-icon">+</div>
             <canvas id="myCanvas"></canvas>
         </div>
         <div class="bottom-action-bar">
             <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="generateRandomDiamonds()">随机</button>
+            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
             <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
             <button onclick="download()">保存</button>
         </div>
-        <input type="file" id="imgInput" accept="image/*" style="display: none;">
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
     </div>
 </div>
 
+<!-- fix1: 色环弹窗 -->
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
-    <div id="iroPicker"></div>
+    <div id="iroPicker" style="display:flex;justify-content:center;"></div>
+    <div class="swatch-title">正在使用</div>
+    <div style="height:34px;width:34px;border-radius:8px;border:2px solid var(--pink-accent);" id="currentSwatch"></div>
     <div class="swatch-title">历史颜色</div>
     <div class="color-swatches" id="historySwatches"></div>
     <div class="swatch-title">初始颜色</div>
     <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:12px; background:var(--pink-accent); width:100%; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold;">确定</button>
+    <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
 </div>
 
 <script>
-    const canvas = document.getElementById('myCanvas'), mainCtx = canvas.getContext('2d');
-    const imgInput = document.getElementById('imgInput'), dropZone = document.getElementById('dropZone');
-    let mainImg = new Image(), stickers = [], records = [], textLayers = [];
-    let curIdx = 0, currentColor = "#FFB7B2", preRenderedSticker = null, selectedLayer = null;
-    let isDragging = false, stickerRatio = 1, colorHistory = [];
+// ============================================================
+//  核心变量
+// ============================================================
+const canvas  = document.getElementById('myCanvas');
+const mainCtx = canvas.getContext('2d');
+const imgInput = document.getElementById('imgInput');
+const dropZone = document.getElementById('dropZone');
 
-    const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
-    const macaronColors = ["#FFB7B2", "#FFDAC1", "#E2F0CB", "#B5EAD7", "#C7CEEA", "#F3B0C3", "#000000", "#FFFFFF"];
+let mainImg            = new Image();
+let stickers           = [];
+let records            = [];      // 小钻石：每项 [{x,y,img,sizeW,sizeH,angle,glowing,glowColor}]
+let textLayers         = [];      // 大贴纸图层
+let curIdx             = 0;
+let currentColor       = "#FFB7B2";
+let preRenderedSticker = null;
+let stickerRatio       = 1;
+let colorHistory       = [];
+let currentPage        = 1;
+let stickerUploadedImg = null;
 
-    // 辅助色彩转换函数
-    function rgbToHsl(r, g, b) {
-        r /= 255, g /= 255, b /= 255;
-        let max = Math.max(r, g, b), min = Math.min(r, g, b);
-        let h, s, l = (max + min) / 2;
-        if (max == min) h = s = 0; else {
-            let d = max - min;
-            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-            switch (max) {
-                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                case g: h = (b - r) / d + 2; break;
-                case b: h = (r - g) / d + 4; break;
-            }
-            h /= 6;
-        }
-        return [h, s, l];
+// 大贴纸交互
+let selectedLayer   = null;
+let isDraggingLayer = false;
+let isRotatingLayer = false;
+let rotStart        = { touchAngle: 0, layerAngle: 0 };
+let layerCenter     = { x: 0, y: 0 };
+
+// 随机按钮
+let randomClickCount = 0;
+let randomClickTimer = null;
+
+// 防抖：sizeSlider
+let rebuildTimer = null;
+
+const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
+const macaronColors = ["#FFB7B2","#FFDAC1","#E2F0CB","#B5EAD7","#C7CEEA","#F3B0C3","#000000","#FFFFFF"];
+const harmonyPalettes = [
+    ["#FFB7B2","#FFDAC1","#FFD3A5","#FFC4CE"],
+    ["#B5EAD7","#A8D8EA","#C7CEEA","#D4EFDF"],
+    ["#F3B0C3","#E8C4F0","#D4AFFF","#FFB3DE"],
+    ["#FFF0AA","#FFE066","#FFDAC1","#FFD3A5"],
+    ["#B5EAD7","#E2F0CB","#D4EFDF","#A8E6CF"],
+    ["#87CEEB","#A8D8EA","#C4E0F9","#B0D4F1"],
+    ["#FFD3E8","#FFB7B2","#FFACC7","#FF9EBF"],
+    ["#DDA0DD","#D4AFFF","#E8C4F0","#C4A8FF"],
+];
+
+// ============================================================
+//  颜色工具
+// ============================================================
+function rgbToHsl(r,g,b){
+    r/=255;g/=255;b/=255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+    let h,s,l=(mx+mn)/2;
+    if(mx===mn){h=s=0;}else{
+        const d=mx-mn;s=l>0.5?d/(2-mx-mn):d/(mx+mn);
+        switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}
+        h/=6;
     }
-    function hslToRgb(h, s, l) {
-        let r, g, b;
-        if (s == 0) r = g = b = l; else {
-            const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
-            const hue2rgb = (p, q, t) => {
-                if (t < 0) t += 1; if (t > 1) t -= 1;
-                if (t < 1/6) return p + (q - p) * 6 * t;
-                if (t < 1/2) return q;
-                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                return p;
+    return[h,s,l];
+}
+function h2r(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+function hslToRgb(h,s,l){
+    if(!s){const v=Math.round(l*255);return`rgb(${v},${v},${v})`;}
+    const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+    return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
+}
+
+// ============================================================
+//  贴纸染色工具
+// ============================================================
+function makeColoredSticker(sImg, color, w, h) {
+    w=Math.max(1,Math.round(w)); h=Math.max(1,Math.round(h));
+    const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
+    const ox=oc.getContext('2d');
+    ox.drawImage(sImg,0,0,w,h);
+    ox.globalCompositeOperation='multiply'; ox.fillStyle=color; ox.fillRect(0,0,w,h);
+    ox.globalCompositeOperation='destination-in'; ox.drawImage(sImg,0,0,w,h);
+    return oc;
+}
+function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
+
+// ============================================================
+//  初始化
+// ============================================================
+function init(){
+    for(let i=1;i<=12;i++){
+        const img=new Image(); img.crossOrigin="anonymous";
+        img.onload=()=>{if(i-1===curIdx)updatePreRender();};
+        img.src=`${baseUrl}sticker${i}.png`;
+        stickers.push(img);
+    }
+    renderStickers(1);
+    initPresetSwatches();
+    animateLiveDots();
+
+    document.getElementById('stickerImgInput').onchange=function(e){
+        const file=e.target.files[0]; if(!file)return;
+        const reader=new FileReader();
+        reader.onload=(f)=>{
+            const img=new Image();
+            img.onload=()=>{
+                stickerUploadedImg=img;
+                const pv=document.getElementById('imgUploadPreview');
+                pv.src=f.target.result; pv.style.display='block';
+                document.getElementById('imgUploadLabel').textContent='✅ 已选择';
             };
-            r = hue2rgb(p, q, h + 1/3); g = hue2rgb(p, q, h); b = hue2rgb(p, q, h - 1/3);
-        }
-        return `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
-    }
-
-    async function init() {
-        for(let i=1; i<=12; i++) {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => { if(i-1 === curIdx) updatePreRender(); };
-            img.src = `${baseUrl}sticker${i}.png`; 
-            stickers.push(img);
-        }
-        renderStickers(1);
-        initPresetSwatches();
-    }
-
-    function renderStickers(page) {
-        const grid = document.getElementById('stickerGrid');
-        grid.innerHTML = '';
-        document.getElementById('pageBtn1').className = (page === 1 ? 'active' : '');
-        document.getElementById('pageBtn2').className = (page === 2 ? 'active' : '');
-        const start = page === 1 ? 1 : 7, end = page === 1 ? 6 : 12;
-        for(let i=start; i<=end; i++) {
-            const slot = document.createElement('div');
-            slot.className = 'sticker-slot' + (curIdx === i-1 ? ' active' : '');
-            const imgEl = document.createElement('img');
-            imgEl.src = `${baseUrl}sticker${i}.png`;
-            imgEl.className = 'sticker-item';
-            slot.onclick = () => { 
-                curIdx = i-1; 
-                document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
-                slot.classList.add('active'); 
-                updatePreRender(); 
-            };
-            slot.appendChild(imgEl);
-            grid.appendChild(slot);
-        }
-    }
-
-    function initPresetSwatches() {
-        const container = document.getElementById('presetSwatches');
-        macaronColors.forEach(c => {
-            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
-            s.onclick = () => colorPicker.color.set(c);
-            container.appendChild(s);
-        });
-    }
-
-    function updateHistorySwatches() {
-        const container = document.getElementById('historySwatches');
-        container.innerHTML = '';
-        colorHistory.slice().reverse().forEach(c => {
-            const s = document.createElement('div'); s.className = 'swatch'; s.style.backgroundColor = c;
-            s.onclick = () => colorPicker.color.set(c);
-            container.appendChild(s);
-        });
-    }
-
-    function updatePreRender() {
-        const sImg = stickers[curIdx]; 
-        if (!sImg || !sImg.complete || sImg.naturalWidth === 0) return;
-        stickerRatio = sImg.naturalWidth / sImg.naturalHeight;
-        const oc = document.createElement('canvas'), ox = oc.getContext('2d');
-        if (stickerRatio >= 1) { oc.width = 150; oc.height = 150 / stickerRatio; }
-        else { oc.width = 150 * stickerRatio; oc.height = 150; }
-        ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        ox.globalCompositeOperation="multiply"; ox.fillStyle=currentColor; ox.fillRect(0,0,oc.width,oc.height);
-        ox.globalCompositeOperation="destination-in"; ox.drawImage(sImg, 0, 0, oc.width, oc.height);
-        preRenderedSticker = new Image(); preRenderedSticker.src = oc.toDataURL();
-        if(selectedLayer) { selectedLayer.img = preRenderedSticker; draw(); }
-    }
-
-    function generateTextStickers() {
-        if (!mainImg.src) return imgInput.click();
-        const text = document.getElementById('stickerTextInput').value; if (!text) return;
-        const useOriginal = document.getElementById('useOriginalColor').checked;
-        
-        const fSize = 60, tempCanvas = document.createElement('canvas'), tempCtx = tempCanvas.getContext('2d');
-        tempCtx.font = `bold ${fSize}px Arial`;
-        const tw = tempCtx.measureText(text).width + 80;
-        tempCanvas.width = tw; tempCanvas.height = fSize * 2.5;
-        tempCtx.font = `bold ${fSize}px Arial`; tempCtx.textBaseline = 'middle'; tempCtx.textAlign = 'center';
-        tempCtx.fillStyle = 'black'; tempCtx.fillText(text, tempCanvas.width/2, tempCanvas.height/2);
-        
-        const imgData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height).data;
-        const points = [];
-        const sliderVal = parseInt(document.getElementById('densitySlider').value);
-        const step = sliderVal === 6 ? 5 : sliderVal === 8 ? 4 : sliderVal === 10 ? 3 : 2;
-        
-        for (let y = 0; y < tempCanvas.height; y += step) {
-            for (let x = 0; x < tempCanvas.width; x += step) {
-                const idx = (y * tempCanvas.width + x) * 4;
-                if (imgData[idx + 3] > 120) {
-                    let pointColor = null;
-                    if (useOriginal) {
-                        let [h, s, l] = rgbToHsl(imgData[idx], imgData[idx+1], imgData[idx+2]);
-                        s = Math.min(1.0, s * 2.5); 
-                        l = Math.min(0.9, l * 1.3); 
-                        pointColor = hslToRgb(h, s, l);
-                    }
-                    points.push({ dx: x - tempCanvas.width/2, dy: y - tempCanvas.height/2, color: pointColor });
-                }
-            }
-        }
-        const currentGlobalSize = parseInt(document.getElementById('sizeSlider').value);
-        const newLayer = { points, x: canvas.width/2, y: canvas.height/2, scale: parseInt(document.getElementById('textScaleSlider').value)/10, img: preRenderedSticker, ratio: stickerRatio, origWidth: tw, dotSize: currentGlobalSize };
-        textLayers.push(newLayer); selectedLayer = newLayer; draw();
-    }
-
-    function draw(isFast = false) {
-        mainCtx.clearRect(0,0,canvas.width,canvas.height);
-        if(mainImg.src) mainCtx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
-        records.flat().forEach(r => {
-            mainCtx.save(); mainCtx.translate(r.x, r.y); mainCtx.rotate(r.angle || 0);
-            mainCtx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
-            mainCtx.restore();
-        });
-        textLayers.forEach(l => {
-            const linkedDotSize = l.dotSize / 6;
-            const dw = linkedDotSize * (l.ratio >= 1 ? 1 : l.ratio), dh = linkedDotSize / (l.ratio >= 1 ? l.ratio : 1);
-            l.points.forEach(p => {
-                if (p.color) {
-                    if (isFast) {
-                        mainCtx.fillStyle = p.color;
-                        mainCtx.fillRect(l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                    } else {
-                        const tempC = document.createElement('canvas'), tempX = tempC.getContext('2d');
-                        tempC.width = dw; tempC.height = dh;
-                        tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        tempX.globalCompositeOperation="multiply"; tempX.fillStyle = p.color; tempX.fillRect(0,0,dw,dh);
-                        tempX.globalCompositeOperation="destination-in"; tempX.drawImage(stickers[curIdx], 0, 0, dw, dh);
-                        mainCtx.drawImage(tempC, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                    }
-                } else if(l.img) {
-                    mainCtx.drawImage(l.img, l.x + p.dx * l.scale - dw/2, l.y + p.dy * l.scale - dh/2, dw, dh);
-                }
-            });
-            if(l === selectedLayer) {
-                const bw = (l.origWidth/2) * l.scale, bh = 30 * l.scale;
-                mainCtx.strokeStyle="#ff85a2"; mainCtx.setLineDash([5,5]); mainCtx.strokeRect(l.x-bw, l.y-bh, bw*2, bh*2);
-            }
-        });
-    }
-
-    const getPos = (e) => {
-        const r = canvas.getBoundingClientRect();
-        const cx = e.touches ? e.touches[0].clientX : e.clientX, cy = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: (cx - r.left) * (canvas.width / r.width), y: (cy - r.top) * (canvas.height / r.height) };
+            img.src=f.target.result;
+        };
+        reader.readAsDataURL(file);
     };
+}
 
-    canvas.addEventListener('touchstart', (e) => {
-        const p = getPos(e); if(!mainImg.src) return;
-        let found = null;
-        for (let i = textLayers.length - 1; i >= 0; i--) {
-            const l = textLayers[i];
-            // 判定范围变小：中心 40% 区域
-            const hitW = (l.origWidth / 2) * l.scale * 0.4; 
-            const hitH = 30 * l.scale * 0.4;
-            if(Math.abs(p.x - l.x) < hitW && Math.abs(p.y - l.y) < hitH) { found = l; break; }
+// fix6: 图示小圆点循环动画
+let liveDotTimer=null;
+function animateLiveDots(){
+    let idx=0;
+    liveDotTimer=setInterval(()=>{
+        for(let i=0;i<5;i++){
+            const d=document.getElementById('liveDot'+i);
+            if(d) d.className='live-dot'+(i===idx?' lit':'');
         }
-        if(found) { 
-            selectedLayer = found; isDragging = true; 
-            document.getElementById('sizeSlider').value = found.dotSize;
-            document.getElementById('sizeVal').innerText = found.dotSize;
-        } else { 
-            selectedLayer = null; const size = parseInt(document.getElementById('sizeSlider').value);
-            records.push([{ x:p.x, y:p.y, img:preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle:parseInt(document.getElementById('rotateSlider').value)*Math.PI/180 }]); 
+        idx=(idx+1)%5;
+    },350);
+}
+
+// ============================================================
+//  翻页
+// ============================================================
+let isFlipped=false;
+function flipPage(){
+    isFlipped=!isFlipped; currentPage=isFlipped?2:1;
+    document.getElementById('pageCorner').classList.toggle('flipped',isFlipped);
+    document.getElementById('pageContent1').style.display=isFlipped?'none':'block';
+    document.getElementById('pageContent2').style.display=isFlipped?'block':'none';
+    renderStickers(currentPage);
+}
+
+// ============================================================
+//  贴纸格
+// ============================================================
+function renderStickers(page){
+    const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
+    const start=page===1?1:7, end=page===1?6:12;
+    for(let i=start;i<=end;i++){
+        const slot=document.createElement('div');
+        slot.className='sticker-slot'+(curIdx===i-1?' active':'');
+        const imgEl=document.createElement('img');
+        imgEl.src=`${baseUrl}sticker${i}.png`; imgEl.className='sticker-item';
+        slot.onclick=()=>{
+            curIdx=i-1;
+            document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
+            slot.classList.add('active');
+            updatePreRender();
+        };
+        slot.appendChild(imgEl); grid.appendChild(slot);
+    }
+}
+
+function initPresetSwatches(){
+    const c=document.getElementById('presetSwatches');
+    macaronColors.forEach(col=>{
+        const s=document.createElement('div'); s.className='swatch'; s.style.backgroundColor=col;
+        s.onclick=()=>colorPicker.color.set(col);
+        c.appendChild(s);
+    });
+}
+function updateHistorySwatches(){
+    const c=document.getElementById('historySwatches'); c.innerHTML='';
+    colorHistory.slice().reverse().forEach(col=>{
+        const s=document.createElement('div'); s.className='swatch'; s.style.backgroundColor=col;
+        s.onclick=()=>colorPicker.color.set(col);
+        c.appendChild(s);
+    });
+}
+
+// ============================================================
+//  预渲染当前贴纸
+// ============================================================
+function updatePreRender(){
+    const sImg=stickers[curIdx];
+    if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
+    stickerRatio=sImg.naturalWidth/sImg.naturalHeight;
+    const w=stickerRatio>=1?150:150*stickerRatio;
+    const h=stickerRatio>=1?150/stickerRatio:150;
+    preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
+}
+
+// ============================================================
+//  文字/Emoji 生成大贴纸（fix2: scale+dotSize 动态更新不卡）
+// ============================================================
+function generateTextStickers(){
+    if(!mainImg.src)return imgInput.click();
+    const text=document.getElementById('stickerTextInput').value; if(!text)return;
+    const tip=document.getElementById('genTip1'); tip.style.display='block';
+    setTimeout(()=>{ _buildTextLayer(text); tip.style.display='none'; },20);
+}
+
+function _buildTextLayer(text){
+    const useOrig=document.getElementById('useOriginalColor').checked;
+    const fSize=60;
+    const tc=document.createElement('canvas'), tx=tc.getContext('2d');
+    tx.font=`bold ${fSize}px Arial`;
+    const tw=Math.ceil(tx.measureText(text).width)+80;
+    const th=Math.ceil(fSize*2.5);
+    tc.width=tw; tc.height=th;
+    tx.font=`bold ${fSize}px Arial`; tx.textBaseline='middle'; tx.textAlign='center';
+    tx.fillStyle='black'; tx.fillText(text,tw/2,th/2);
+
+    const raw=tx.getImageData(0,0,tw,th).data;
+    const step=_stepFromDensity('densitySlider');
+    const points=[];
+    for(let y=0;y<th;y+=step){
+        for(let x=0;x<tw;x+=step){
+            const idx=(y*tw+x)*4;
+            if(raw[idx+3]>120){
+                let pc=null;
+                if(useOrig){
+                    let[h,s,l]=rgbToHsl(raw[idx],raw[idx+1],raw[idx+2]);
+                    s=Math.min(1,s*2.5); l=Math.min(0.9,l*1.3);
+                    pc=hslToRgb(h,s,l);
+                }
+                points.push({dx:x-tw/2, dy:y-th/2, color:pc});
+            }
         }
+    }
+    if(!points.length)return;
+
+    const dotSize=parseInt(document.getElementById('sizeSlider').value);
+    const layer={
+        points, colorCacheMap:{},
+        defaultImg: preRenderedSticker,
+        x:canvas.width/2, y:canvas.height/2,
+        scale:parseInt(document.getElementById('textScaleSlider').value)/10,
+        ratio:stickerRatio, origWidth:tw, origHeight:th,
+        dotSize, rotation:0,
+        stickerIdx: curIdx,
+        useOrig,
+    };
+    _buildCache(layer);
+    textLayers.push(layer);
+    selectedLayer=layer;
+    draw();
+}
+
+// ============================================================
+//  图片生成水钻（fix2+fix3: 量化颜色+缓存，无卡顿）
+// ============================================================
+function generateImgStickers(){
+    if(!mainImg.src)return imgInput.click();
+    if(!stickerUploadedImg){alert('请先上传图片');return;}
+    const tip=document.getElementById('genTip2'); tip.style.display='block';
+    setTimeout(()=>{ _buildImgLayer(); tip.style.display='none'; },20);
+}
+
+function _buildImgLayer(){
+    const step=_stepFromDensity('densitySlider2');
+    const MAX=160;
+    const iw=stickerUploadedImg.naturalWidth, ih=stickerUploadedImg.naturalHeight;
+    const sc=Math.min(MAX/iw,MAX/ih,1);
+    const sw=Math.max(1,Math.round(iw*sc)), sh=Math.max(1,Math.round(ih*sc));
+    const tc=document.createElement('canvas'); tc.width=sw; tc.height=sh;
+    tc.getContext('2d').drawImage(stickerUploadedImg,0,0,sw,sh);
+    const raw=tc.getContext('2d').getImageData(0,0,sw,sh).data;
+
+    // 颜色量化到16级（约16^3=4096色但实际很少）
+    function q(v){return Math.round(v/16)*16;}
+
+    const points=[];
+    for(let y=0;y<sh;y+=step){
+        for(let x=0;x<sw;x+=step){
+            const idx=(y*sw+x)*4;
+            if(raw[idx+3]>80){
+                let[h,s,l]=rgbToHsl(q(raw[idx]),q(raw[idx+1]),q(raw[idx+2]));
+                s=Math.min(1,s*1.8); l=Math.min(0.82,Math.max(0.28,l));
+                points.push({dx:x-sw/2, dy:y-sh/2, color:hslToRgb(h,s,l)});
+            }
+        }
+    }
+    if(!points.length)return;
+
+    const dotSize=parseInt(document.getElementById('sizeSlider').value);
+    const layer={
+        points, colorCacheMap:{},
+        defaultImg:preRenderedSticker,
+        x:canvas.width/2, y:canvas.height/2,
+        scale:parseInt(document.getElementById('textScaleSlider2').value)/10,
+        ratio:stickerRatio, origWidth:sw, origHeight:sh,
+        dotSize, rotation:0,
+        stickerIdx:curIdx,
+        useOrig:true,
+    };
+    _buildCache(layer);
+    textLayers.push(layer);
+    selectedLayer=layer;
+    draw();
+}
+
+// ============================================================
+//  缓存构建（fix2: dotSize变化时重建，但用 requestAnimationFrame 防卡）
+// ============================================================
+function _stepFromDensity(sliderId){
+    const v=parseInt(document.getElementById(sliderId).value);
+    return v===6?5:v===8?4:v===10?3:2;
+}
+
+function _buildCache(l){
+    const sImg=stickers[l.stickerIdx||curIdx];
+    if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
+    const linked=l.dotSize/6;
+    const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
+    const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
+    const newCache={};
+    const uniqueColors=[...new Set(l.points.map(p=>p.color).filter(Boolean))];
+    uniqueColors.forEach(col=>{
+        newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh));
+    });
+    l.colorCacheMap=newCache;
+    // default无色点
+    l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
+}
+
+// ============================================================
+//  主绘制
+// ============================================================
+function draw(isExporting){
+    mainCtx.clearRect(0,0,canvas.width,canvas.height);
+    if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
+
+    // 小钻石（无选中框）
+    records.flat().forEach(r=>{
+        mainCtx.save();
+        mainCtx.translate(r.x,r.y); mainCtx.rotate(r.angle||0);
+        if(r.glowing&&!isExporting){mainCtx.shadowColor=r.glowColor||'#ffddee';mainCtx.shadowBlur=22;}
+        mainCtx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+        mainCtx.shadowBlur=0;
+        mainCtx.restore();
+    });
+
+    // 大贴纸图层
+    textLayers.forEach(l=>{
+        const linked=l.dotSize/6;
+        const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
+        const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
+        mainCtx.save();
+        mainCtx.translate(l.x,l.y); mainCtx.rotate(l.rotation||0);
+        l.points.forEach(p=>{
+            const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
+            if(img)mainCtx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+        });
+        // 选中框缩小（0.55系数贴近实际内容），旋转圆点加大
+        if(l===selectedLayer&&!isExporting){
+            const bw=(l.origWidth/2)*l.scale*0.55;
+            const bh=(l.origHeight/2)*l.scale*0.55;
+            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
+            mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
+            mainCtx.setLineDash([]);
+            // 旋转圆点：r=18，触摸区40px，框正下方
+            const dotY=bh+28;
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,21,0,Math.PI*2);
+            mainCtx.fillStyle="rgba(255,255,255,0.95)"; mainCtx.fill();
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,18,0,Math.PI*2);
+            mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
+            mainCtx.fillStyle='#fff'; mainCtx.font='bold 22px Arial';
+            mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
+            mainCtx.fillText('\u21bb',0,dotY+1);
+        }
+        mainCtx.restore();
+    });
+}
+
+// ============================================================
+//  触摸交互
+// ============================================================
+const getPos=(e)=>{
+    const r=canvas.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r.left)*(canvas.width/r.width), y:(cy-r.top)*(canvas.height/r.height)};
+};
+
+function hitLayer(px,py,l){
+    const dx=px-l.x, dy=py-l.y;
+    const rot=-(l.rotation||0);
+    const lx=dx*Math.cos(rot)-dy*Math.sin(rot);
+    const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
+    return Math.abs(lx)<=(l.origWidth/2)*l.scale*0.92 && Math.abs(ly)<=(l.origHeight/2)*l.scale*0.92;
+}
+function hitRotateDot(px,py,l){
+    const rot=l.rotation||0;
+    const bh=(l.origHeight/2)*l.scale+22;
+    const dotX=l.x+(-Math.sin(rot))*bh;
+    const dotY=l.y+(Math.cos(rot))*bh;
+    return Math.hypot(px-dotX,py-dotY)<26; // fix3: 碰撞半径加大
+}
+
+canvas.addEventListener('touchstart',(e)=>{
+    if(!mainImg.src)return;
+    const p=getPos(e);
+
+    // 旋转圆点优先
+    if(selectedLayer&&hitRotateDot(p.x,p.y,selectedLayer)){
+        isRotatingLayer=true;
+        layerCenter={x:selectedLayer.x, y:selectedLayer.y};
+        rotStart.touchAngle=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
+        rotStart.layerAngle=selectedLayer.rotation||0;
+        return;
+    }
+
+    // 大贴纸拖动
+    let found=null;
+    for(let i=textLayers.length-1;i>=0;i--){
+        if(hitLayer(p.x,p.y,textLayers[i])){found=textLayers[i];break;}
+    }
+    if(found){
+        selectedLayer=found; isDraggingLayer=true;
+        document.getElementById('sizeSlider').value=found.dotSize;
+        document.getElementById('sizeVal').innerText=found.dotSize;
+        draw(); return;
+    }
+
+    // 放置小钻石
+    selectedLayer=null;
+    const size=parseInt(document.getElementById('sizeSlider').value);
+    const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
+    const sW=size*(stickerRatio>=1?1:stickerRatio);
+    const sH=size/(stickerRatio>=1?stickerRatio:1);
+    const rec={x:p.x,y:p.y,img:preRenderedSticker,sizeW:sW,sizeH:sH,angle,glowing:true,glowColor:currentColor};
+    records.push([rec]);
+    draw();
+    setTimeout(()=>{rec.glowing=false;draw();},600);
+},{passive:true});
+
+canvas.addEventListener('touchmove',(e)=>{
+    const p=getPos(e);
+    if(isRotatingLayer&&selectedLayer){
+        const curA=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
+        selectedLayer.rotation=rotStart.layerAngle+(curA-rotStart.touchAngle);
         draw();
-    });
+    }else if(isDraggingLayer&&selectedLayer){
+        selectedLayer.x=p.x; selectedLayer.y=p.y; draw();
+    }
+    e.preventDefault();
+},{passive:false});
 
-    canvas.addEventListener('touchmove', (e) => { if(isDragging && selectedLayer) { const p = getPos(e); selectedLayer.x = p.x; selectedLayer.y = p.y; draw(true); } e.preventDefault(); }, {passive:false});
-    canvas.addEventListener('touchend', () => { if(isDragging) draw(); isDragging = false; });
+canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
 
-    document.getElementById('sizeSlider').oninput = function() { 
-        const val = parseInt(this.value); document.getElementById('sizeVal').innerText = val; 
-        if (selectedLayer) { selectedLayer.dotSize = val; draw(); }
-    };
-    document.getElementById('textScaleSlider').oninput = function() { 
-        const val = parseInt(this.value); document.getElementById('textScaleVal').innerText = (val/10).toFixed(1); 
-        if(selectedLayer) { selectedLayer.scale = val/10; draw(); } 
-    };
-    document.getElementById('rotateSlider').oninput = function() { document.getElementById('rotVal').innerText = this.value + "°"; draw(); };
+// ============================================================
+//  fix2: 滑块联动 — dotSize用防抖重建缓存，scale实时更新不卡
+// ============================================================
+document.getElementById('sizeSlider').oninput=function(){
+    const val=parseInt(this.value);
+    document.getElementById('sizeVal').innerText=val;
+    if(selectedLayer){
+        selectedLayer.dotSize=val;
+        // 防抖：停止拖动100ms后再重建缓存
+        clearTimeout(rebuildTimer);
+        rebuildTimer=setTimeout(()=>{
+            _buildCache(selectedLayer);
+            draw();
+        },100);
+        draw(); // 立刻用旧缓存画（不卡）
+    }
+};
+document.getElementById('textScaleSlider').oninput=function(){
+    document.getElementById('textScaleVal').innerText=(parseInt(this.value)/10).toFixed(1);
+    if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
+};
+document.getElementById('textScaleSlider2').oninput=function(){
+    document.getElementById('textScaleVal2').innerText=(parseInt(this.value)/10).toFixed(1);
+    if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
+};
+document.getElementById('rotateSlider').oninput=function(){
+    document.getElementById('rotVal').innerText=this.value+'°';
+};
 
-    // 色环逻辑
-    const colorPicker = new iro.ColorPicker("#iroPicker", { width: 200, color: currentColor });
-    colorPicker.on('color:change', (c) => { 
-        currentColor = c.hexString; 
-        document.getElementById('colorBtn').style.backgroundColor = currentColor; 
-        document.getElementById('colorPreview').innerText = currentColor;
-        document.getElementById('colorPreview').style.backgroundColor = currentColor;
-        updatePreRender(); 
-    });
+// ============================================================
+//  fix1: 色环 — 确保弹窗可正常点击
+// ============================================================
+const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[
+    {component:iro.ui.Wheel},
+    {component:iro.ui.Slider,options:{sliderType:'value'}}
+]});
+colorPicker.on('color:change',(c)=>{
+    currentColor=c.hexString;
+    document.getElementById('colorBtn').style.backgroundColor=currentColor;
+    document.getElementById('colorPreview').innerText=currentColor;
+    document.getElementById('colorPreview').style.backgroundColor=currentColor;
+    document.getElementById('currentSwatch').style.backgroundColor=currentColor;
+    updatePreRender();
+});
 
-    document.getElementById('colorBtn').onclick = () => { 
-        document.getElementById('pickerContainer').style.display='block'; 
-        document.getElementById('overlay').style.display='block'; 
-        updateHistorySwatches();
-    };
+document.getElementById('colorBtn').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    document.getElementById('pickerContainer').style.display='block';
+    document.getElementById('overlay').style.display='block';
+    document.getElementById('currentSwatch').style.backgroundColor=currentColor;
+    updateHistorySwatches();
+});
 
-    function closePicker() { 
-        if(!colorHistory.includes(currentColor)) {
-            colorHistory.push(currentColor);
-            if(colorHistory.length > 12) colorHistory.shift();
+function closePicker(){
+    if(!colorHistory.includes(currentColor)){
+        colorHistory.push(currentColor);
+        if(colorHistory.length>12)colorHistory.shift();
+    }
+    document.getElementById('pickerContainer').style.display='none';
+    document.getElementById('overlay').style.display='none';
+}
+
+// 阻止弹窗内点击穿透到overlay
+document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
+
+// ============================================================
+//  随机钻石（前2次：用户颜色+当前形状；第3次+：和谐色+随机形状）
+// ============================================================
+function handleRandomClick(){
+    randomClickCount++;
+    clearTimeout(randomClickTimer);
+    randomClickTimer=setTimeout(()=>{
+        if(randomClickCount>0)_doRandom(randomClickCount);
+        randomClickCount=0;
+    },380);
+}
+
+function _doRandom(count){
+    if(!mainImg.src)return;
+    const useHarmony=count>=3;
+    const sz=parseInt(document.getElementById('sizeSlider').value);
+    const palette=useHarmony?harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]:null;
+    const g=[];
+    for(let i=0;i<15;i++){
+        let sImg,ratio;
+        if(useHarmony){
+            const ri=Math.floor(Math.random()*stickers.length);
+            sImg=stickers[ri];
+            if(!sImg||!sImg.complete||!sImg.naturalWidth)continue;
+            ratio=sImg.naturalWidth/sImg.naturalHeight||1;
+        }else{
+            sImg=stickers[curIdx];
+            if(!sImg||!sImg.complete||!sImg.naturalWidth)continue;
+            ratio=stickerRatio;
         }
-        document.getElementById('pickerContainer').style.display='none'; 
-        document.getElementById('overlay').style.display='none'; 
+        const color=useHarmony?palette[Math.floor(Math.random()*palette.length)]:currentColor;
+        const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
+        const ci=canvasToImg(makeColoredSticker(sImg,color,w,h));
+        const size=sz*(0.7+Math.random()*0.6);
+        g.push({
+            x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+            img:ci,
+            sizeW:size*(ratio>=1?1:ratio), sizeH:size/(ratio>=1?ratio:1),
+            angle:Math.random()*Math.PI*2,
+            glowing:false, glowColor:color
+        });
+    }
+    if(g.length){records.push(g);draw();}
+}
+
+// ============================================================
+//  Live 图：逐帧绘制到离屏canvas → MediaRecorder录制WebM
+//  关键：不用scale变换，shadowBlur直接设像素值，setInterval同步推帧
+// ============================================================
+function generateLiveGif(){
+    if(!mainImg.src){alert('请先上传图片');return;}
+    const allRecords=records.flat();
+    if(allRecords.length===0){alert('请先在画布上放置钻石贴纸');return;}
+
+    const btn=document.getElementById('liveBtn');
+
+    const mimeType=
+        typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported
+        ? ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))
+        : null;
+
+    if(!mimeType){
+        _doLivePngSequence(allRecords,btn); return;
     }
 
-    function generateRandomDiamonds() {
-        if (!mainImg.src) return;
-        let g = []; const currentSize = parseInt(document.getElementById('sizeSlider').value);
-        for(let i=0; i<15; i++) {
-            const size = currentSize * (0.8 + Math.random()*0.4); 
-            g.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, img: preRenderedSticker, sizeW: size * (stickerRatio >= 1 ? 1 : stickerRatio), sizeH: size / (stickerRatio >= 1 ? stickerRatio : 1), angle: Math.random()*Math.PI*2 });
-        }
-        records.push(g); draw();
+    btn.disabled=true; btn.textContent='录制中...';
+
+    // 离屏canvas与主canvas同尺寸，不缩放，shadowBlur才能正确显示
+    const rc=document.createElement('canvas');
+    rc.width=canvas.width; rc.height=canvas.height;
+    const rx=rc.getContext('2d');
+
+    const FRAME_INTERVAL=350;   // ms每帧（每颗钻石亮一帧）
+    const frameCount=Math.min(allRecords.length,25);
+    // 多录2帧（首尾各加一帧全暗）
+    const totalFrames=frameCount+2;
+
+    // 绘制一帧：glowIdx=-1表示全暗
+    function drawLiveFrame(glowIdx){
+        rx.clearRect(0,0,rc.width,rc.height);
+        if(mainImg.src) rx.drawImage(mainImg,0,0,rc.width,rc.height);
+
+        // 大贴纸图层
+        textLayers.forEach(l=>{
+            const linked=l.dotSize/6;
+            const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
+            const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
+            rx.save(); rx.translate(l.x,l.y); rx.rotate(l.rotation||0);
+            l.points.forEach(p=>{
+                const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
+                if(img) rx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+            });
+            rx.restore();
+        });
+
+        // 小钻石：当前glowIdx那颗发光
+        allRecords.forEach((r,ri)=>{
+            rx.save();
+            rx.translate(r.x,r.y);
+            rx.rotate(r.angle||0);
+            if(ri===glowIdx){
+                // 先画两遍叠加发光：一次大blur淡光，一次小blur亮光
+                rx.shadowOffsetX=0; rx.shadowOffsetY=0;
+                rx.shadowColor=r.glowColor||'#ffe0ee';
+                rx.shadowBlur=40;
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=18;
+                rx.shadowColor='#ffffff';
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=0;
+            } else {
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+            }
+            rx.restore();
+        });
     }
-    function updateDensityLabel(val) { document.getElementById('densityVal').innerText = { "6":"少", "8":"中", "10":"多", "12":"极多" }[val] || "少"; }
-    function smartUndo() { if(selectedLayer){ textLayers=textLayers.filter(l=>l!==selectedLayer); selectedLayer=null; } else records.pop(); draw(); }
-    function clearAll() { if(confirm("清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)")){ textLayers=[]; records=[]; draw(); } }
-    function download() { 
-        const link = document.createElement('a'); const now = new Date();
-        const timeStr = `${now.getFullYear()}${now.getMonth()+1}${now.getDate()}_${now.getHours()}${now.getMinutes()}${now.getSeconds()}`;
-        link.download = `pancake_${timeStr}.png`; link.href = canvas.toDataURL(); link.click(); 
-    }
-    imgInput.onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (f) => { mainImg = new Image(); mainImg.onload = () => { canvas.width = mainImg.width; canvas.height = mainImg.height; dropZone.classList.add('has-img'); draw(); }; mainImg.src = f.target.result; };
-        reader.readAsDataURL(e.target.files[0]);
+
+    // 先画第一帧（全暗）让MediaRecorder拿到初始内容
+    drawLiveFrame(-1);
+
+    const stream=rc.captureStream(0); // fps=0，手动推帧
+    const chunks=[];
+    const recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:4000000});
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
+    recorder.onstop=()=>{
+        const blob=new Blob(chunks,{type:mimeType});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');
+        const now=new Date();
+        const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        a.download=`pancakesticker_live_${ts}.webm`;
+        a.href=url; a.click();
+        URL.revokeObjectURL(url);
+        btn.disabled=false; btn.textContent='生成';
     };
-    init();
+
+    recorder.start();
+
+    let fi=0;  // fi=0是首帧（全暗），fi=1..frameCount是钻石帧，fi=totalFrames-1是尾帧（全暗）
+    const timer=setInterval(()=>{
+        const glowIdx=(fi===0||fi===totalFrames-1) ? -1 : fi-1;
+        drawLiveFrame(glowIdx);
+        // 手动通知stream有新帧
+        stream.getTracks()[0].requestFrame ? stream.getTracks()[0].requestFrame() : null;
+        fi++;
+        if(fi>=totalFrames){
+            clearInterval(timer);
+            setTimeout(()=>recorder.stop(),200);
+        }
+    }, FRAME_INTERVAL);
+}
+
+// 降级方案（不支持MediaRecorder时）：逐帧下载PNG
+function _doLivePngSequence(allRecords,btn){
+    btn.disabled=true; btn.textContent='生成中...';
+    const frameCount=Math.min(allRecords.length,12);
+    let fi=0;
+    function nextFrame(){
+        if(fi>=frameCount){ btn.disabled=false; btn.textContent='生成'; return; }
+        const fc=document.createElement('canvas');
+        fc.width=canvas.width; fc.height=canvas.height;
+        const fx=fc.getContext('2d');
+        if(mainImg.src) fx.drawImage(mainImg,0,0,fc.width,fc.height);
+        textLayers.forEach(l=>{
+            const linked=l.dotSize/6;
+            const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
+            const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
+            fx.save(); fx.translate(l.x,l.y); fx.rotate(l.rotation||0);
+            l.points.forEach(p=>{
+                const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
+                if(img) fx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+            });
+            fx.restore();
+        });
+        allRecords.forEach((r,ri)=>{
+            fx.save(); fx.translate(r.x,r.y); fx.rotate(r.angle||0);
+            if(ri===fi){
+                fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40;
+                fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                fx.shadowColor='#ffffff'; fx.shadowBlur=18;
+            }
+            fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+            fx.shadowBlur=0; fx.restore();
+        });
+        const a=document.createElement('a');
+        a.download=`pancakesticker_live_frame${String(fi+1).padStart(2,'0')}.png`;
+        a.href=fc.toDataURL(); a.click();
+        fi++; setTimeout(nextFrame,400);
+    }
+    nextFrame();
+}
+
+// ============================================================
+//  其他
+// ============================================================
+function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
+function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
+
+function smartUndo(){
+    if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;}
+    else records.pop();
+    draw();
+}
+function clearAll(){
+    if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){textLayers=[];records=[];selectedLayer=null;draw();}
+}
+
+// fix5: 文件名加时间戳 pancakesticker_年月日_时分秒.png
+function download(){
+    const prev=selectedLayer; selectedLayer=null;
+    draw(true);
+    const link=document.createElement('a');
+    const now=new Date();
+    const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    link.download=`pancakesticker_${ts}.png`;
+    link.href=canvas.toDataURL(); link.click();
+    selectedLayer=prev; draw();
+}
+
+imgInput.onchange=(e)=>{
+    const reader=new FileReader();
+    reader.onload=(f)=>{
+        mainImg=new Image();
+        mainImg.onload=()=>{
+            canvas.width=mainImg.width; canvas.height=mainImg.height;
+            dropZone.classList.add('has-img'); draw();
+        };
+        mainImg.src=f.target.result;
+    };
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+init();
 </script>
 </body>
 </html>
