@@ -18,7 +18,6 @@
         .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
         .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
 
-        /* 书角 */
         .page-corner { position: absolute; top: 0; right: 0; width: 56px; height: 56px; cursor: pointer; z-index: 10; }
         .page-corner::before { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 56px 56px 0; border-color: transparent var(--pink-accent) transparent transparent; filter: drop-shadow(-2px 2px 4px rgba(255,133,162,0.5)); transition: border-width 0.15s; }
         .page-corner:active::before { border-width: 0 66px 66px 0; }
@@ -26,9 +25,13 @@
         .page-corner.flipped .page-corner-icon { transform: rotate(180deg); }
 
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
-        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
+        /* FIX2: 贴纸格骨架屏占位 */
+        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+        .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; }
+        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
+        .sticker-item.loaded { opacity: 1; }
 
         .page-content { width: 100%; }
         .sticker-gen-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
@@ -39,13 +42,11 @@
         .img-upload-preview { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: 1.5px solid #ffcad4; display: none; flex-shrink: 0; }
         .gen-tip { font-size: 11px; color: #ff85a2; text-align: center; padding: 2px 0; display: none; }
 
-        /* fix4: 上下对齐 — 使用统一的两列布局 */
         .slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
         .slider-row span:first-child { min-width: 56px; }
         .slider-row span:last-child { min-width: 30px; text-align: right; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
 
-        /* 控制区两行对齐 */
         .controls { display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-top: 2px; }
         .color-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 18px; }
         .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
@@ -58,15 +59,7 @@
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
         .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; cursor: pointer; }
 
-        /* 色环弹窗 — fix1: 确保能正常显示 */
-        #pickerContainer {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: white; padding: 20px; border-radius: 20px;
-            z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3);
-            width: min(300px, 90vw);
-            max-height: 90vh; overflow-y: auto;
-        }
+        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3); width: min(300px, 90vw); max-height: 90vh; overflow-y: auto; }
         .color-preview-bar { width: 100%; height: 34px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 13px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
         .color-swatches { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
@@ -74,7 +67,6 @@
         .swatch:active { transform: scale(0.9); }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9998; }
 
-        /* fix6: Live图图示按钮 */
         .live-btn-area { width: 100%; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 10px; background: #fff5f8; border-radius: 10px; border: 1px dashed #ffcad4; }
         .live-preview-icon { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
         .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #ffcad4; }
@@ -82,6 +74,10 @@
         .live-label { font-size: 11px; color: var(--pink-accent); font-weight: bold; flex: 1; }
         .live-btn { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer; font-size: 11px; white-space: nowrap; }
         .live-btn:disabled { background: #ffcad4; cursor: not-allowed; }
+
+        /* FIX1: 录制进度条 */
+        .record-progress { display:none; width:100%; height:4px; background:#ffd6e0; border-radius:4px; margin-top:4px; }
+        .record-progress-bar { height:100%; background:var(--pink-accent); border-radius:4px; transition:width 0.3s; width:0%; }
     </style>
 </head>
 <body>
@@ -90,14 +86,12 @@
 
 <div class="book-container">
     <div class="top-page" id="topPage">
-        <!-- 书角翻页 -->
         <div class="page-corner" id="pageCorner" onclick="flipPage()">
             <div class="page-corner-icon">▷</div>
         </div>
 
         <div class="sticker-grid" id="stickerGrid"></div>
 
-        <!-- 第一页：文字/emoji 生成 -->
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
                 <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;font-size:12px;color:var(--pink-accent);font-weight:bold;">
@@ -115,7 +109,6 @@
             </div>
         </div>
 
-        <!-- 第二页：图片生成水钻 -->
         <div class="page-content" id="pageContent2" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成水钻贴纸</div>
@@ -135,7 +128,6 @@
             </div>
         </div>
 
-        <!-- 颜色 + 钻石大小/角度 — fix4: 左侧色块与右侧两行滑块严格对齐 -->
         <div class="controls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
@@ -154,7 +146,6 @@
     </div>
 
     <div class="bottom-page">
-        <!-- fix6: Live图图示 + 按钮 -->
         <div class="live-btn-area">
             <div class="live-preview-icon" id="livePreviewIcon">
                 <div class="live-dot lit" id="liveDot0"></div>
@@ -163,8 +154,12 @@
                 <div class="live-dot" id="liveDot3"></div>
                 <div class="live-dot" id="liveDot4"></div>
             </div>
-            <span class="live-label">按粘贴顺序依次闪光 · 生成 Live 图</span>
-            <button class="live-btn" id="liveBtn" onclick="generateLiveGif()">生成</button>
+            <span class="live-label">依次闪光 · 生成高清视频</span>
+            <button class="live-btn" id="liveBtn" onclick="generateLiveVideo()">生成</button>
+        </div>
+        <!-- FIX1: 录制进度条 -->
+        <div class="record-progress" id="recordProgress">
+            <div class="record-progress-bar" id="recordProgressBar"></div>
         </div>
 
         <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
@@ -181,7 +176,6 @@
     </div>
 </div>
 
-<!-- fix1: 色环弹窗 -->
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
     <div id="iroPicker" style="display:flex;justify-content:center;"></div>
@@ -205,8 +199,8 @@ const dropZone = document.getElementById('dropZone');
 
 let mainImg            = new Image();
 let stickers           = [];
-let records            = [];      // 小钻石：每项 [{x,y,img,sizeW,sizeH,angle,glowing,glowColor}]
-let textLayers         = [];      // 大贴纸图层
+let records            = [];
+let textLayers         = [];
 let curIdx             = 0;
 let currentColor       = "#FFB7B2";
 let preRenderedSticker = null;
@@ -222,15 +216,16 @@ let isRotatingLayer = false;
 let rotStart        = { touchAngle: 0, layerAngle: 0 };
 let layerCenter     = { x: 0, y: 0 };
 
-// 随机按钮
 let randomClickCount = 0;
 let randomClickTimer = null;
+let rebuildTimer     = null;
 
-// 防抖：sizeSlider
-let rebuildTimer = null;
+// FIX4: 存储从主图提取的主色盘
+let photoColorPalette = [];
 
 const baseUrl = "https://raw.githubusercontent.com/nnn561/decodeco-/main/";
 const macaronColors = ["#FFB7B2","#FFDAC1","#E2F0CB","#B5EAD7","#C7CEEA","#F3B0C3","#000000","#FFFFFF"];
+// 备用和谐色盘（未上传图片时使用）
 const harmonyPalettes = [
     ["#FFB7B2","#FFDAC1","#FFD3A5","#FFC4CE"],
     ["#B5EAD7","#A8D8EA","#C7CEEA","#D4EFDF"],
@@ -250,7 +245,7 @@ function rgbToHsl(r,g,b){
     const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
     let h,s,l=(mx+mn)/2;
     if(mx===mn){h=s=0;}else{
-        const d=mx-mn;s=l>0.5?d/(2-mx-mn):d/(mx+mn);
+        const d=mx-mn; s=l>0.5?d/(2-mx-mn):d/(mx+mn);
         switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}
         h/=6;
     }
@@ -261,6 +256,79 @@ function hslToRgb(h,s,l){
     if(!s){const v=Math.round(l*255);return`rgb(${v},${v},${v})`;}
     const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
     return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
+}
+function rgbToHex(r,g,b){
+    return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function hexToRgb(hex){
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return{r,g,b};
+}
+
+// ============================================================
+//  FIX4: 从主图提取主色调 (k-means简化版)
+// ============================================================
+function extractPhotoColors(imgEl){
+    const sc=document.createElement('canvas');
+    sc.width=40; sc.height=40;
+    const sx=sc.getContext('2d');
+    sx.drawImage(imgEl,0,0,40,40);
+    const data=sx.getImageData(0,0,40,40).data;
+
+    // 采样所有像素，跳过太暗/太亮/低饱和
+    const samples=[];
+    for(let i=0;i<data.length;i+=4){
+        if(data[i+3]<100) continue;
+        const r=data[i],g=data[i+1],b=data[i+2];
+        const [h,s,l]=rgbToHsl(r,g,b);
+        if(s<0.12||l<0.08||l>0.95) continue; // 排除灰/黑/白
+        samples.push({r,g,b,h,s,l});
+    }
+    if(samples.length<5) return [];
+
+    // 量化：把颜色归到32个色调桶
+    const buckets={};
+    samples.forEach(({h,s,l,r,g,b})=>{
+        const hBin=Math.round(h*16); // 16个色相桶
+        const lBin=l<0.4?0:l<0.65?1:2; // 3个亮度级别
+        const key=`${hBin}_${lBin}`;
+        if(!buckets[key]) buckets[key]={count:0,rs:0,gs:0,bs:0};
+        buckets[key].count++;
+        buckets[key].rs+=r;
+        buckets[key].gs+=g;
+        buckets[key].bs+=b;
+    });
+
+    // 取频率最高的6个桶，计算平均色
+    const sorted=Object.values(buckets).sort((a,b)=>b.count-a.count).slice(0,6);
+    const palette=sorted.map(b=>{
+        const r=b.rs/b.count, g=b.gs/b.count, bv=b.bs/b.count;
+        let [h,s,l]=rgbToHsl(r,g,b);
+        // 提升饱和度+适当调亮，让钻石更好看
+        s=Math.min(1,s*1.5+0.1);
+        l=Math.min(0.80,Math.max(0.42,l));
+        // 重新转回RGB -> Hex
+        const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+        const nr=Math.round(h2r(p,q,h+1/3)*255);
+        const ng=Math.round(h2r(p,q,h)*255);
+        const nb=Math.round(h2r(p,q,h-1/3)*255);
+        return rgbToHex(nr,ng,nb);
+    });
+
+    // 再补充几个临近色（色相±0.08）丰富多样性
+    const extra=[];
+    palette.slice(0,3).forEach(hex=>{
+        const {r,g,b}=hexToRgb(hex);
+        let [h,s,l]=rgbToHsl(r,g,b);
+        const q1=l<0.5?l*(1+s):l+s-l*s,p1=2*l-q1;
+        const h2=(h+0.08)%1;
+        const nr=Math.round(h2r(p1,q1,h2+1/3)*255);
+        const ng=Math.round(h2r(p1,q1,h2)*255);
+        const nb=Math.round(h2r(p1,q1,h2-1/3)*255);
+        extra.push(rgbToHex(nr,ng,nb));
+    });
+
+    return [...palette,...extra];
 }
 
 // ============================================================
@@ -278,16 +346,38 @@ function makeColoredSticker(sImg, color, w, h) {
 function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
 
 // ============================================================
-//  初始化
+//  FIX2: 初始化 — 立刻渲染骨架屏，异步后台加载贴纸
 // ============================================================
 function init(){
+    // 先渲染骨架屏格子（用户立刻能看到页面）
+    renderStickersSkeleton(1);
+
+    // 后台异步加载12张贴纸
+    let loadedCount=0;
     for(let i=1;i<=12;i++){
         const img=new Image(); img.crossOrigin="anonymous";
-        img.onload=()=>{if(i-1===curIdx)updatePreRender();};
-        img.src=`${baseUrl}sticker${i}.png`;
-        stickers.push(img);
+        stickers[i-1]=img;
+
+        img.onload=()=>{
+            loadedCount++;
+            // 更新对应格子
+            const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
+            if(slot){
+                slot.classList.remove('loading');
+                const imgEl=slot.querySelector('.sticker-item');
+                if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
+            }
+            if(i-1===curIdx) updatePreRender();
+        };
+        img.onerror=()=>{
+            const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
+            if(slot) slot.classList.remove('loading');
+        };
+
+        // FIX2: 交错50ms启动请求，避免同时触发12个请求被限流
+        setTimeout(()=>{ img.src=`${baseUrl}sticker${i}.png`; }, (i-1)*50);
     }
-    renderStickers(1);
+
     initPresetSwatches();
     animateLiveDots();
 
@@ -308,48 +398,31 @@ function init(){
     };
 }
 
-// fix6: 图示小圆点循环动画
-let liveDotTimer=null;
-function animateLiveDots(){
-    let idx=0;
-    liveDotTimer=setInterval(()=>{
-        for(let i=0;i<5;i++){
-            const d=document.getElementById('liveDot'+i);
-            if(d) d.className='live-dot'+(i===idx?' lit':'');
-        }
-        idx=(idx+1)%5;
-    },350);
-}
-
-// ============================================================
-//  翻页
-// ============================================================
-let isFlipped=false;
-function flipPage(){
-    isFlipped=!isFlipped; currentPage=isFlipped?2:1;
-    document.getElementById('pageCorner').classList.toggle('flipped',isFlipped);
-    document.getElementById('pageContent1').style.display=isFlipped?'none':'block';
-    document.getElementById('pageContent2').style.display=isFlipped?'block':'none';
-    renderStickers(currentPage);
-}
-
-// ============================================================
-//  贴纸格
-// ============================================================
-function renderStickers(page){
+// FIX2: 骨架屏（先渲染空格子+loading动画，图片加载好后替换）
+function renderStickersSkeleton(page){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
-    const start=page===1?1:7, end=page===1?6:12;
-    for(let i=start;i<=end;i++){
+    const start=page===1?0:6, end=page===1?6:12;
+    for(let i=start;i<end;i++){
         const slot=document.createElement('div');
-        slot.className='sticker-slot'+(curIdx===i-1?' active':'');
+        slot.className='sticker-slot loading'+(curIdx===i?' active':'');
+        slot.setAttribute('data-sticker-idx',i);
         const imgEl=document.createElement('img');
-        imgEl.src=`${baseUrl}sticker${i}.png`; imgEl.className='sticker-item';
-        slot.onclick=()=>{
-            curIdx=i-1;
-            document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
-            slot.classList.add('active');
-            updatePreRender();
-        };
+        imgEl.className='sticker-item';
+        // 如果已经加载好，直接显示
+        const sImg=stickers[i];
+        if(sImg&&sImg.complete&&sImg.naturalWidth>0){
+            imgEl.src=sImg.src; imgEl.classList.add('loaded');
+            slot.classList.remove('loading');
+        }
+        slot.onclick=(()=>{
+            const idx=i;
+            return ()=>{
+                curIdx=idx;
+                document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
+                slot.classList.add('active');
+                updatePreRender();
+            };
+        })();
         slot.appendChild(imgEl); grid.appendChild(slot);
     }
 }
@@ -371,6 +444,30 @@ function updateHistorySwatches(){
     });
 }
 
+let liveDotTimer=null;
+function animateLiveDots(){
+    let idx=0;
+    liveDotTimer=setInterval(()=>{
+        for(let i=0;i<5;i++){
+            const d=document.getElementById('liveDot'+i);
+            if(d) d.className='live-dot'+(i===idx?' lit':'');
+        }
+        idx=(idx+1)%5;
+    },350);
+}
+
+// ============================================================
+//  翻页
+// ============================================================
+let isFlipped=false;
+function flipPage(){
+    isFlipped=!isFlipped; currentPage=isFlipped?2:1;
+    document.getElementById('pageCorner').classList.toggle('flipped',isFlipped);
+    document.getElementById('pageContent1').style.display=isFlipped?'none':'block';
+    document.getElementById('pageContent2').style.display=isFlipped?'block':'none';
+    renderStickersSkeleton(currentPage);
+}
+
 // ============================================================
 //  预渲染当前贴纸
 // ============================================================
@@ -384,7 +481,7 @@ function updatePreRender(){
 }
 
 // ============================================================
-//  文字/Emoji 生成大贴纸（fix2: scale+dotSize 动态更新不卡）
+//  文字/Emoji 生成大贴纸
 // ============================================================
 function generateTextStickers(){
     if(!mainImg.src)return imgInput.click();
@@ -441,7 +538,7 @@ function _buildTextLayer(text){
 }
 
 // ============================================================
-//  图片生成水钻（fix2+fix3: 量化颜色+缓存，无卡顿）
+//  图片生成水钻
 // ============================================================
 function generateImgStickers(){
     if(!mainImg.src)return imgInput.click();
@@ -460,7 +557,6 @@ function _buildImgLayer(){
     tc.getContext('2d').drawImage(stickerUploadedImg,0,0,sw,sh);
     const raw=tc.getContext('2d').getImageData(0,0,sw,sh).data;
 
-    // 颜色量化到16级（约16^3=4096色但实际很少）
     function q(v){return Math.round(v/16)*16;}
 
     const points=[];
@@ -494,7 +590,7 @@ function _buildImgLayer(){
 }
 
 // ============================================================
-//  缓存构建（fix2: dotSize变化时重建，但用 requestAnimationFrame 防卡）
+//  缓存构建
 // ============================================================
 function _stepFromDensity(sliderId){
     const v=parseInt(document.getElementById(sliderId).value);
@@ -513,7 +609,6 @@ function _buildCache(l){
         newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh));
     });
     l.colorCacheMap=newCache;
-    // default无色点
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
 
@@ -524,7 +619,6 @@ function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
 
-    // 小钻石（无选中框）
     records.flat().forEach(r=>{
         mainCtx.save();
         mainCtx.translate(r.x,r.y); mainCtx.rotate(r.angle||0);
@@ -534,7 +628,6 @@ function draw(isExporting){
         mainCtx.restore();
     });
 
-    // 大贴纸图层
     textLayers.forEach(l=>{
         const linked=l.dotSize/6;
         const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
@@ -545,22 +638,34 @@ function draw(isExporting){
             const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
             if(img)mainCtx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
         });
-        // 选中框缩小（0.55系数贴近实际内容），旋转圆点加大
+
+        // FIX3: 选中框 + 更大的旋转按钮
         if(l===selectedLayer&&!isExporting){
             const bw=(l.origWidth/2)*l.scale*0.55;
             const bh=(l.origHeight/2)*l.scale*0.55;
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
             mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
             mainCtx.setLineDash([]);
-            // 旋转圆点：r=18，触摸区40px，框正下方
-            const dotY=bh+28;
-            mainCtx.beginPath(); mainCtx.arc(0,dotY,21,0,Math.PI*2);
-            mainCtx.fillStyle="rgba(255,255,255,0.95)"; mainCtx.fill();
-            mainCtx.beginPath(); mainCtx.arc(0,dotY,18,0,Math.PI*2);
+
+            // FIX3: 旋转按钮大幅放大：外白圆r=38，内粉圆r=32，图标28px
+            const dotY=bh+46; // 往下移更多，避免遮挡内容
+            // 白色外圈
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,38,0,Math.PI*2);
+            mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
+            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.setLineDash([]);
+            mainCtx.stroke();
+            // 粉色内圆
+            mainCtx.beginPath(); mainCtx.arc(0,dotY,32,0,Math.PI*2);
             mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
-            mainCtx.fillStyle='#fff'; mainCtx.font='bold 22px Arial';
+            // 旋转图标
+            mainCtx.fillStyle='#fff';
+            mainCtx.font='bold 28px Arial';
             mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
             mainCtx.fillText('\u21bb',0,dotY+1);
+            // "旋转"小字提示
+            mainCtx.fillStyle='#ff85a2';
+            mainCtx.font='bold 11px Microsoft YaHei';
+            mainCtx.fillText('旋转',0,dotY+48);
         }
         mainCtx.restore();
     });
@@ -583,19 +688,20 @@ function hitLayer(px,py,l){
     const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
     return Math.abs(lx)<=(l.origWidth/2)*l.scale*0.92 && Math.abs(ly)<=(l.origHeight/2)*l.scale*0.92;
 }
+
+// FIX3: 碰撞半径扩大到52（视觉圆半径32+20余量），让手指更容易点中
 function hitRotateDot(px,py,l){
     const rot=l.rotation||0;
-    const bh=(l.origHeight/2)*l.scale+22;
+    const bh=(l.origHeight/2)*l.scale*0.55+46;
     const dotX=l.x+(-Math.sin(rot))*bh;
     const dotY=l.y+(Math.cos(rot))*bh;
-    return Math.hypot(px-dotX,py-dotY)<26; // fix3: 碰撞半径加大
+    return Math.hypot(px-dotX,py-dotY)<52;
 }
 
 canvas.addEventListener('touchstart',(e)=>{
     if(!mainImg.src)return;
     const p=getPos(e);
 
-    // 旋转圆点优先
     if(selectedLayer&&hitRotateDot(p.x,p.y,selectedLayer)){
         isRotatingLayer=true;
         layerCenter={x:selectedLayer.x, y:selectedLayer.y};
@@ -604,7 +710,6 @@ canvas.addEventListener('touchstart',(e)=>{
         return;
     }
 
-    // 大贴纸拖动
     let found=null;
     for(let i=textLayers.length-1;i>=0;i--){
         if(hitLayer(p.x,p.y,textLayers[i])){found=textLayers[i];break;}
@@ -616,7 +721,6 @@ canvas.addEventListener('touchstart',(e)=>{
         draw(); return;
     }
 
-    // 放置小钻石
     selectedLayer=null;
     const size=parseInt(document.getElementById('sizeSlider').value);
     const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
@@ -643,20 +747,16 @@ canvas.addEventListener('touchmove',(e)=>{
 canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
 
 // ============================================================
-//  fix2: 滑块联动 — dotSize用防抖重建缓存，scale实时更新不卡
+//  滑块联动
 // ============================================================
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value);
     document.getElementById('sizeVal').innerText=val;
     if(selectedLayer){
         selectedLayer.dotSize=val;
-        // 防抖：停止拖动100ms后再重建缓存
         clearTimeout(rebuildTimer);
-        rebuildTimer=setTimeout(()=>{
-            _buildCache(selectedLayer);
-            draw();
-        },100);
-        draw(); // 立刻用旧缓存画（不卡）
+        rebuildTimer=setTimeout(()=>{ _buildCache(selectedLayer); draw(); },100);
+        draw();
     }
 };
 document.getElementById('textScaleSlider').oninput=function(){
@@ -672,7 +772,7 @@ document.getElementById('rotateSlider').oninput=function(){
 };
 
 // ============================================================
-//  fix1: 色环 — 确保弹窗可正常点击
+//  色环
 // ============================================================
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[
     {component:iro.ui.Wheel},
@@ -704,11 +804,13 @@ function closePicker(){
     document.getElementById('overlay').style.display='none';
 }
 
-// 阻止弹窗内点击穿透到overlay
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
 
 // ============================================================
-//  随机钻石（前2次：用户颜色+当前形状；第3次+：和谐色+随机形状）
+//  FIX4: 随机钻石 — 使用照片主色 + 随机贴纸形状
+//  单击：照片主色（或当前色）+ 当前形状
+//  双击：照片主色 + 随机形状
+//  三击+：照片主色 + 随机形状 + 更多数量
 // ============================================================
 function handleRandomClick(){
     randomClickCount++;
@@ -721,26 +823,41 @@ function handleRandomClick(){
 
 function _doRandom(count){
     if(!mainImg.src)return;
-    const useHarmony=count>=3;
-    const sz=parseInt(document.getElementById('sizeSlider').value);
-    const palette=useHarmony?harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]:null;
+
+    // 确定颜色来源
+    let palette;
+    if(photoColorPalette&&photoColorPalette.length>=3){
+        palette=photoColorPalette;
+    } else {
+        // 没有主色时用当前色+和谐色盘
+        palette=harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)];
+    }
+
+    const useRandomShape = count>=2;     // 双击以上才随机形状
+    const num = count>=3 ? 20 : 12;     // 三击放更多
+
     const g=[];
-    for(let i=0;i<15;i++){
+    const sz=parseInt(document.getElementById('sizeSlider').value);
+
+    for(let i=0;i<num;i++){
         let sImg,ratio;
-        if(useHarmony){
-            const ri=Math.floor(Math.random()*stickers.length);
-            sImg=stickers[ri];
-            if(!sImg||!sImg.complete||!sImg.naturalWidth)continue;
-            ratio=sImg.naturalWidth/sImg.naturalHeight||1;
+        if(useRandomShape){
+            // 随机选一个已加载的贴纸形状
+            const loadedIdx=stickers.map((s,idx)=>s&&s.complete&&s.naturalWidth>0?idx:-1).filter(x=>x>=0);
+            if(loadedIdx.length===0) continue;
+            const ri=loadedIdx[Math.floor(Math.random()*loadedIdx.length)];
+            sImg=stickers[ri]; ratio=sImg.naturalWidth/sImg.naturalHeight||1;
         }else{
             sImg=stickers[curIdx];
-            if(!sImg||!sImg.complete||!sImg.naturalWidth)continue;
+            if(!sImg||!sImg.complete||!sImg.naturalWidth) continue;
             ratio=stickerRatio;
         }
-        const color=useHarmony?palette[Math.floor(Math.random()*palette.length)]:currentColor;
+
+        // 从主色盘随机取一个颜色
+        const color=palette[Math.floor(Math.random()*palette.length)];
         const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
         const ci=canvasToImg(makeColoredSticker(sImg,color,w,h));
-        const size=sz*(0.7+Math.random()*0.6);
+        const size=sz*(0.65+Math.random()*0.7);
         g.push({
             x:Math.random()*canvas.width, y:Math.random()*canvas.height,
             img:ci,
@@ -753,43 +870,57 @@ function _doRandom(count){
 }
 
 // ============================================================
-//  Live 图：逐帧绘制到离屏canvas → MediaRecorder录制WebM
-//  关键：不用scale变换，shadowBlur直接设像素值，setInterval同步推帧
-// ============================================================
-function generateLiveGif(){
+//  FIX1: 高清视频生成
+//  策略：离屏canvas用原图2倍尺寸渲染 → MediaRecorder高码率录制
+//  码率 20Mbps，帧间隔400ms，额外首尾各2帧稳定画面
+//  不支持MediaRecorder时降级为逐帧PNG下载
+// =======================
+function generateLiveVideo(){
     if(!mainImg.src){alert('请先上传图片');return;}
     const allRecords=records.flat();
     if(allRecords.length===0){alert('请先在画布上放置钻石贴纸');return;}
 
     const btn=document.getElementById('liveBtn');
+    const progressWrap=document.getElementById('recordProgress');
+    const progressBar=document.getElementById('recordProgressBar');
 
-    const mimeType=
-        typeof MediaRecorder!=='undefined' && MediaRecorder.isTypeSupported
-        ? ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))
-        : null;
+    // 检测支持格式，优先 mp4/h264
+    const mimeType = (() => {
+        const types=[
+            'video/mp4;codecs=avc1',
+            'video/mp4;codecs=h264',
+            'video/mp4',
+            'video/webm;codecs=vp9',
+            'video/webm;codecs=vp8',
+            'video/webm',
+        ];
+        if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported) return null;
+        return types.find(m=>MediaRecorder.isTypeSupported(m))||null;
+    })();
 
     if(!mimeType){
         _doLivePngSequence(allRecords,btn); return;
     }
 
     btn.disabled=true; btn.textContent='录制中...';
+    progressWrap.style.display='block'; progressBar.style.width='0%';
 
-    // 离屏canvas与主canvas同尺寸，不缩放，shadowBlur才能正确显示
+    // FIX1: 离屏canvas用2倍分辨率，提高清晰度
+    const SCALE=2;
     const rc=document.createElement('canvas');
-    rc.width=canvas.width; rc.height=canvas.height;
+    rc.width=canvas.width*SCALE; rc.height=canvas.height*SCALE;
     const rx=rc.getContext('2d');
+    rx.scale(SCALE,SCALE); // 之后所有绘制自动放大2倍
 
-    const FRAME_INTERVAL=350;   // ms每帧（每颗钻石亮一帧）
-    const frameCount=Math.min(allRecords.length,25);
-    // 多录2帧（首尾各加一帧全暗）
-    const totalFrames=frameCount+2;
+    const FRAME_INTERVAL=400;
+    const frameCount=Math.min(allRecords.length,30);
+    // 首帧×2（全暗稳定）+ 内容帧 + 尾帧×2（全暗稳定）
+    const totalFrames=frameCount+4;
 
-    // 绘制一帧：glowIdx=-1表示全暗
     function drawLiveFrame(glowIdx){
-        rx.clearRect(0,0,rc.width,rc.height);
-        if(mainImg.src) rx.drawImage(mainImg,0,0,rc.width,rc.height);
+        rx.clearRect(0,0,canvas.width,canvas.height);
+        if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
 
-        // 大贴纸图层
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
             const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
@@ -802,18 +933,15 @@ function generateLiveGif(){
             rx.restore();
         });
 
-        // 小钻石：当前glowIdx那颗发光
         allRecords.forEach((r,ri)=>{
-            rx.save();
-            rx.translate(r.x,r.y);
-            rx.rotate(r.angle||0);
+            rx.save(); rx.translate(r.x,r.y); rx.rotate(r.angle||0);
             if(ri===glowIdx){
-                // 先画两遍叠加发光：一次大blur淡光，一次小blur亮光
+                // 发光叠加两遍
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0;
                 rx.shadowColor=r.glowColor||'#ffe0ee';
-                rx.shadowBlur=40;
+                rx.shadowBlur=36;
                 rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
-                rx.shadowBlur=18;
+                rx.shadowBlur=16;
                 rx.shadowColor='#ffffff';
                 rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
                 rx.shadowBlur=0;
@@ -824,42 +952,49 @@ function generateLiveGif(){
         });
     }
 
-    // 先画第一帧（全暗）让MediaRecorder拿到初始内容
     drawLiveFrame(-1);
 
-    const stream=rc.captureStream(0); // fps=0，手动推帧
+    const stream=rc.captureStream(0);
     const chunks=[];
-    const recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:4000000});
+
+    // FIX1: 码率提高到20Mbps（原来4Mbps），大幅提升清晰度
+    const recorder=new MediaRecorder(stream,{
+        mimeType,
+        videoBitsPerSecond: 20000000
+    });
     recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
     recorder.onstop=()=>{
+        const ext=mimeType.includes('mp4')?'mp4':'webm';
         const blob=new Blob(chunks,{type:mimeType});
         const url=URL.createObjectURL(blob);
         const a=document.createElement('a');
         const now=new Date();
         const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-        a.download=`pancakesticker_live_${ts}.webm`;
+        a.download=`pancakesticker_live_${ts}.${ext}`;
         a.href=url; a.click();
         URL.revokeObjectURL(url);
         btn.disabled=false; btn.textContent='生成';
+        progressWrap.style.display='none';
     };
 
     recorder.start();
 
-    let fi=0;  // fi=0是首帧（全暗），fi=1..frameCount是钻石帧，fi=totalFrames-1是尾帧（全暗）
+    let fi=0;
+    // 前2帧和后2帧是全暗稳定帧
     const timer=setInterval(()=>{
-        const glowIdx=(fi===0||fi===totalFrames-1) ? -1 : fi-1;
+        const glowIdx=(fi<2||fi>=totalFrames-2)?-1:(fi-2);
         drawLiveFrame(glowIdx);
-        // 手动通知stream有新帧
-        stream.getTracks()[0].requestFrame ? stream.getTracks()[0].requestFrame() : null;
+        if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame();
         fi++;
+        progressBar.style.width=(fi/totalFrames*100)+'%';
         if(fi>=totalFrames){
             clearInterval(timer);
-            setTimeout(()=>recorder.stop(),200);
+            setTimeout(()=>recorder.stop(),300);
         }
     }, FRAME_INTERVAL);
 }
 
-// 降级方案（不支持MediaRecorder时）：逐帧下载PNG
+// 降级方案：逐帧下载PNG
 function _doLivePngSequence(allRecords,btn){
     btn.disabled=true; btn.textContent='生成中...';
     const frameCount=Math.min(allRecords.length,12);
@@ -893,7 +1028,7 @@ function _doLivePngSequence(allRecords,btn){
         });
         const a=document.createElement('a');
         a.download=`pancakesticker_live_frame${String(fi+1).padStart(2,'0')}.png`;
-        a.href=fc.toDataURL(); a.click();
+        a.href=fc.toDataURL('image/png'); a.click();
         fi++; setTimeout(nextFrame,400);
     }
     nextFrame();
@@ -914,7 +1049,6 @@ function clearAll(){
     if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){textLayers=[];records=[];selectedLayer=null;draw();}
 }
 
-// fix5: 文件名加时间戳 pancakesticker_年月日_时分秒.png
 function download(){
     const prev=selectedLayer; selectedLayer=null;
     draw(true);
@@ -922,7 +1056,7 @@ function download(){
     const now=new Date();
     const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
     link.download=`pancakesticker_${ts}.png`;
-    link.href=canvas.toDataURL(); link.click();
+    link.href=canvas.toDataURL('image/png'); link.click();
     selectedLayer=prev; draw();
 }
 
@@ -932,7 +1066,10 @@ imgInput.onchange=(e)=>{
         mainImg=new Image();
         mainImg.onload=()=>{
             canvas.width=mainImg.width; canvas.height=mainImg.height;
-            dropZone.classList.add('has-img'); draw();
+            dropZone.classList.add('has-img');
+            // FIX4: 图片加载完马上分析主色
+            photoColorPalette=extractPhotoColors(mainImg);
+            draw();
         };
         mainImg.src=f.target.result;
     };
