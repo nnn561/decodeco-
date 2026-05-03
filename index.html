@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="light">
-    <title>Pancake Sticker Book - pancake33</title>
+    <title>Pancake Sticker Book - pancakedeco</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
@@ -101,7 +101,7 @@
                     <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                     <button class="gen-btn" onclick="generateTextStickers()">生成</button>
                 </div>
-                <div class="gen-tip" id="genTip1">⏳ 生成中...</div>
+                <div class="gen-tip" id="genTip1">生成中...</div>
                 <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
                 <input type="range" id="textScaleSlider" min="10" max="300" value="30">
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
@@ -111,15 +111,15 @@
 
         <div class="page-content" id="pageContent2" style="display:none">
             <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成水钻贴纸</div>
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成贴纸</div>
                 <div class="gen-row">
                     <div class="img-upload-box" onclick="stickerImgInput.click()">
                         <img id="imgUploadPreview" class="img-upload-preview">
-                        <span id="imgUploadLabel">📷 点击上传图片</span>
+                        <span id="imgUploadLabel">点击上传图片</span>
                     </div>
                     <button class="gen-btn" onclick="generateImgStickers()">生成</button>
                 </div>
-                <div class="gen-tip" id="genTip2">⏳ 生成中...</div>
+                <div class="gen-tip" id="genTip2">生成中...</div>
                 <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal2">3.0</span></div>
                 <input type="range" id="textScaleSlider2" min="10" max="300" value="30">
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
@@ -154,7 +154,7 @@
                 <div class="live-dot" id="liveDot3"></div>
                 <div class="live-dot" id="liveDot4"></div>
             </div>
-            <span class="live-label">依次闪光 · 生成高清视频</span>
+            <span class="live-label">生成视频</span>
             <button class="live-btn" id="liveBtn" onclick="generateLiveVideo()">生成</button>
         </div>
         <!-- FIX1: 录制进度条 -->
