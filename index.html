@@ -81,7 +81,7 @@
     </style>
 </head>
 <body>
-<div class="overlay" id="overlay" onclick="closePicker()"></div>
+<div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null)"></div>
 <div class="title-header">pancake sticker book</div>
 
 <div class="book-container">
@@ -133,7 +133,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col">
-                <div class="slider-row"><span>钻石大小</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小（联动贴纸中钻石大小）</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -187,7 +187,12 @@
     <div class="color-swatches" id="presetSwatches"></div>
     <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
 </div>
-
+<div id="randomModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:24px 20px;border-radius:20px;z-index:9999;box-shadow:0 10px 50px rgba(0,0,0,0.3);width:min(280px,88vw);text-align:center;">
+    <div style="font-size:15px;font-weight:bold;color:var(--pink-accent);margin-bottom:18px;">选择随机颜色来源</div>
+    <button onclick="closeRandomModal('photo')" style="width:100%;margin-bottom:10px;padding:13px;background:var(--pink-accent);color:white;border:none;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;">图片同色系</button>
+    <button onclick="closeRandomModal('history')" style="width:100%;padding:13px;background:#fff0f4;color:var(--pink-accent);border:2px solid #ffcad4;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;">历史颜色</button>
+    <button onclick="closeRandomModal(null)" style="margin-top:12px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
+</div>
 <script>
 // ============================================================
 //  核心变量
@@ -438,10 +443,37 @@ function initPresetSwatches(){
 }
 function updateHistorySwatches(){
     const c=document.getElementById('historySwatches'); c.innerHTML='';
-    colorHistory.slice().reverse().forEach(col=>{
-        const s=document.createElement('div'); s.className='swatch'; s.style.backgroundColor=col;
+    colorHistory.slice().reverse().forEach((col,i)=>{
+        const realIdx=colorHistory.length-1-i;
+        const wrap=document.createElement('div');
+        wrap.style.cssText='position:relative;width:34px;height:34px;';
+        const s=document.createElement('div');
+        s.className='swatch'; s.style.backgroundColor=col;
+        s.style.width='34px'; s.style.height='34px';
         s.onclick=()=>colorPicker.color.set(col);
-        c.appendChild(s);
+
+        // 长按显示❌
+        let pressTimer=null;
+        const delBtn=document.createElement('div');
+        delBtn.textContent='❌';
+        delBtn.style.cssText='display:none;position:absolute;top:-8px;right:-8px;font-size:14px;cursor:pointer;z-index:10;';
+        delBtn.onclick=(e)=>{
+            e.stopPropagation();
+            colorHistory.splice(realIdx,1);
+            updateHistorySwatches();
+        };
+
+        s.addEventListener('touchstart',()=>{
+            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
+        },{passive:true});
+        s.addEventListener('touchend',()=>clearTimeout(pressTimer));
+        s.addEventListener('mousedown',()=>{
+            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
+        });
+        s.addEventListener('mouseup',()=>clearTimeout(pressTimer));
+
+        wrap.appendChild(s); wrap.appendChild(delBtn);
+        c.appendChild(wrap);
     });
 }
 
@@ -804,57 +836,64 @@ function closePicker(){
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
 
 // ============================================================
-//  FIX4: 随机钻石 — 使用照片主色 + 随机贴纸形状
-//  单击：照片主色（或当前色）+ 当前形状
-//  双击：照片主色 + 随机形状
-//  三击+：照片主色 + 随机形状 + 更多数量
+//  FIX4: 随机钻石 — 使用照片主色 +使用历史颜色
 // ============================================================
+let lastRandomType = null; // 记住上次选择
+
 function handleRandomClick(){
-    randomClickCount++;
-    clearTimeout(randomClickTimer);
-    randomClickTimer=setTimeout(()=>{
-        if(randomClickCount>0)_doRandom(randomClickCount);
-        randomClickCount=0;
-    },380);
+    if(!mainImg.src) return;
+    if(lastRandomType){
+        // 已经选过，直接用上次的类型
+        _doRandom(lastRandomType);
+    } else {
+        // 第一次，弹窗让用户选
+        document.getElementById('randomModal').style.display='block';
+        document.getElementById('overlay').style.display='block';
+    }
 }
 
-function _doRandom(count){
-    if(!mainImg.src)return;
+function closeRandomModal(type){
+    document.getElementById('randomModal').style.display='none';
+    document.getElementById('overlay').style.display='none';
+    if(!type) return;
+    _doRandom(type);
+}
+function closeRandomModal(type){
+    document.getElementById('randomModal').style.display='none';
+    document.getElementById('overlay').style.display='none';
+    if(!type) return;
+    lastRandomType = type; // 记住这次选择
+    _doRandom(type);
+}
+function _doRandom(type){
+    if(!mainImg.src) return;
 
-    // 确定颜色来源
     let palette;
-    if(photoColorPalette&&photoColorPalette.length>=3){
-        palette=photoColorPalette;
+    if(type==='history'){
+        // 用历史颜色，没有历史就fallback马卡龙色
+        palette = colorHistory.length>=2 ? colorHistory : macaronColors;
     } else {
-        // 没有主色时用当前色+和谐色盘
-        palette=harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)];
+        // 图片主色，没有就用和谐色盘
+        palette = photoColorPalette&&photoColorPalette.length>=3
+            ? photoColorPalette
+            : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)];
     }
 
-    const useRandomShape = count>=2;     // 双击以上才随机形状
-    const num = count>=3 ? 20 : 12;     // 三击放更多
-
-    const g=[];
-    const sz=parseInt(document.getElementById('sizeSlider').value);
+    // 两种模式都是随机形状
+    const num = 12;
+    const g = [];
+    const sz = parseInt(document.getElementById('sizeSlider').value);
 
     for(let i=0;i<num;i++){
-        let sImg,ratio;
-        if(useRandomShape){
-            // 随机选一个已加载的贴纸形状
-            const loadedIdx=stickers.map((s,idx)=>s&&s.complete&&s.naturalWidth>0?idx:-1).filter(x=>x>=0);
-            if(loadedIdx.length===0) continue;
-            const ri=loadedIdx[Math.floor(Math.random()*loadedIdx.length)];
-            sImg=stickers[ri]; ratio=sImg.naturalWidth/sImg.naturalHeight||1;
-        }else{
-            sImg=stickers[curIdx];
-            if(!sImg||!sImg.complete||!sImg.naturalWidth) continue;
-            ratio=stickerRatio;
-        }
-
-        // 从主色盘随机取一个颜色
-        const color=palette[Math.floor(Math.random()*palette.length)];
+        const loadedIdx = stickers.map((s,idx)=>s&&s.complete&&s.naturalWidth>0?idx:-1).filter(x=>x>=0);
+        if(loadedIdx.length===0) continue;
+        const ri = loadedIdx[Math.floor(Math.random()*loadedIdx.length)];
+        const sImg = stickers[ri];
+        const ratio = sImg.naturalWidth/sImg.naturalHeight||1;
+        const color = palette[Math.floor(Math.random()*palette.length)];
         const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
-        const ci=canvasToImg(makeColoredSticker(sImg,color,w,h));
-        const size=sz*(0.65+Math.random()*0.7);
+        const ci = canvasToImg(makeColoredSticker(sImg,color,w,h));
+        const size = sz*(0.65+Math.random()*0.7);
         g.push({
             x:Math.random()*canvas.width, y:Math.random()*canvas.height,
             img:ci,
@@ -865,7 +904,6 @@ function _doRandom(count){
     }
     if(g.length){records.push(g);draw();}
 }
-
 // ============================================================
 //  FIX1: 高清视频生成
 //  策略：离屏canvas用原图2倍尺寸渲染 → MediaRecorder高码率录制
