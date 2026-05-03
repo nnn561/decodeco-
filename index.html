@@ -443,10 +443,37 @@ function initPresetSwatches(){
 }
 function updateHistorySwatches(){
     const c=document.getElementById('historySwatches'); c.innerHTML='';
-    colorHistory.slice().reverse().forEach(col=>{
-        const s=document.createElement('div'); s.className='swatch'; s.style.backgroundColor=col;
+    colorHistory.slice().reverse().forEach((col,i)=>{
+        const realIdx=colorHistory.length-1-i;
+        const wrap=document.createElement('div');
+        wrap.style.cssText='position:relative;width:34px;height:34px;';
+        const s=document.createElement('div');
+        s.className='swatch'; s.style.backgroundColor=col;
+        s.style.width='34px'; s.style.height='34px';
         s.onclick=()=>colorPicker.color.set(col);
-        c.appendChild(s);
+
+        // 长按显示❌
+        let pressTimer=null;
+        const delBtn=document.createElement('div');
+        delBtn.textContent='❌';
+        delBtn.style.cssText='display:none;position:absolute;top:-8px;right:-8px;font-size:14px;cursor:pointer;z-index:10;';
+        delBtn.onclick=(e)=>{
+            e.stopPropagation();
+            colorHistory.splice(realIdx,1);
+            updateHistorySwatches();
+        };
+
+        s.addEventListener('touchstart',()=>{
+            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
+        },{passive:true});
+        s.addEventListener('touchend',()=>clearTimeout(pressTimer));
+        s.addEventListener('mousedown',()=>{
+            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
+        });
+        s.addEventListener('mouseup',()=>clearTimeout(pressTimer));
+
+        wrap.appendChild(s); wrap.appendChild(delBtn);
+        c.appendChild(wrap);
     });
 }
 
@@ -811,11 +838,18 @@ document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPro
 // ============================================================
 //  FIX4: 随机钻石 — 使用照片主色 +使用历史颜色
 // ============================================================
+let lastRandomType = null; // 记住上次选择
+
 function handleRandomClick(){
     if(!mainImg.src) return;
-    // 弹出选择弹窗
-    document.getElementById('randomModal').style.display='block';
-    document.getElementById('overlay').style.display='block';
+    if(lastRandomType){
+        // 已经选过，直接用上次的类型
+        _doRandom(lastRandomType);
+    } else {
+        // 第一次，弹窗让用户选
+        document.getElementById('randomModal').style.display='block';
+        document.getElementById('overlay').style.display='block';
+    }
 }
 
 function closeRandomModal(type){
@@ -824,7 +858,13 @@ function closeRandomModal(type){
     if(!type) return;
     _doRandom(type);
 }
-
+function closeRandomModal(type){
+    document.getElementById('randomModal').style.display='none';
+    document.getElementById('overlay').style.display='none';
+    if(!type) return;
+    lastRandomType = type; // 记住这次选择
+    _doRandom(type);
+}
 function _doRandom(type){
     if(!mainImg.src) return;
 
