@@ -1279,22 +1279,28 @@ imgInput.onchange=(e)=>{
     // 用这个贴纸
     window.mosaicUseSticker = function(){
         if(!mLastDataUrl) return;
-        if(!mainImg.src){ alert('请先在下方上传图片'); return; }
+        const mainCanvas = document.getElementById('myCanvas');
         const img = new Image();
         img.onload = ()=>{
+            // 如果画布还没图，先把画布尺寸设为贴纸本身大小
+            if(!mainCanvas.width || mainCanvas.width < 10){
+                mainCanvas.width  = 600;
+                mainCanvas.height = 600;
+            }
             const size = parseInt(document.getElementById('sizeSlider').value);
             const ratio = img.naturalWidth/img.naturalHeight;
             const angle = parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
             const sW = size*(ratio>=1?1:ratio);
             const sH = size/(ratio>=1?ratio:1);
             const rec = {
-                x:canvas.width/2, y:canvas.height/2,
+                x: mainCanvas.width/2,
+                y: mainCanvas.height/2,
                 img, sizeW:sW, sizeH:sH, angle,
                 glowing:true, glowColor:'#ff85a2'
             };
             records.push([rec]);
             draw();
-            setTimeout(()=>{rec.glowing=false;draw();},600);
+            setTimeout(()=>{rec.glowing=false; draw();}, 600);
         };
         img.src = mLastDataUrl;
     };
