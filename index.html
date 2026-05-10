@@ -289,327 +289,6 @@
 <script>
 // ============================================================
 //  核心变量
-// ============================================================
-const canvas  = document.getElementById('myCanvas');
-const mainCtx = canvas.getContext('2d');
-const imgInput = document.getElementById('imgInput');
-const dropZone = document.getElementById('dropZone');
-let mainImg            = new Image();
-let stickers           = [];
-let records            = [];
-let textLayers         = [];
-let curIdx             = 0;
-let currentColor       = "#FFB7B2";
-let preRenderedSticker = null;
-let stickerRatio       = 1;
-let colorHistory       = [];
-let currentPage        = 1;
-let stickerUploadedImg = null;
-// 大贴纸交互
-let selectedLayer   = null;
-let isDraggingLayer = false;
-let isRotatingLayer = false;
-let rotStart        = { touchAngle: 0, layerAngle: 0 };
-let layerCenter     = { x: 0, y: 0 };
-let randomClickCount = 0;
-let randomClickTimer = null;
-let rebuildTimer     = null;
-// FIX4: 存储从主图提取的主色盘
-let photoColorPalette = [];
-// jsDelivr 是 GitHub raw 的全球CDN镜像，在中国可正常访问
-const baseUrl = "https://cdn.jsdelivr.net/gh/nnn561/decodeco-@main/";
-const macaronColors = ["#FFB7B2","#FFDAC1","#E2F0CB","#B5EAD7","#C7CEEA","#F3B0C3","#000000","#FFFFFF"];
-// 备用和谐色盘（未上传图片时使用）
-const harmonyPalettes = [
-    ["#FFB7B2","#FFDAC1","#FFD3A5","#FFC4CE"],
-    ["#B5EAD7","#A8D8EA","#C7CEEA","#D4EFDF"],
-    ["#F3B0C3","#E8C4F0","#D4AFFF","#FFB3DE"],
-    ["#FFF0AA","#FFE066","#FFDAC1","#FFD3A5"],
-    ["#B5EAD7","#E2F0CB","#D4EFDF","#A8E6CF"],
-    ["#87CEEB","#A8D8EA","#C4E0F9","#B0D4F1"],
-    ["#FFD3E8","#FFB7B2","#FFACC7","#FF9EBF"],
-    ["#DDA0DD","#D4AFFF","#E8C4F0","#C4A8FF"],
-];
-// ============================================================
-//  颜色工具
-// ============================================================
-function rgbToHsl(r,g,b){
-    r/=255;g/=255;b/=255;
-    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
-    let h,s,l=(mx+mn)/2;
-    if(mx===mn){h=s=0;}else{
-        const d=mx-mn; s=l>0.5?d/(2-mx-mn):d/(mx+mn);
-        switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}
-        h/=6;
-    }
-    return[h,s,l];
-}
-function h2r(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
-function hslToRgb(h,s,l){
-    if(!s){const v=Math.round(l*255);return`rgb(${v},${v},${v})`;}
-    const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
-    return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
-}
-function rgbToHex(r,g,b){
-    return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
-}
-function hexToRgb(hex){
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return{r,g,b};
-}
-// ============================================================
-//  FIX4: 从主图提取主色调 (k-means简化版)
-// ============================================================
-function extractPhotoColors(imgEl){
-    const sc=document.createElement('canvas');
-    sc.width=40; sc.height=40;
-    const sx=sc.getContext('2d');
-    sx.drawImage(imgEl,0,0,40,40);
-    const data=sx.getImageData(0,0,40,40).data;
-    // 采样所有像素，跳过太暗/太亮/低饱和
-    const samples=[];
-    for(let i=0;i<data.length;i+=4){
-        if(data[i+3]<100) continue;
-        const r=data[i],g=data[i+1],b=data[i+2];
-        const [h,s,l]=rgbToHsl(r,g,b);
-        if(s<0.12||l<0.08||l>0.95) continue; // 排除灰/黑/白
-        samples.push({r,g,b,h,s,l});
-    }
-    if(samples.length<5) return [];
-    // 量化：把颜色归到32个色调桶
-    const buckets={};
-    samples.forEach(({h,s,l,r,g,b})=>{
-        const hBin=Math.round(h*16); // 16个色相桶
-        const lBin=l<0.4?0:l<0.65?1:2; // 3个亮度级别
-        const key=`${hBin}_${lBin}`;
-        if(!buckets[key]) buckets[key]={count:0,rs:0,gs:0,bs:0};
-        buckets[key].count++;
-        buckets[key].rs+=r;
-        buckets[key].gs+=g;
-        buckets[key].bs+=b;
-    });
-    // 取频率最高的6个桶，计算平均色
-    const sorted=Object.values(buckets).sort((a,b)=>b.count-a.count).slice(0,6);
-    const palette=sorted.map(bkt=>{
-        const r=bkt.rs/bkt.count, g=bkt.gs/bkt.count, bv=bkt.bs/bkt.count;
-        let [h,s,l]=rgbToHsl(r,g,bv);  // 修复：第三个参数必须是蓝色值bv，不是桶对象
-        // 提升饱和度+适当调亮，让钻石更好看
-        s=Math.min(1,s*1.5+0.1);
-        l=Math.min(0.80,Math.max(0.42,l));
-        // 重新转回RGB -> Hex
-        const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
-        const nr=Math.round(h2r(p,q,h+1/3)*255);
-        const ng=Math.round(h2r(p,q,h)*255);
-        const nb=Math.round(h2r(p,q,h-1/3)*255);
-        return rgbToHex(nr,ng,nb);
-    });
-    // 再补充几个临近色（色相±0.08）丰富多样性
-    const extra=[];
-    palette.slice(0,3).forEach(hex=>{
-        const {r,g,b}=hexToRgb(hex);
-        let [h,s,l]=rgbToHsl(r,g,b);
-        const q1=l<0.5?l*(1+s):l+s-l*s,p1=2*l-q1;
-        const h2=(h+0.08)%1;
-        const nr=Math.round(h2r(p1,q1,h2+1/3)*255);
-        const ng=Math.round(h2r(p1,q1,h2)*255);
-        const nb=Math.round(h2r(p1,q1,h2-1/3)*255);
-        extra.push(rgbToHex(nr,ng,nb));
-    });
-    return [...palette,...extra];
-}
-// ============================================================
-//  贴纸染色工具
-// ============================================================
-function makeColoredSticker(sImg, color, w, h) {
-    w=Math.max(1,Math.round(w)); h=Math.max(1,Math.round(h));
-    const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
-    const ox=oc.getContext('2d');
-    ox.drawImage(sImg,0,0,w,h);
-    ox.globalCompositeOperation='multiply'; ox.fillStyle=color; ox.fillRect(0,0,w,h);
-    ox.globalCompositeOperation='destination-in'; ox.drawImage(sImg,0,0,w,h);
-    return oc;
-}
-function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
-// ============================================================
-//  FIX2: 初始化 — 立刻渲染骨架屏，异步后台加载贴纸
-// ============================================================
-function init(){
-    // 先渲染骨架屏格子（用户立刻能看到页面）
-    renderStickersSkeleton(1);
-    // 后台异步加载12张贴纸
-    let loadedCount=0;
-    for(let i=1;i<=12;i++){
-        const img=new Image(); img.crossOrigin="anonymous";
-        stickers[i-1]=img;
-        img.onload=()=>{
-            loadedCount++;
-            // 更新对应格子
-            const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
-            if(slot){
-                slot.classList.remove('loading');
-                const imgEl=slot.querySelector('.sticker-item');
-                if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
-            }
-            if(i-1===curIdx) updatePreRender();
-        };
-        img.onerror=()=>{
-            const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
-            if(slot) slot.classList.remove('loading');
-        };
-        // FIX2: 交错50ms启动请求，避免同时触发12个请求被限流
-        setTimeout(()=>{ img.src=`${baseUrl}sticker${i}.png`; }, (i-1)*50);
-    }
-    initPresetSwatches();
-    animateLiveDots();
-    document.getElementById('stickerImgInput').onchange=function(e){
-        const file=e.target.files[0]; if(!file)return;
-        const reader=new FileReader();
-        reader.onload=(f)=>{
-            const img=new Image();
-            img.onload=()=>{
-                stickerUploadedImg=img;
-                const pv=document.getElementById('imgUploadPreview');
-                pv.src=f.target.result; pv.style.display='block';
-                document.getElementById('imgUploadLabel').textContent='✅ 已选择';
-            };
-            img.src=f.target.result;
-        };
-        reader.readAsDataURL(file);
-    };
-}
-// FIX2: 骨架屏（先渲染空格子+loading动画，图片加载好后替换）
-function renderStickersSkeleton(page){
-    const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
-    const start=page===1?0:6, end=page===1?6:12;
-    for(let i=start;i<end;i++){
-        const slot=document.createElement('div');
-        slot.className='sticker-slot loading'+(curIdx===i?' active':'');
-        slot.setAttribute('data-sticker-idx',i);
-        const imgEl=document.createElement('img');
-        imgEl.className='sticker-item';
-        // 如果已经加载好，直接显示
-        const sImg=stickers[i];
-        if(sImg&&sImg.complete&&sImg.naturalWidth>0){
-            imgEl.src=sImg.src; imgEl.classList.add('loaded');
-            slot.classList.remove('loading');
-        }
-        slot.onclick=(()=>{
-            const idx=i;
-            return ()=>{
-                curIdx=idx;
-                document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
-                slot.classList.add('active');
-                updatePreRender();
-            };
-        })();
-        slot.appendChild(imgEl); grid.appendChild(slot);
-    }
-}
-function initPresetSwatches(){
-    const c=document.getElementById('presetSwatches');
-    macaronColors.forEach(col=>{
-        const s=document.createElement('div'); s.className='swatch'; s.style.backgroundColor=col;
-        s.onclick=()=>colorPicker.color.set(col);
-        c.appendChild(s);
-    });
-}
-function updateHistorySwatches(){
-    const c=document.getElementById('historySwatches'); c.innerHTML='';
-    colorHistory.slice().reverse().forEach((col,i)=>{
-        const realIdx=colorHistory.length-1-i;
-        const wrap=document.createElement('div');
-        wrap.style.cssText='position:relative;width:34px;height:34px;';
-        const s=document.createElement('div');
-        s.className='swatch'; s.style.backgroundColor=col;
-        s.style.width='34px'; s.style.height='34px';
-        s.onclick=()=>colorPicker.color.set(col);
-        // 长按显示❌
-        let pressTimer=null;
-        const delBtn=document.createElement('div');
-        delBtn.textContent='❌';
-        delBtn.style.cssText='display:none;position:absolute;top:-8px;right:-8px;font-size:14px;cursor:pointer;z-index:10;';
-        delBtn.onclick=(e)=>{
-            e.stopPropagation();
-            colorHistory.splice(realIdx,1);
-            updateHistorySwatches();
-        };
-        s.addEventListener('touchstart',()=>{
-            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
-        },{passive:true});
-        s.addEventListener('touchend',()=>clearTimeout(pressTimer));
-        s.addEventListener('mousedown',()=>{
-            pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);
-        });
-        s.addEventListener('mouseup',()=>clearTimeout(pressTimer));
-        wrap.appendChild(s); wrap.appendChild(delBtn);
-        c.appendChild(wrap);
-    });
-}
-let liveDotTimer=null;
-function animateLiveDots(){
-    let idx=0;
-    liveDotTimer=setInterval(()=>{
-        for(let i=0;i<5;i++){
-            const d=document.getElementById('liveDot'+i);
-            if(d) d.className='live-dot'+(i===idx?' lit':'');
-        }
-        idx=(idx+1)%5;
-    },350);
-}
-// ============================================================
-//  翻页
-// ============================================================
-function flipPage(){
-    currentPage = (currentPage % 3) + 1;
-    const corner = document.getElementById('pageCorner');
-    const icon = corner.querySelector('.page-corner-icon');
-    // 页角图标 1→2→3→1
-    const icons = ['▷','▶▷','↩'];
-    icon.textContent = icons[currentPage - 1];
-    corner.classList.toggle('flipped', currentPage > 1);
-    document.getElementById('pageContent1').style.display  = currentPage===1?'block':'none';
-    document.getElementById('pageContent2').style.display  = currentPage===2?'block':'none';
-    document.getElementById('pageContent3').style.display  = currentPage===3?'block':'none';
-    // 第3页隐藏钻石大小/角度控件（不需要），其他页显示
-    document.getElementById('mainControls').style.display = currentPage===3?'none':'flex';
-    if(currentPage <= 2) renderStickersSkeleton(currentPage);
-    // 第3页时同步色环颜色到马赛克色点
-    if(currentPage===3) document.getElementById('mosaicColorDot').style.background = currentColor;
-}
-// ============================================================
-//  预渲染当前贴纸
-// ============================================================
-function updatePreRender(){
-    const sImg=stickers[curIdx];
-    if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
-    stickerRatio=sImg.naturalWidth/sImg.naturalHeight;
-    const w=stickerRatio>=1?150:150*stickerRatio;
-    const h=stickerRatio>=1?150/stickerRatio:150;
-    preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
-}
-// ============================================================
-//  文字/Emoji 生成大贴纸
-// ============================================================
-function generateTextStickers(){
-    if(!mainImg.src)return imgInput.click();
-    const text=document.getElementById('stickerTextInput').value; if(!text)return;
-    const tip=document.getElementById('genTip1'); tip.style.display='block';
-    setTimeout(()=>{ _buildTextLayer(text); tip.style.display='none'; },20);
-}
-function _buildTextLayer(text){
-    const useOrig=document.getElementById('useOriginalColor').checked;
-    const fSize=60;
-    const tc=document.createElement('canvas'), tx=tc.getContext('2d');
-    tx.font=`bold ${fSize}px Arial`;
-    const tw=Math.ceil(tx.measureText(text).width)+80;
-    const th=Math.ceil(fSize*2.5);
-    tc.width=tw; tc.height=th;
-    tx.font=`bold ${fSize}px Arial`; tx.textBaseline='middle'; tx.textAlign='center';
-    tx.fillStyle='black'; tx.fillText(text,tw/2,th/2);
-    const raw=tx.getImageData(0,0,tw,th).data;
-    const step=_stepFromDensity('densitySlider');
-    const points=[];
-    for(let y=0;y<th;y+=step){
         for(let x=0;x<tw;x+=step){
             const idx=(y*tw+x)*4;
             if(raw[idx+3]>120){
@@ -955,41 +634,42 @@ function _doRandom(type){
 function generateLiveVideo(){
     if(!mainImg.src){alert('请先上传图片');return;}
     const allRecords=records.flat();
-    if(allRecords.length===0){alert('请先在画布上放置钻石贴纸');return;}
+    if(allRecords.length===0){alert('请先在画布上放置贴纸');return;}
     const btn=document.getElementById('liveBtn');
     const progressWrap=document.getElementById('recordProgress');
     const progressBar=document.getElementById('recordProgressBar');
-    // 检测支持格式，优先 mp4/h264
+    // 检测支持格式，优先 webm（兼容性最好），mp4 在 iOS Safari 支持
     const mimeType = (() => {
         const types=[
-            'video/mp4;codecs=avc1',
-            'video/mp4;codecs=h264',
-            'video/mp4',
             'video/webm;codecs=vp9',
             'video/webm;codecs=vp8',
             'video/webm',
+            'video/mp4;codecs=avc1',
+            'video/mp4',
         ];
-        if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported) return null;
-        return types.find(m=>MediaRecorder.isTypeSupported(m))||null;
+        if(typeof MediaRecorder==='undefined') return null;
+        if(!MediaRecorder.isTypeSupported) return null;
+        return types.find(m=>{ try{return MediaRecorder.isTypeSupported(m);}catch(e){return false;} })||null;
     })();
     if(!mimeType){
         _doLivePngSequence(allRecords,btn); return;
     }
     btn.disabled=true; btn.textContent='录制中...';
     progressWrap.style.display='block'; progressBar.style.width='0%';
-    // FIX1: 离屏canvas用2倍分辨率，提高清晰度
-    const SCALE=2;
+    // 离屏canvas — 确保有正确尺寸
+    const srcW = canvas.width  || 800;
+    const srcH = canvas.height || 800;
+    const SCALE = window.devicePixelRatio >= 2 ? 1 : 2; // 高清屏不需要再放大
     const rc=document.createElement('canvas');
-    rc.width=canvas.width*SCALE; rc.height=canvas.height*SCALE;
+    rc.width=srcW*SCALE; rc.height=srcH*SCALE;
     const rx=rc.getContext('2d');
-    rx.scale(SCALE,SCALE); // 之后所有绘制自动放大2倍
+    rx.scale(SCALE,SCALE);
     const FRAME_INTERVAL=400;
     const frameCount=Math.min(allRecords.length,30);
-    // 首帧×2（全暗稳定）+ 内容帧 + 尾帧×2（全暗稳定）
     const totalFrames=frameCount+4;
     function drawLiveFrame(glowIdx){
-        rx.clearRect(0,0,canvas.width,canvas.height);
-        if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
+        rx.clearRect(0,0,srcW,srcH);
+        if(mainImg.src) rx.drawImage(mainImg,0,0,srcW,srcH);
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
             const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
@@ -1002,9 +682,9 @@ function generateLiveVideo(){
             rx.restore();
         });
         allRecords.forEach((r,ri)=>{
+            if(!r.img) return;
             rx.save(); rx.translate(r.x,r.y); rx.rotate(r.angle||0);
             if(ri===glowIdx){
-                // 发光叠加两遍
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0;
                 rx.shadowColor=r.glowColor||'#ffe0ee';
                 rx.shadowBlur=36;
@@ -1020,15 +700,18 @@ function generateLiveVideo(){
         });
     }
     drawLiveFrame(-1);
-    const stream=rc.captureStream(0);
+    let stream;
+    try { stream=rc.captureStream(0); } catch(e){ _doLivePngSequence(allRecords,btn); return; }
     const chunks=[];
-    // FIX1: 码率提高到20Mbps（原来4Mbps），大幅提升清晰度
-    const recorder=new MediaRecorder(stream,{
-        mimeType,
-        videoBitsPerSecond: 20000000
-    });
+    let recorder;
+    try {
+        recorder=new MediaRecorder(stream,{ mimeType, videoBitsPerSecond: 8000000 });
+    } catch(e){
+        _doLivePngSequence(allRecords,btn); return;
+    }
     recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
     recorder.onstop=()=>{
+        if(chunks.length===0){ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; alert('录制失败，请重试'); return; }
         const ext=mimeType.includes('mp4')?'mp4':'webm';
         const blob=new Blob(chunks,{type:mimeType});
         const url=URL.createObjectURL(blob);
@@ -1041,18 +724,18 @@ function generateLiveVideo(){
         btn.disabled=false; btn.textContent='生成';
         progressWrap.style.display='none';
     };
-    recorder.start();
+    recorder.onerror=()=>{ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; alert('录制出错，请重试'); };
+    try { recorder.start(); } catch(e){ _doLivePngSequence(allRecords,btn); return; }
     let fi=0;
-    // 前2帧和后2帧是全暗稳定帧
     const timer=setInterval(()=>{
         const glowIdx=(fi<2||fi>=totalFrames-2)?-1:(fi-2);
         drawLiveFrame(glowIdx);
-        if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame();
+        try{ if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame(); }catch(e){}
         fi++;
         progressBar.style.width=(fi/totalFrames*100)+'%';
         if(fi>=totalFrames){
             clearInterval(timer);
-            setTimeout(()=>recorder.stop(),300);
+            setTimeout(()=>{ try{recorder.stop();}catch(e){} },400);
         }
     }, FRAME_INTERVAL);
 }
@@ -1237,7 +920,7 @@ imgInput.onchange=(e)=>{
         document.getElementById('mosaicPreviewRow').style.display='none';
     };
 
-    // 生成贴纸
+    // 生成贴纸 → 直接放到主画布
     window.mosaicGenerate = function(){
         const hasContent = grid.some(row=>row.some(c=>c!==null));
         if(!hasContent){ alert('请先涂色再生成 🎨'); return; }
@@ -1253,7 +936,7 @@ imgInput.onchange=(e)=>{
         for(let r=0;r<ROWS;r++){
             for(let c=0;c<COLS;c++){
                 if(!grid[r][c]) continue;
-             const x=c*CELL_OUT, y=r*CELL_OUT;
+                const x=c*CELL_OUT, y=r*CELL_OUT;
                 if(sImg&&sImg.complete&&sImg.naturalWidth){
                     octx.globalCompositeOperation='source-over';
                     octx.drawImage(sImg, x, y, CELL_OUT, CELL_OUT);
@@ -1270,39 +953,64 @@ imgInput.onchange=(e)=>{
             }
         }
 
-        mLastDataUrl = out.toDataURL('image/png');
-        document.getElementById('mosaicThumb').src = mLastDataUrl;
+        const dataUrl = out.toDataURL('image/png');
+        // 显示预览缩略图
+        document.getElementById('mosaicThumb').src = dataUrl;
         document.getElementById('mosaicPreviewRow').style.display = 'flex';
         btn.disabled=false; btn.textContent='✨ 生成贴纸';
-    };
 
-    // 用这个贴纸
-    window.mosaicUseSticker = function(){
-        if(!mLastDataUrl) return;
+        // 直接放到主画布中央
         const mainCanvas = document.getElementById('myCanvas');
         const img = new Image();
-        img.onload = ()=>{
-            // 如果画布还没图，先把画布尺寸设为贴纸本身大小
+        img.onload = function(){
+            // 画布没有底图时给个默认尺寸
             if(!mainCanvas.width || mainCanvas.width < 10){
-                mainCanvas.width  = 600;
-                mainCanvas.height = 600;
+                mainCanvas.width  = 800;
+                mainCanvas.height = 800;
+                document.getElementById('dropZone').classList.add('has-img');
             }
-            const size = parseInt(document.getElementById('sizeSlider').value);
-            const ratio = img.naturalWidth/img.naturalHeight;
-            const angle = parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
-            const sW = size*(ratio>=1?1:ratio);
-            const sH = size/(ratio>=1?ratio:1);
+            const sz = parseInt(document.getElementById('sizeSlider').value) * 3;
+            const ratio = img.naturalWidth / img.naturalHeight;
+            const sW = sz * (ratio>=1 ? 1 : ratio);
+            const sH = sz / (ratio>=1 ? ratio : 1);
             const rec = {
                 x: mainCanvas.width/2,
                 y: mainCanvas.height/2,
-                img, sizeW:sW, sizeH:sH, angle,
+                img, sizeW:sW, sizeH:sH,
+                angle: 0,
                 glowing:true, glowColor:'#ff85a2'
             };
             records.push([rec]);
             draw();
-            setTimeout(()=>{rec.glowing=false; draw();}, 600);
+            setTimeout(()=>{ rec.glowing=false; draw(); }, 800);
         };
-        img.src = mLastDataUrl;
+        img.src = dataUrl;
+    };
+
+    // 保留 use 按钮兼容（现在生成时已自动放置，按钮可再次触发）
+    window.mosaicUseSticker = function(){
+        const thumb = document.getElementById('mosaicThumb');
+        if(!thumb.src) return;
+        const mainCanvas = document.getElementById('myCanvas');
+        const img = new Image();
+        img.onload = function(){
+            if(!mainCanvas.width || mainCanvas.width < 10){
+                mainCanvas.width = 800; mainCanvas.height = 800;
+                document.getElementById('dropZone').classList.add('has-img');
+            }
+            const sz = parseInt(document.getElementById('sizeSlider').value) * 3;
+            const ratio = img.naturalWidth / img.naturalHeight;
+            const sW = sz*(ratio>=1?1:ratio);
+            const sH = sz/(ratio>=1?ratio:1);
+            records.push([{
+                x:mainCanvas.width/2, y:mainCanvas.height/2,
+                img, sizeW:sW, sizeH:sH, angle:0,
+                glowing:true, glowColor:'#ff85a2'
+            }]);
+            draw();
+            setTimeout(()=>{ records.flat().slice(-1)[0].glowing=false; draw(); }, 800);
+        };
+        img.src = thumb.src;
     };
 })();
 
@@ -1311,3 +1019,4 @@ init();
 </script>
 </body>
 </html>
+            
