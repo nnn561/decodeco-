@@ -70,40 +70,96 @@
         .record-progress { display:none; width:100%; height:4px; background:#ffd6e0; border-radius:4px; margin-top:4px; }
         .record-progress-bar { height:100%; background:var(--pink-accent); border-radius:4px; transition:width 0.3s; width:0%; }
 
-        /* ── 马赛克画板 ── */
-        #pageContent3 { width: 100%; }
-        .mosaic-tab-label { font-size: 12px; color: var(--pink-accent); font-weight: bold; margin-bottom: 6px; text-align: center; }
-        #mosaicGridCanvas {
+        /* ── 第3页：马赛克画板 ── */
+        #pageContent3 { width: 100%; display: none; }
+        .mosaic-board-wrap {
+            width: 100%;
+            background: #fffafb;
+            border-radius: 12px;
+            border: 1px dashed #ffcad4;
+            padding: 10px;
+        }
+        #mosaicCanvas {
             display: block;
             width: 100%;
-            border-radius: 10px;
-            cursor: crosshair;
+            border-radius: 8px;
             touch-action: none;
+            cursor: crosshair;
             border: 1.5px solid #ffcad4;
             background-image:
                 linear-gradient(45deg,#f5f5f5 25%,transparent 25%),
                 linear-gradient(-45deg,#f5f5f5 25%,transparent 25%),
                 linear-gradient(45deg,transparent 75%,#f5f5f5 75%),
                 linear-gradient(-45deg,transparent 75%,#f5f5f5 75%);
-            background-size: 12px 12px;
-            background-position: 0 0,0 6px,6px -6px,-6px 0;
+            background-size: 10px 10px;
+            background-position: 0 0,0 5px,5px -5px,-5px 0;
         }
-        .mosaic-palette-row { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin: 6px 0; }
-        .mosaic-dot {
-            width: 26px; height: 26px; border-radius: 50%;
-            border: 2px solid transparent; cursor: pointer; flex-shrink: 0;
-            transition: transform .15s;
+        .mosaic-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        .mosaic-dot.active { transform: scale(1.3); border-color: #333; }
-        .mosaic-custom-color { width: 26px; height: 26px; border: none; border-radius: 50%; cursor: pointer; padding: 0; }
-        .mosaic-tool-row { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
-        .mosaic-tool-btn { padding: 5px 12px; border-radius: 16px; border: 1.5px solid #ffcad4; background: #fff5f8; color: var(--pink-accent); font-size: 12px; font-weight: bold; cursor: pointer; }
-        .mosaic-tool-btn.active { background: #ff85a2; color: #fff; border-color: #ff85a2; }
-        .mosaic-gen-btn { width: 100%; padding: 10px; background: var(--pink-accent); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; margin-top: 6px; }
+        .mosaic-color-preview {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 6px rgba(255,133,162,.4);
+            cursor: pointer;
+            flex-shrink: 0;
+            background: #FFB7B2;
+        }
+        .mosaic-tool-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid #ffcad4;
+            background: #fff5f8;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: all .15s;
+        }
+        .mosaic-tool-btn.active { background: #ff85a2; border-color: #ff85a2; }
+        .mosaic-gen-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 10px;
+            background: var(--pink-accent);
+            color: #fff; border: none;
+            border-radius: 20px;
+            font-weight: bold; font-size: 13px;
+            cursor: pointer;
+        }
         .mosaic-gen-btn:disabled { background: #ffcad4; cursor: not-allowed; }
-        .mosaic-preview-area { display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 8px; }
-        .mosaic-preview-img { width: 120px; height: 120px; object-fit: contain; border-radius: 10px; box-shadow: 0 3px 12px rgba(255,133,162,.25); border: 1.5px solid #ffcad4; }
-        .mosaic-use-btn { background: var(--pink-accent); color: #fff; border: none; border-radius: 20px; padding: 7px 18px; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .mosaic-preview-row {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: #fff0f5;
+            border-radius: 10px;
+            border: 1.5px solid #ffcad4;
+        }
+        .mosaic-preview-thumb {
+            width: 56px; height: 56px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid #ffcad4;
+            flex-shrink: 0;
+        }
+        .mosaic-use-btn {
+            flex: 1;
+            padding: 9px 6px;
+            background: #ff85a2;
+            color: #fff; border: none;
+            border-radius: 14px;
+            font-weight: bold; font-size: 13px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -148,24 +204,28 @@
                 <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
-
-        <div class="page-content" id="pageContent3" style="display:none">
-            <div class="sticker-gen-area">
-                <div class="mosaic-tab-label">🎨 马赛克涂色生成贴纸</div>
-                <canvas id="mosaicGridCanvas"></canvas>
-                <div class="mosaic-palette-row" id="mosaicPalette"></div>
-                <div class="mosaic-tool-row">
-                    <button class="mosaic-tool-btn" id="mosaicEraserBtn" onclick="mosaicToggleEraser()">🧹 橡皮</button>
-                    <button class="mosaic-tool-btn" onclick="mosaicClear()">🗑 清空</button>
+        </div>
+        <div id="pageContent3" style="display:none">
+            <div class="mosaic-board-wrap">
+                <canvas id="mosaicCanvas"></canvas>
+                <div class="mosaic-toolbar">
+                    <div class="mosaic-color-preview" id="mosaicColorDot" onclick="document.getElementById('colorBtn').click()" title="选色"></div>
+                    <button class="mosaic-tool-btn" id="mosaicBucketBtn" onclick="mosaicSetMode('bucket')" title="油漆桶">🪣</button>
+                    <button class="mosaic-tool-btn" id="mosaicPenBtn" onclick="mosaicSetMode('pen')" title="画笔">✏️</button>
+                    <button class="mosaic-tool-btn" id="mosaicEraserBtn" onclick="mosaicSetMode('eraser')" title="橡皮">🧹</button>
+                    <button class="mosaic-tool-btn" onclick="mosaicClear()" title="清空">🗑️</button>
+                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">✨ 生成贴纸</button>
                 </div>
-                <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">✨ 生成贴纸</button>
-                <div class="mosaic-preview-area" id="mosaicPreviewArea">
-                    <img class="mosaic-preview-img" id="mosaicPreviewImg" alt="马赛克贴纸">
-                    <button class="mosaic-use-btn" onclick="mosaicUseSticker()">🎀 用这个贴纸</button>
+                <div class="mosaic-preview-row" id="mosaicPreviewRow">
+                    <img class="mosaic-preview-thumb" id="mosaicThumb" alt="">
+                    <div style="flex:1">
+                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">马赛克贴纸生成完成 🎀</div>
+                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">贴到画布上 →</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="controls">
+        <div class="controls" id="mainControls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
@@ -500,18 +560,21 @@ function animateLiveDots(){
 //  翻页
 // ============================================================
 function flipPage(){
-    currentPage = currentPage >= 3 ? 1 : currentPage + 1;
+    currentPage = (currentPage % 3) + 1;
     const corner = document.getElementById('pageCorner');
-    corner.classList.toggle('flipped', currentPage > 1);
-    // 页角图标变化
     const icon = corner.querySelector('.page-corner-icon');
-    if(currentPage === 1) icon.textContent = '▷';
-    else if(currentPage === 2) icon.textContent = '▶▷';
-    else icon.textContent = '↩';
-    document.getElementById('pageContent1').style.display = currentPage===1?'block':'none';
-    document.getElementById('pageContent2').style.display = currentPage===2?'block':'none';
-    document.getElementById('pageContent3').style.display = currentPage===3?'block':'none';
+    // 页角图标 1→2→3→1
+    const icons = ['▷','▶▷','↩'];
+    icon.textContent = icons[currentPage - 1];
+    corner.classList.toggle('flipped', currentPage > 1);
+    document.getElementById('pageContent1').style.display  = currentPage===1?'block':'none';
+    document.getElementById('pageContent2').style.display  = currentPage===2?'block':'none';
+    document.getElementById('pageContent3').style.display  = currentPage===3?'block':'none';
+    // 第3页隐藏钻石大小/角度控件（不需要），其他页显示
+    document.getElementById('mainControls').style.display = currentPage===3?'none':'flex';
     if(currentPage <= 2) renderStickersSkeleton(currentPage);
+    // 第3页时同步色环颜色到马赛克色点
+    if(currentPage===3) document.getElementById('mosaicColorDot').style.background = currentColor;
 }
 // ============================================================
 //  预渲染当前贴纸
@@ -798,6 +861,9 @@ colorPicker.on('color:change',(c)=>{
     document.getElementById('colorPreview').innerText=currentColor;
     document.getElementById('colorPreview').style.backgroundColor=currentColor;
     document.getElementById('currentSwatch').style.backgroundColor=currentColor;
+    // 同步到马赛克色点
+    const mcd=document.getElementById('mosaicColorDot');
+    if(mcd) mcd.style.background=currentColor;
     updatePreRender();
 });
 document.getElementById('colorBtn').addEventListener('click',(e)=>{
@@ -1068,181 +1134,170 @@ imgInput.onchange=(e)=>{
     reader.readAsDataURL(e.target.files[0]);
 };
 // ============================================================
-//  马赛克画板
+//  马赛克画板功能
 // ============================================================
 (function(){
-    const PALETTE = [
-        "#FF4444","#FF8833","#FFDD00","#88CC44",
-        "#44BB88","#4488FF","#AA55FF","#FF88BB",
-        "#FFFFFF","#CCCCCC","#888888","#000000",
-    ];
-    const COLS = 16, ROWS = 16;
-    const mc   = document.getElementById('mosaicGridCanvas');
-    const mctx = mc.getContext('2d');
+    const COLS = 20, ROWS = 20;  // 格子数
+    const CANVAS_PX = 320;       // 内部分辨率
+    const CELL = CANVAS_PX / COLS;
+    const CELL_OUT = 48;         // 生成贴纸每格像素
 
-    // 画布实际像素（内部分辨率），CSS width=100%
-    const CANVAS_PX = 320;
-    mc.width  = CANVAS_PX;
-    mc.height = CANVAS_PX;
-    const CELL = CANVAS_PX / COLS; // 20px
+    const mc   = document.getElementById('mosaicCanvas');
+    const mctx = mc.getContext('2d');
+    mc.width = mc.height = CANVAS_PX;
 
     const grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
-    let mColor   = PALETTE[0];
-    let mErasing = false;
-    let mDown    = false;
+    let mMode  = 'pen';   // 'pen' | 'bucket' | 'eraser'
+    let mDown  = false;
+    let mLastDataUrl = null;
 
-    // 生成调色板按钮
-    const paletteEl = document.getElementById('mosaicPalette');
-    PALETTE.forEach(c => {
-        const btn = document.createElement('button');
-        btn.className = 'mosaic-dot';
-        btn.style.background = c;
-        if(c==='#FFFFFF') btn.style.boxShadow='inset 0 0 0 1px #ddd';
-        btn.onclick = () => { mColor = c; mErasing = false; syncPaletteDots(btn); document.getElementById('mosaicEraserBtn').classList.remove('active'); };
-        paletteEl.appendChild(btn);
-        if(c === PALETTE[0]) btn.classList.add('active');
-    });
-    // 自定义色
-    const customBtn = document.createElement('input');
-    customBtn.type = 'color'; customBtn.className = 'mosaic-custom-color'; customBtn.value = '#ff85a2';
-    customBtn.oninput = e => { mColor = e.target.value; mErasing = false; document.querySelectorAll('.mosaic-dot').forEach(d=>d.classList.remove('active')); document.getElementById('mosaicEraserBtn').classList.remove('active'); };
-    paletteEl.appendChild(customBtn);
-
-    function syncPaletteDots(active){
-        document.querySelectorAll('.mosaic-dot').forEach(d=>d.classList.remove('active'));
-        if(active) active.classList.add('active');
+    // 绘制所有格子
+    function mRedrawAll(){
+        mctx.clearRect(0, 0, CANVAS_PX, CANVAS_PX);
+        for(let r=0; r<ROWS; r++)
+            for(let c=0; c<COLS; c++)
+                mDrawCell(r, c);
     }
-
-    // 涂色
-    function mPaint(clientX, clientY){
-        const rect = mc.getBoundingClientRect();
-        const scaleX = mc.width / rect.width;
-        const scaleY = mc.height / rect.height;
-        const col = Math.floor((clientX - rect.left) * scaleX / CELL);
-        const row = Math.floor((clientY - rect.top)  * scaleY / CELL);
-        if(row<0||row>=ROWS||col<0||col>=COLS) return;
-        const newVal = mErasing ? null : mColor;
-        if(grid[row][col] === newVal) return;
-        grid[row][col] = newVal;
-        mRedrawCell(row, col);
-    }
-
-    function mRedrawCell(r, c){
-        const x = c*CELL, y = r*CELL;
-        mctx.clearRect(x, y, CELL, CELL);
+    function mDrawCell(r, c){
+        const x=c*CELL, y=r*CELL;
         if(grid[r][c]){
             mctx.fillStyle = grid[r][c];
             mctx.fillRect(x, y, CELL, CELL);
+        } else {
+            mctx.clearRect(x, y, CELL, CELL);
         }
-        mctx.strokeStyle = 'rgba(255,133,162,0.18)';
+        mctx.strokeStyle = 'rgba(255,133,162,0.15)';
         mctx.lineWidth = 0.5;
         mctx.strokeRect(x+.5, y+.5, CELL-1, CELL-1);
     }
-
-    function mRedrawAll(){
-        mctx.clearRect(0,0,mc.width,mc.height);
-        for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) mRedrawCell(r,c);
-    }
-
-    // 初始绘制网格线
     mRedrawAll();
 
-    // 鼠标事件
-    mc.addEventListener('mousedown', e => { mDown=true; mPaint(e.clientX, e.clientY); });
-    mc.addEventListener('mousemove', e => { if(mDown) mPaint(e.clientX, e.clientY); });
-    window.addEventListener('mouseup', () => mDown=false);
+    // 坐标换算
+    function mGetCell(clientX, clientY){
+        const rect = mc.getBoundingClientRect();
+        const col = Math.floor((clientX - rect.left) / rect.width  * COLS);
+        const row = Math.floor((clientY - rect.top)  / rect.height * ROWS);
+        return {row, col};
+    }
 
-    // 触屏事件
-    mc.addEventListener('touchstart', e => { e.preventDefault(); mPaint(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
-    mc.addEventListener('touchmove',  e => { e.preventDefault(); mPaint(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+    // 油漆桶 flood fill（BFS）
+    function mFloodFill(startR, startC, fillColor){
+        const targetColor = grid[startR][startC];
+        if(targetColor === fillColor) return;
+        const q = [[startR, startC]];
+        const visited = Array.from({length:ROWS}, ()=>Array(COLS).fill(false));
+        visited[startR][startC] = true;
+        while(q.length){
+            const [r,c] = q.shift();
+            grid[r][c] = fillColor;
+            mDrawCell(r, c);
+            [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc])=>{
+                if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&!visited[nr][nc]&&grid[nr][nc]===targetColor){
+                    visited[nr][nc]=true;
+                    q.push([nr,nc]);
+                }
+            });
+        }
+    }
 
-    // 工具函数（挂到 window 供按钮调用）
-    window.mosaicToggleEraser = function(){
-        mErasing = !mErasing;
-        document.getElementById('mosaicEraserBtn').classList.toggle('active', mErasing);
-        syncPaletteDots(null);
+    // 点击/涂色处理
+    function mAct(clientX, clientY){
+        const {row, col} = mGetCell(clientX, clientY);
+        if(row<0||row>=ROWS||col<0||col>=COLS) return;
+        if(mMode === 'bucket'){
+            mFloodFill(row, col, currentColor);
+        } else if(mMode === 'eraser'){
+            if(grid[row][col] !== null){ grid[row][col]=null; mDrawCell(row,col); }
+        } else {
+            // pen
+            if(grid[row][col] !== currentColor){ grid[row][col]=currentColor; mDrawCell(row,col); }
+        }
+    }
+
+    mc.addEventListener('mousedown', e=>{ mDown=true; mAct(e.clientX,e.clientY); });
+    mc.addEventListener('mousemove', e=>{ if(mDown&&mMode!=='bucket') mAct(e.clientX,e.clientY); });
+    window.addEventListener('mouseup', ()=>mDown=false);
+    mc.addEventListener('touchstart', e=>{ e.preventDefault(); mAct(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+    mc.addEventListener('touchmove',  e=>{ e.preventDefault(); if(mMode!=='bucket') mAct(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
+
+    // 工具切换
+    window.mosaicSetMode = function(mode){
+        mMode = mode;
+        document.getElementById('mosaicBucketBtn').classList.toggle('active', mode==='bucket');
+        document.getElementById('mosaicPenBtn').classList.toggle('active',    mode==='pen');
+        document.getElementById('mosaicEraserBtn').classList.toggle('active', mode==='eraser');
+        mc.style.cursor = mode==='eraser'?'cell':mode==='bucket'?'copy':'crosshair';
     };
+    mosaicSetMode('pen'); // 默认画笔
+
+    // 清空
     window.mosaicClear = function(){
         for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=null;
         mRedrawAll();
-        document.getElementById('mosaicPreviewArea').style.display='none';
+        document.getElementById('mosaicPreviewRow').style.display='none';
     };
 
-    // 生成贴纸：用当前选中的小贴纸（curIdx）+ multiply 叠色
-    window.mosaicGenerate = async function(){
+    // 生成贴纸
+    window.mosaicGenerate = function(){
         const hasContent = grid.some(row=>row.some(c=>c!==null));
-        if(!hasContent){ alert('请先在画板上涂色 🎨'); return; }
-
+        if(!hasContent){ alert('请先涂色再生成 🎨'); return; }
         const btn = document.getElementById('mosaicGenBtn');
-        btn.disabled = true; btn.textContent = '生成中…';
+        btn.disabled=true; btn.textContent='生成中…';
 
-        const CELL_OUT = 40; // 每格输出像素
         const out = document.createElement('canvas');
-        out.width  = COLS * CELL_OUT;
+        out.width = COLS * CELL_OUT;
         out.height = ROWS * CELL_OUT;
         const octx = out.getContext('2d');
-
-        // 加载当前贴纸（已经在 stickers[] 里了，直接用）
         const sImg = stickers[curIdx];
 
         for(let r=0;r<ROWS;r++){
             for(let c=0;c<COLS;c++){
                 if(!grid[r][c]) continue;
-                const x = c*CELL_OUT, y = r*CELL_OUT;
-                if(sImg && sImg.complete && sImg.naturalWidth){
-                    // 画贴纸原图
-                    octx.globalCompositeOperation = 'source-over';
+             const x=c*CELL_OUT, y=r*CELL_OUT;
+                if(sImg&&sImg.complete&&sImg.naturalWidth){
+                    octx.globalCompositeOperation='source-over';
                     octx.drawImage(sImg, x, y, CELL_OUT, CELL_OUT);
-                    // multiply 叠色
-                    octx.globalCompositeOperation = 'multiply';
-                    octx.fillStyle = grid[r][c];
+                    octx.globalCompositeOperation='multiply';
+                    octx.fillStyle=grid[r][c];
                     octx.fillRect(x, y, CELL_OUT, CELL_OUT);
-                    // 用 destination-in 裁回贴纸轮廓（保持透明度）
-                    octx.globalCompositeOperation = 'destination-in';
+                    octx.globalCompositeOperation='destination-in';
                     octx.drawImage(sImg, x, y, CELL_OUT, CELL_OUT);
-                    octx.globalCompositeOperation = 'source-over';
+                    octx.globalCompositeOperation='source-over';
                 } else {
-                    // 贴纸未加载完，纯色方块
-                    octx.fillStyle = grid[r][c];
+                    octx.fillStyle=grid[r][c];
                     octx.fillRect(x, y, CELL_OUT, CELL_OUT);
                 }
             }
         }
 
-        const dataUrl = out.toDataURL('image/png');
-        document.getElementById('mosaicPreviewImg').src = dataUrl;
-        document.getElementById('mosaicPreviewArea').style.display = 'flex';
-    btn.disabled = false; btn.textContent = '✨ 生成贴纸';
-
-        // 存起来供 use 按钮用
-        mc._lastDataUrl = dataUrl;
+        mLastDataUrl = out.toDataURL('image/png');
+        document.getElementById('mosaicThumb').src = mLastDataUrl;
+        document.getElementById('mosaicPreviewRow').style.display = 'flex';
+        btn.disabled=false; btn.textContent='✨ 生成贴纸';
     };
 
-    // 用这个贴纸 → 贴到主画布上（和普通贴纸一样的方式）
+    // 用这个贴纸
     window.mosaicUseSticker = function(){
-        const dataUrl = mc._lastDataUrl;
-        if(!dataUrl) return;
+        if(!mLastDataUrl) return;
         if(!mainImg.src){ alert('请先在下方上传图片'); return; }
-
         const img = new Image();
-        img.onload = () => {
+        img.onload = ()=>{
             const size = parseInt(document.getElementById('sizeSlider').value);
-            const ratio = img.naturalWidth / img.naturalHeight;
-            const angle = parseInt(document.getElementById('rotateSlider').value) * Math.PI/180;
-            const sW = size * (ratio>=1?1:ratio);
-            const sH = size / (ratio>=1?ratio:1);
+            const ratio = img.naturalWidth/img.naturalHeight;
+            const angle = parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
+            const sW = size*(ratio>=1?1:ratio);
+            const sH = size/(ratio>=1?ratio:1);
             const rec = {
-                x: canvas.width/2, y: canvas.height/2,
-                img, sizeW: sW, sizeH: sH, angle,
-                glowing: true, glowColor: '#ff85a2'
+                x:canvas.width/2, y:canvas.height/2,
+                img, sizeW:sW, sizeH:sH, angle,
+                glowing:true, glowColor:'#ff85a2'
             };
             records.push([rec]);
             draw();
-            setTimeout(()=>{ rec.glowing=false; draw(); }, 600);
+            setTimeout(()=>{rec.glowing=false;draw();},600);
         };
-        img.src = dataUrl;
+        img.src = mLastDataUrl;
     };
-
 })();
 
 
