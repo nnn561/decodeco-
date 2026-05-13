@@ -8,9 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
-            --book-cover: #ff24ab;
+            --book-cover: #ff;
             --page-white: #ffffff;
-            --pink-accent: #ff85a2;
+            --pink-accent: #ff66ab;
             --ring-gray: #c0c0c0;
             --spine-pink: #e01090;
         }
@@ -20,7 +20,7 @@
             margin: 0; padding: 15px 0;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
-            background-color: #ffb5fe;
+            background-color: #ffd1de;
         }
         /* ── 顶部 Logo ── */
         .title-header {
@@ -349,7 +349,7 @@
         <!-- 第3页：马赛克画板 -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="mosaic-board-wrap">
-                <div class="mosaic-label">🎨 马赛克涂色 → 生成贴纸</div>
+                <div class="mosaic-label">涂色生成贴纸</div>
                 <canvas id="mosaicCanvas"></canvas>
                 <div class="mosaic-toolbar">
                     <div class="mosaic-color-dot" id="mosaicColorDot" onclick="document.getElementById('colorBtn').click()" title="选色（点击打开色环）"></div>
@@ -357,13 +357,13 @@
                     <button class="mosaic-tool-btn active" id="mosaicPenBtn" onclick="mosaicSetMode('pen')" title="画笔">✏️</button>
                     <button class="mosaic-tool-btn" id="mosaicEraserBtn" onclick="mosaicSetMode('eraser')" title="橡皮">🧹</button>
                     <button class="mosaic-tool-btn" onclick="mosaicClear()" title="清空">🗑️</button>
-                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">✨ 生成贴纸</button>
+                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">生成贴纸</button>
                 </div>
                 <div class="mosaic-preview-row" id="mosaicPreviewRow">
                     <img class="mosaic-preview-thumb" id="mosaicThumb" alt="">
                     <div style="flex:1">
-                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">贴纸已放到画布上 🎀</div>
-                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">再贴一次 →</button>
+                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">贴纸已放到画布上</div>
+                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">再贴一次</button>
                     </div>
                 </div>
             </div>
@@ -606,7 +606,7 @@ function init(){
                 stickerUploadedImg=img;
                 const pv=document.getElementById('imgUploadPreview');
                 pv.src=f.target.result; pv.style.display='block';
-                document.getElementById('imgUploadLabel').textContent='✅ 已选择';
+                document.getElementById('imgUploadLabel').textContent='已选择';
             };
             img.src=f.target.result;
         };
@@ -694,7 +694,7 @@ function animateLiveDots(){
 function flipPage(){
     currentPage = (currentPage % 3) + 1;
     const icon = document.getElementById('pageCornerIcon');
-    const icons = ['▷','▶▷','↩'];
+    const icons = ['▷','▶▷','▷'];
     icon.textContent = icons[currentPage-1];
     document.getElementById('pageCorner').classList.toggle('flipped', currentPage > 1);
     document.getElementById('pageContent1').style.display = currentPage===1?'block':'none';
@@ -1309,7 +1309,7 @@ imgInput.onchange=(e)=>{
     };
     window.mosaicGenerate=function(){
         const hasContent=grid.some(row=>row.some(c=>c!==null));
-        if(!hasContent){alert('请先涂色再生成 🎨');return;}
+        if(!hasContent){alert('请先涂色再生成 ');return;}
         const btn=document.getElementById('mosaicGenBtn');
         btn.disabled=true; btn.textContent='生成中…';
         const out=document.createElement('canvas');
@@ -1337,7 +1337,7 @@ imgInput.onchange=(e)=>{
         mLastDataUrl=dataUrl;
         document.getElementById('mosaicThumb').src=dataUrl;
         document.getElementById('mosaicPreviewRow').style.display='flex';
-        btn.disabled=false; btn.textContent='✨ 生成贴纸';
+        btn.disabled=false; btn.textContent='生成贴纸';
         // 直接放到主画布
         const img=new Image();
         img.onload=function(){
