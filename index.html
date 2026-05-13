@@ -7,84 +7,243 @@
     <title>Pancake Sticker Book - pancakedeco</title>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
-        :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
+        :root {
+            --book-cover: #ff24ab;
+            --page-white: #ffffff;
+            --pink-accent: #ff85a2;
+            --ring-gray: #c0c0c0;
+            --spine-pink: #e01090;
+        }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffeef4; }
-        .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
-        .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214,51,132,0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
-        .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
-        .top-page { border-radius: 12px 25px 0 0; z-index: 2; overflow: hidden; }
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 0; padding: 15px 0;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh;
+            background-color: #ffb5fe;
+        }
+        /* ── 顶部 Logo ── */
+        .title-header {
+            width: 92%; max-width: 420px;
+            margin-bottom: 10px;
+            display: flex; justify-content: center;
+        }
+        .title-header img {
+            width: 70%; max-width: 200px;
+            height: auto;
+            filter: drop-shadow(2px 3px 0px rgba(180,0,120,0.35));
+        }
+
+        /* ── 书本外壳：深粉色 + 银色水钻 ── */
+        .book-container {
+            width: 94%; max-width: 420px;
+            padding: 12px;
+            border-radius: 15px 40px 40px 15px;
+            position: relative;
+            display: flex; flex-direction: column;
+            margin: 0 auto;
+            background-color: var(--book-cover);
+            /* 水钻效果：多层 radial-gradient 模拟银色钻石散点 */
+            background-image:
+                radial-gradient(circle at 18% 22%, rgba(255,255,255,0.85) 1.5px, transparent 2.5px),
+                radial-gradient(circle at 72% 14%, rgba(255,255,255,0.8)  1.2px, transparent 2.2px),
+                radial-gradient(circle at 45% 38%, rgba(200,200,220,0.7)  1px,   transparent 2px),
+                radial-gradient(circle at 88% 55%, rgba(255,255,255,0.9)  1.5px, transparent 2.5px),
+                radial-gradient(circle at 6%  67%, rgba(255,255,255,0.75) 1px,   transparent 2px),
+                radial-gradient(circle at 33% 80%, rgba(210,210,230,0.8)  1.2px, transparent 2.2px),
+                radial-gradient(circle at 60% 91%, rgba(255,255,255,0.85) 1.5px, transparent 2.5px),
+                radial-gradient(circle at 92% 82%, rgba(255,255,255,0.7)  1px,   transparent 2px),
+                radial-gradient(circle at 25% 55%, rgba(255,255,255,0.6)  1px,   transparent 1.8px),
+                radial-gradient(circle at 77% 38%, rgba(220,220,240,0.75) 1.2px, transparent 2.2px),
+                radial-gradient(circle at 50% 68%, rgba(255,255,255,0.8)  1px,   transparent 2px),
+                radial-gradient(circle at 13% 44%, rgba(255,255,255,0.65) 1.2px, transparent 2px),
+                radial-gradient(circle at 84% 26%, rgba(255,255,255,0.8)  1.5px, transparent 2.5px),
+                radial-gradient(circle at 38% 12%, rgba(220,220,240,0.7)  1px,   transparent 1.8px),
+                radial-gradient(circle at 66% 75%, rgba(255,255,255,0.9)  1px,   transparent 2px);
+            box-shadow: 0 20px 40px rgba(180,0,120,0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .top-page, .bottom-page {
+            background: var(--page-white);
+            padding: 15px;
+            position: relative;
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%;
+            box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03);
+        }
+        .top-page  { border-radius: 12px 25px 0 0; z-index: 2; overflow: hidden; }
         .bottom-page { border-radius: 0 0 25px 12px; min-height: 380px; z-index: 2; }
-        .spine-area { height: 30px; background: var(--spine-pink); width: 100%; position: relative; z-index: 5; margin: -5px 0; display: flex; justify-content: space-around; align-items: center; }
-        .ring { width: 10px; height: 45px; background: var(--ring-gray); border-radius: 5px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.3); }
-        .page-corner { position: absolute; top: 0; right: 0; width: 56px; height: 56px; cursor: pointer; z-index: 10; }
-        .page-corner::before { content: ''; position: absolute; top: 0; right: 0; width: 0; height: 0; border-style: solid; border-width: 0 56px 56px 0; border-color: transparent var(--pink-accent) transparent transparent; filter: drop-shadow(-2px 2px 4px rgba(255,133,162,0.5)); transition: border-width 0.15s; }
+
+        /* ── 书脊 ── */
+        .spine-area {
+            height: 30px;
+            background: var(--spine-pink);
+            width: 100%;
+            position: relative; z-index: 5;
+            margin: -5px 0;
+            display: flex; justify-content: space-around; align-items: center;
+        }
+        /* 银色金属环 */
+        .ring {
+            width: 10px; height: 45px;
+            background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 40%, #a8a8a8 60%, #d0d0d0 100%);
+            border-radius: 5px;
+            box-shadow: inset 1px 1px 3px rgba(255,255,255,0.8), inset -1px -1px 3px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* ── 翻页角 ── */
+        .page-corner {
+            position: absolute; top: 0; right: 0;
+            width: 56px; height: 56px;
+            cursor: pointer; z-index: 10;
+        }
+        .page-corner::before {
+            content: '';
+            position: absolute; top: 0; right: 0;
+            width: 0; height: 0; border-style: solid;
+            border-width: 0 56px 56px 0;
+            border-color: transparent var(--book-cover) transparent transparent;
+            filter: drop-shadow(-2px 2px 4px rgba(255,36,171,0.4));
+            transition: border-width 0.15s;
+        }
         .page-corner:active::before { border-width: 0 66px 66px 0; }
-        .page-corner-icon { position: absolute; top: 8px; right: 8px; font-size: 14px; color: white; pointer-events: none; transition: transform 0.3s; }
-        .page-corner.flipped .page-corner-icon { transform: rotate(180deg); }
-        .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
-        /* FIX2: 贴纸格骨架屏占位 */
-        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
-        .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+        .page-corner-icon {
+            position: absolute; top: 8px; right: 9px;
+            font-size: 13px; color: white;
+            pointer-events: none;
+        }
+
+        /* ── 贴纸格 ── */
+        .sticker-grid {
+            display: grid; grid-template-columns: repeat(3,1fr);
+            gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center;
+        }
+        .sticker-slot {
+            width: 58px; height: 58px; border-radius: 10px;
+            border: 2px solid #f0f0f0; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; cursor: pointer; position: relative;
+        }
+        .sticker-slot.loading {
+            background: linear-gradient(110deg,#ffeef4 30%,#ffd6e4 50%,#ffeef4 70%);
+            background-size: 200% 100%; animation: shimmer 1.4s infinite;
+        }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
+        .sticker-item {
+            max-width: 85%; max-height: 85%; object-fit: contain;
+            display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s;
+        }
         .sticker-item.loaded { opacity: 1; }
+
+        /* ── 生成区域 ── */
         .page-content { width: 100%; }
-        .sticker-gen-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
+        .sticker-gen-area {
+            width: 100%; padding: 10px;
+            background: #fffafb; border-radius: 12px;
+            border: 1px dashed #ffcad4; margin-bottom: 10px;
+        }
         .gen-row { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; }
-        .gen-row input[type=text] { flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px; padding: 8px; outline: none; font-size: 14px; height: 38px; }
-        .gen-btn { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 0 15px; font-weight: bold; cursor: pointer; height: 38px; white-space: nowrap; flex-shrink: 0; }
-        .img-upload-box { flex: 1; border: 1.5px dashed #ffcad4; border-radius: 8px; padding: 6px 8px; font-size: 12px; color: #ff85a2; cursor: pointer; background: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; height: 38px; overflow: hidden; }
-        .img-upload-preview { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; border: 1.5px solid #ffcad4; display: none; flex-shrink: 0; }
+        .gen-row input[type=text] {
+            flex: 1; border: 1.5px solid #ffcad4; border-radius: 8px;
+            padding: 8px; outline: none; font-size: 14px; height: 38px;
+        }
+        .gen-btn {
+            background: var(--pink-accent); color: white;
+            border: none; border-radius: 8px; padding: 0 15px;
+            font-weight: bold; cursor: pointer; height: 38px;
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .img-upload-box {
+            flex: 1; border: 1.5px dashed #ffcad4; border-radius: 8px;
+            padding: 6px 8px; font-size: 12px; color: #ff85a2;
+            cursor: pointer; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; height: 38px; overflow: hidden;
+        }
+        .img-upload-preview {
+            width: 28px; height: 28px; border-radius: 4px;
+            object-fit: cover; border: 1.5px solid #ffcad4;
+            display: none; flex-shrink: 0;
+        }
         .gen-tip { font-size: 11px; color: #ff85a2; text-align: center; padding: 2px 0; display: none; }
-        .slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px; }
+        .slider-row {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; color: var(--pink-accent); font-weight: bold; margin-top: 5px;
+        }
         .slider-row span:first-child { min-width: 56px; }
-        .slider-row span:last-child { min-width: 30px; text-align: right; }
+        .slider-row span:last-child  { min-width: 30px; text-align: right; }
         input[type=range] { accent-color: var(--pink-accent); width: 100%; cursor: pointer; }
+
+        /* ── 色环控件 ── */
         .controls { display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-top: 2px; }
         .color-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 18px; }
-        .current-color-dot { width: 48px; height: 48px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .current-color-dot {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;
+        }
         .slider-col { flex: 1; }
-        .canvas-area { flex: 1; width: 100%; border: 2px dashed #ffcad4; border-radius: 15px; position: relative; background: #fffafb; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-top: 10px; }
+
+        /* ── 画布区域 ── */
+        .canvas-area {
+            flex: 1; width: 100%; border: 2px dashed #ffcad4;
+            border-radius: 15px; position: relative; background: #fffafb;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; margin-top: 10px;
+        }
         #myCanvas { max-width: 100%; max-height: 100%; touch-action: none; z-index: 6; }
         .plus-icon { font-size: 60px; color: #ffabbd; position: absolute; pointer-events: none; z-index: 1; }
         .canvas-area.has-img .plus-icon { display: none; }
         .bottom-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 15px; }
-        .bottom-action-bar button { flex: 1; padding: 12px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; cursor: pointer; }
-        #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3); width: min(300px, 90vw); max-height: 90vh; overflow-y: auto; }
-        .color-preview-bar { width: 100%; height: 34px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 13px; }
+        .bottom-action-bar button {
+            flex: 1; padding: 12px 2px; border: none; border-radius: 10px;
+            color: white; font-weight: bold; font-size: 11px;
+            background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; cursor: pointer;
+        }
+
+        /* ── 色环弹窗 ── */
+        #pickerContainer {
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            background: white; padding: 20px; border-radius: 20px;
+            z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            width: min(300px,90vw); max-height: 90vh; overflow-y: auto;
+        }
+        .color-preview-bar {
+            width: 100%; height: 34px; border-radius: 8px; margin-bottom: 12px;
+            border: 1px solid #eee; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 13px;
+        }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
         .color-swatches { display: grid; grid-template-columns: repeat(6,1fr); gap: 5px; margin-bottom: 5px; min-height: 34px; }
         .swatch { width: 34px; height: 34px; border-radius: 6px; cursor: pointer; border: 2px solid #eee; transition: transform 0.1s; }
         .swatch:active { transform: scale(0.9); }
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 9998; }
-        .live-btn-area { width: 100%; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px 10px; background: #fff5f8; border-radius: 10px; border: 1px dashed #ffcad4; }
+
+        /* ── 视频生成区 ── */
+        .live-btn-area {
+            width: 100%; display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px; padding: 8px 10px;
+            background: #fff5f8; border-radius: 10px; border: 1px dashed #ffcad4;
+        }
         .live-preview-icon { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
         .live-dot { width: 10px; height: 10px; border-radius: 50%; background: #ffcad4; }
         .live-dot.lit { background: var(--pink-accent); box-shadow: 0 0 6px var(--pink-accent); }
         .live-label { font-size: 11px; color: var(--pink-accent); font-weight: bold; flex: 1; }
         .live-btn { background: var(--pink-accent); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-weight: bold; cursor: pointer; font-size: 11px; white-space: nowrap; }
         .live-btn:disabled { background: #ffcad4; cursor: not-allowed; }
-        /* FIX1: 录制进度条 */
         .record-progress { display:none; width:100%; height:4px; background:#ffd6e0; border-radius:4px; margin-top:4px; }
         .record-progress-bar { height:100%; background:var(--pink-accent); border-radius:4px; transition:width 0.3s; width:0%; }
 
         /* ── 第3页：马赛克画板 ── */
-        #pageContent3 { width: 100%; display: none; }
         .mosaic-board-wrap {
-            width: 100%;
-            background: #fffafb;
-            border-radius: 12px;
-            border: 1px dashed #ffcad4;
-            padding: 10px;
+            width: 100%; background: #fffafb;
+            border-radius: 12px; border: 1px dashed #ffcad4; padding: 10px;
         }
+        .mosaic-label { font-size: 12px; color: var(--pink-accent); font-weight: bold; text-align: center; margin-bottom: 8px; }
         #mosaicCanvas {
-            display: block;
-            width: 100%;
-            border-radius: 8px;
-            touch-action: none;
-            cursor: crosshair;
+            display: block; width: 100%;
+            border-radius: 8px; touch-action: none;
             border: 1.5px solid #ffcad4;
             background-image:
                 linear-gradient(45deg,#f5f5f5 25%,transparent 25%),
@@ -95,200 +254,125 @@
             background-position: 0 0,0 5px,5px -5px,-5px 0;
         }
         .mosaic-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 10px; justify-content: center; flex-wrap: wrap;
         }
-        .mosaic-color-preview {
-            width: 36px; height: 36px;
-            border-radius: 50%;
+        .mosaic-color-dot {
+            width: 36px; height: 36px; border-radius: 50%;
             border: 3px solid #fff;
             box-shadow: 0 2px 6px rgba(255,133,162,.4);
-            cursor: pointer;
-            flex-shrink: 0;
-            background: #FFB7B2;
+            cursor: pointer; flex-shrink: 0; background: #FFB7B2;
         }
         .mosaic-tool-btn {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border: 2px solid #ffcad4;
-            background: #fff5f8;
-            font-size: 16px;
-            cursor: pointer;
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid #ffcad4; background: #fff5f8;
+            font-size: 16px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            transition: all .15s;
+            flex-shrink: 0; transition: all .15s;
         }
         .mosaic-tool-btn.active { background: #ff85a2; border-color: #ff85a2; }
         .mosaic-gen-btn {
-            flex: 1;
-            min-width: 80px;
-            padding: 8px 10px;
-            background: var(--pink-accent);
-            color: #fff; border: none;
-            border-radius: 20px;
-            font-weight: bold; font-size: 13px;
-            cursor: pointer;
+            flex: 1; min-width: 80px; padding: 8px 10px;
+            background: var(--pink-accent); color: #fff;
+            border: none; border-radius: 20px;
+            font-weight: bold; font-size: 13px; cursor: pointer;
         }
         .mosaic-gen-btn:disabled { background: #ffcad4; cursor: not-allowed; }
         .mosaic-preview-row {
-            display: none;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            padding: 8px 10px;
-            background: #fff0f5;
-            border-radius: 10px;
-            border: 1.5px solid #ffcad4;
+            display: none; align-items: center; gap: 10px;
+            margin-top: 10px; padding: 8px 10px;
+            background: #fff0f5; border-radius: 10px; border: 1.5px solid #ffcad4;
         }
         .mosaic-preview-thumb {
-            width: 56px; height: 56px;
-            object-fit: contain;
-            border-radius: 8px;
-            border: 1px solid #ffcad4;
-            flex-shrink: 0;
+            width: 56px; height: 56px; object-fit: contain;
+            border-radius: 8px; border: 1px solid #ffcad4; flex-shrink: 0;
         }
         .mosaic-use-btn {
-            flex: 1;
-            padding: 9px 6px;
-            background: #ff85a2;
-            color: #fff; border: none;
-            border-radius: 14px;
-            font-weight: bold; font-size: 13px;
-            cursor: pointer;
+            flex: 1; padding: 9px 6px; background: #ff85a2; color: #fff;
+            border: none; border-radius: 14px; font-weight: bold; font-size: 13px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 <div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null)"></div>
-<div class="title-header">pancake sticker book</div>
-<div class="book-container">
-    <div class="top-page" id="topPage">
-        <div class="page-corner" id="pageCorner" onclick="flipPage()">
-            <div class="page-corner-icon">▷</div>
-        </div>
-        <div class="sticker-grid" id="stickerGrid"></div>
-        <div class="page-content" id="pageContent1">
-            <div class="sticker-gen-area">
-                <div style="display:flex;align-items:center;gap:5px;margin-bottom:6px;font-size:12px;color:var(--pink-accent);font-weight:bold;">
-                    <input type="checkbox" id="useOriginalColor"><label for="useOriginalColor">使用Emoji本身颜色</label>
-                </div>
-                <div class="gen-row">
-                    <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
-                    <button class="gen-btn" onclick="generateTextStickers()">生成</button>
-                </div>
-                <div class="gen-tip" id="genTip1">生成中...</div>
-                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
-                <input type="range" id="textScaleSlider" min="10" max="300" value="30">
-                <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
-                <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
-            </div>
-        </div>
-        <div class="page-content" id="pageContent2" style="display:none">
-            <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成贴纸</div>
-                <div class="gen-row">
-                    <div class="img-upload-box" onclick="stickerImgInput.click()">
-                        <img id="imgUploadPreview" class="img-upload-preview">
-                        <span id="imgUploadLabel">点击上传图片</span>
-                    </div>
-                    <button class="gen-btn" onclick="generateImgStickers()">生成</button>
-                </div>
-                <div class="gen-tip" id="genTip2">生成中...</div>
-                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal2">3.0</span></div>
-                <input type="range" id="textScaleSlider2" min="10" max="300" value="30">
-                <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
-                <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
-                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
-            </div>
-        </div>
-        <div id="pageContent3" style="display:none">
-            <div class="mosaic-board-wrap">
-                <canvas id="mosaicCanvas"></canvas>
-                <div class="mosaic-toolbar">
-                    <div class="mosaic-color-preview" id="mosaicColorDot" onclick="document.getElementById('colorBtn').click()" title="选色"></div>
-                    <button class="mosaic-tool-btn" id="mosaicBucketBtn" onclick="mosaicSetMode('bucket')" title="油漆桶">🪣</button>
-                    <button class="mosaic-tool-btn" id="mosaicPenBtn" onclick="mosaicSetMode('pen')" title="画笔">✏️</button>
-                    <button class="mosaic-tool-btn" id="mosaicEraserBtn" onclick="mosaicSetMode('eraser')" title="橡皮">🧹</button>
-                    <button class="mosaic-tool-btn" onclick="mosaicClear()" title="清空">🗑️</button>
-                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">✨ 生成贴纸</button>
-                </div>
-                <div class="mosaic-preview-row" id="mosaicPreviewRow">
-                    <img class="mosaic-preview-thumb" id="mosaicThumb" alt="">
-                    <div style="flex:1">
-                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">马赛克贴纸生成完成 🎀</div>
-                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">贴到画布上 →</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="controls" id="mainControls">
-            <div class="color-col">
-                <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
-            </div>
-            <div class="slider-col">
-                <div class="slider-row"><span>钻石大小（联动贴纸中钻石大小）</span><span id="sizeVal">80</span></div>
-                <input type="range" id="sizeSlider" min="30" max="500" value="80">
-                <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
-                <input type="range" id="rotateSlider" min="0" max="360" value="0">
-            </div>
-        </div>
-    </div>
-    <div class="spine-area">
-        <script>for(let i=0;i<6;i++)document.write('<div class="ring"></div>');</script>
-    </div>
-    <div class="bottom-page">
-        <div class="live-btn-area">
-            <div class="live-preview-icon" id="livePreviewIcon">
-                <div class="live-dot lit" id="liveDot0"></div>
-                <div class="live-dot" id="liveDot1"></div>
-                <div class="live-dot" id="liveDot2"></div>
-                <div class="live-dot" id="liveDot3"></div>
-                <div class="live-dot" id="liveDot4"></div>
-            </div>
-            <span class="live-label">生成视频</span>
-            <button class="live-btn" id="liveBtn" onclick="generateLiveVideo()">生成</button>
-        </div>
-        <!-- FIX1: 录制进度条 -->
-        <div class="record-progress" id="recordProgress">
-            <div class="record-progress-bar" id="recordProgressBar"></div>
-        </div>
-        <div class="canvas-area" id="dropZone" onclick="if(!mainImg.src)imgInput.click()">
-            <div class="plus-icon">+</div>
-            <canvas id="myCanvas"></canvas>
-        </div>
-        <div class="bottom-action-bar">
-            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
-            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
-            <button onclick="download()">保存</button>
-        </div>
-        <input type="file" id="imgInput" accept="image/*" style="display:none">
-    </div>
+
+<div class="title-header">
+    <img src="data:image/png;base64,"title pic"alt"=Pancake Sticker Book">
 </div>
-<div id="pickerContainer">
-    <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
-    <div id="iroPicker" style="display:flex;justify-content:center;"></div>
-    <div class="swatch-title">正在使用</div>
-    <div style="height:34px;width:34px;border-radius:8px;border:2px solid var(--pink-accent);" id="currentSwatch"></div>
-    <div class="swatch-title">历史颜色</div>
-    <div class="color-swatches" id="historySwatches"></div>
-    <div class="swatch-title">初始颜色</div>
-    <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
-</div>
-<div id="randomModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:24px 20px;border-radius:20px;z-index:9999;box-shadow:0 10px 50px rgba(0,0,0,0.3);width:min(280px,88vw);text-align:center;">
-    <div style="font-size:15px;font-weight:bold;color:var(--pink-accent);margin-bottom:18px;">选择随机颜色来源</div>
-    <button onclick="closeRandomModal('photo')" style="width:100%;margin-bottom:10px;padding:13px;background:var(--pink-accent);color:white;border:none;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;">图片同色系</button>
-    <button onclick="closeRandomModal('history')" style="width:100%;padding:13px;background:#fff0f4;color:var(--pink-accent);border:2px solid #ffcad4;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;">历史颜色</button>
-    <button onclick="closeRandomModal(null)" style="margin-top:12px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
-</div>
-<script>
+        s.addEventListener('touchend',()=>clearTimeout(pressTimer));
+        s.addEventListener('mousedown',()=>{ pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500); });
+        s.addEventListener('mouseup',()=>clearTimeout(pressTimer));
+        wrap.appendChild(s); wrap.appendChild(delBtn);
+        c.appendChild(wrap);
+    });
+}
+let liveDotTimer=null;
+function animateLiveDots(){
+    let idx=0;
+    liveDotTimer=setInterval(()=>{
+        for(let i=0;i<5;i++){
+            const d=document.getElementById('liveDot'+i);
+            if(d) d.className='live-dot'+(i===idx?' lit':'');
+        }
+        idx=(idx+1)%5;
+    },350);
+}
+
 // ============================================================
-//  核心变量
+//  翻页：1→2→3→1 循环
+// ============================================================
+function flipPage(){
+    currentPage = (currentPage % 3) + 1;
+    const icon = document.getElementById('pageCornerIcon');
+    const icons = ['▷','▶▷','↩'];
+    icon.textContent = icons[currentPage-1];
+    document.getElementById('pageCorner').classList.toggle('flipped', currentPage > 1);
+    document.getElementById('pageContent1').style.display = currentPage===1?'block':'none';
+    document.getElementById('pageContent2').style.display = currentPage===2?'block':'none';
+    document.getElementById('pageContent3').style.display = currentPage===3?'block':'none';
+    document.getElementById('mainControls').style.display  = currentPage===3?'none':'flex';
+    renderStickersSkeleton(currentPage);
+    // 第3页同步色点颜色
+    if(currentPage===3){
+        document.getElementById('mosaicColorDot').style.background = currentColor;
+    }
+}
+
+// ============================================================
+//  预渲染当前贴纸（原版）
+// ============================================================
+function updatePreRender(){
+    const sImg=stickers[curIdx];
+    if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
+    stickerRatio=sImg.naturalWidth/sImg.naturalHeight;
+    const w=stickerRatio>=1?150:150*stickerRatio;
+    const h=stickerRatio>=1?150/stickerRatio:150;
+    preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
+}
+
+// ============================================================
+//  文字/Emoji 生成大贴纸（原版）
+// ============================================================
+function generateTextStickers(){
+    if(!mainImg.src)return imgInput.click();
+    const text=document.getElementById('stickerTextInput').value; if(!text)return;
+    const tip=document.getElementById('genTip1'); tip.style.display='block';
+    setTimeout(()=>{ _buildTextLayer(text); tip.style.display='none'; },20);
+}
+function _buildTextLayer(text){
+    const useOrig=document.getElementById('useOriginalColor').checked;
+    const fSize=60;
+    const tc=document.createElement('canvas'), tx=tc.getContext('2d');
+    tx.font=`bold ${fSize}px Arial`;
+    const tw=Math.ceil(tx.measureText(text).width)+80;
+    const th=Math.ceil(fSize*2.5);
+    tc.width=tw; tc.height=th;
+    tx.font=`bold ${fSize}px Arial`; tx.textBaseline='middle'; tx.textAlign='center';
+    tx.fillStyle='black'; tx.fillText(text,tw/2,th/2);
+    const raw=tx.getImageData(0,0,tw,th).data;
+    const step=_stepFromDensity('densitySlider');
+    const points=[];
+    for(let y=0;y<th;y+=step){
         for(let x=0;x<tw;x+=step){
             const idx=(y*tw+x)*4;
             if(raw[idx+3]>120){
@@ -319,8 +403,9 @@
     selectedLayer=layer;
     draw();
 }
+
 // ============================================================
-//  图片生成水钻
+//  图片生成水钻（原版）
 // ============================================================
 function generateImgStickers(){
     if(!mainImg.src)return imgInput.click();
@@ -366,8 +451,9 @@ function _buildImgLayer(){
     selectedLayer=layer;
     draw();
 }
+
 // ============================================================
-//  缓存构建
+//  缓存构建（原版）
 // ============================================================
 function _stepFromDensity(sliderId){
     const v=parseInt(document.getElementById(sliderId).value);
@@ -387,8 +473,9 @@ function _buildCache(l){
     l.colorCacheMap=newCache;
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
+
 // ============================================================
-//  主绘制
+//  主绘制（原版）
 // ============================================================
 function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
@@ -411,24 +498,19 @@ function draw(isExporting){
             const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
             if(img)mainCtx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
         });
-        // FIX3: 选中框 + 更大的旋转按钮
         if(l===selectedLayer&&!isExporting){
             const bw=(l.origWidth/2)*l.scale*0.55;
             const bh=(l.origHeight/2)*l.scale*0.55;
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
             mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
             mainCtx.setLineDash([]);
-            // FIX3: 旋转按钮大幅放大：外白圆r=38，内粉圆r=32，图标28px
-            const dotY=bh+46; // 往下移更多，避免遮挡内容
-            // 白色外圈
+            const dotY=bh+46;
             mainCtx.beginPath(); mainCtx.arc(0,dotY,38,0,Math.PI*2);
             mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.setLineDash([]);
             mainCtx.stroke();
-            // 粉色内圆
             mainCtx.beginPath(); mainCtx.arc(0,dotY,32,0,Math.PI*2);
             mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
-            // 旋转图标
             mainCtx.fillStyle='#fff';
             mainCtx.font='bold 28px Arial';
             mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
@@ -437,8 +519,9 @@ function draw(isExporting){
         mainCtx.restore();
     });
 }
+
 // ============================================================
-//  触摸交互
+//  触摸交互（原版）
 // ============================================================
 const getPos=(e)=>{
     const r=canvas.getBoundingClientRect();
@@ -453,7 +536,6 @@ function hitLayer(px,py,l){
     const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
     return Math.abs(lx)<=(l.origWidth/2)*l.scale*0.92 && Math.abs(ly)<=(l.origHeight/2)*l.scale*0.92;
 }
-// FIX3: 碰撞半径扩大到52（视觉圆半径32+20余量），让手指更容易点中
 function hitRotateDot(px,py,l){
     const rot=l.rotation||0;
     const bh=(l.origHeight/2)*l.scale*0.55+46;
@@ -503,8 +585,9 @@ canvas.addEventListener('touchmove',(e)=>{
     e.preventDefault();
 },{passive:false});
 canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
+
 // ============================================================
-//  滑块联动
+//  滑块联动（原版）
 // ============================================================
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value);
@@ -527,8 +610,9 @@ document.getElementById('textScaleSlider2').oninput=function(){
 document.getElementById('rotateSlider').oninput=function(){
     document.getElementById('rotVal').innerText=this.value+'°';
 };
+
 // ============================================================
-//  色环
+//  色环（原版 + 同步马赛克色点）
 // ============================================================
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[
     {component:iro.ui.Wheel},
@@ -540,7 +624,7 @@ colorPicker.on('color:change',(c)=>{
     document.getElementById('colorPreview').innerText=currentColor;
     document.getElementById('colorPreview').style.backgroundColor=currentColor;
     document.getElementById('currentSwatch').style.backgroundColor=currentColor;
-    // 同步到马赛克色点
+    // 同步马赛克色点
     const mcd=document.getElementById('mosaicColorDot');
     if(mcd) mcd.style.background=currentColor;
     updatePreRender();
@@ -561,17 +645,16 @@ function closePicker(){
     document.getElementById('overlay').style.display='none';
 }
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
+
 // ============================================================
-//  FIX4: 随机钻石 — 使用照片主色 +使用历史颜色
+//  随机钻石（原版）
 // ============================================================
-let lastRandomType = null; // 记住上次选择
+let lastRandomType = null;
 function handleRandomClick(){
     if(!mainImg.src) return;
     if(lastRandomType){
-        // 已经选过，直接用上次的类型
         _doRandom(lastRandomType);
     } else {
-        // 第一次，弹窗让用户选
         document.getElementById('randomModal').style.display='block';
         document.getElementById('overlay').style.display='block';
     }
@@ -580,28 +663,19 @@ function closeRandomModal(type){
     document.getElementById('randomModal').style.display='none';
     document.getElementById('overlay').style.display='none';
     if(!type) return;
-    _doRandom(type);
-}
-function closeRandomModal(type){
-    document.getElementById('randomModal').style.display='none';
-    document.getElementById('overlay').style.display='none';
-    if(!type) return;
-    lastRandomType = type; // 记住这次选择
+    lastRandomType = type;
     _doRandom(type);
 }
 function _doRandom(type){
     if(!mainImg.src) return;
     let palette;
     if(type==='history'){
-        // 用历史颜色，没有历史就fallback马卡龙色
         palette = colorHistory.length>=2 ? colorHistory : macaronColors;
     } else {
-        // 图片主色，没有就用和谐色盘
         palette = photoColorPalette&&photoColorPalette.length>=3
             ? photoColorPalette
             : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)];
     }
-    // 两种模式都是随机形状
     const num = 12;
     const g = [];
     const sz = parseInt(document.getElementById('sizeSlider').value);
@@ -625,48 +699,34 @@ function _doRandom(type){
     }
     if(g.length){records.push(g);draw();}
 }
+
 // ============================================================
-//  FIX1: 高清视频生成
-//  策略：离屏canvas用原图2倍尺寸渲染 → MediaRecorder高码率录制
-//  码率 20Mbps，帧间隔400ms，额外首尾各2帧稳定画面
-//  不支持MediaRecorder时降级为逐帧PNG下载
+//  视频生成（修复版：webm优先 + try-catch + 尺寸保护）
 // ============================================================
 function generateLiveVideo(){
     if(!mainImg.src){alert('请先上传图片');return;}
     const allRecords=records.flat();
-    if(allRecords.length===0){alert('请先在画布上放置贴纸');return;}
+    if(allRecords.length===0&&textLayers.length===0){alert('请先在画布上放置贴纸');return;}
     const btn=document.getElementById('liveBtn');
     const progressWrap=document.getElementById('recordProgress');
     const progressBar=document.getElementById('recordProgressBar');
-    // 检测支持格式，优先 webm（兼容性最好），mp4 在 iOS Safari 支持
-    const mimeType = (() => {
-        const types=[
-            'video/webm;codecs=vp9',
-            'video/webm;codecs=vp8',
-            'video/webm',
-            'video/mp4;codecs=avc1',
-            'video/mp4',
-        ];
+    const mimeType=(()=>{
+        const types=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4;codecs=avc1','video/mp4'];
         if(typeof MediaRecorder==='undefined') return null;
         if(!MediaRecorder.isTypeSupported) return null;
         return types.find(m=>{ try{return MediaRecorder.isTypeSupported(m);}catch(e){return false;} })||null;
     })();
-    if(!mimeType){
-        _doLivePngSequence(allRecords,btn); return;
-    }
+    if(!mimeType){ _doLivePngSequence(allRecords,btn); return; }
     btn.disabled=true; btn.textContent='录制中...';
     progressWrap.style.display='block'; progressBar.style.width='0%';
-    // 离屏canvas — 确保有正确尺寸
-    const srcW = canvas.width  || 800;
-    const srcH = canvas.height || 800;
-    const SCALE = window.devicePixelRatio >= 2 ? 1 : 2; // 高清屏不需要再放大
+    const srcW=canvas.width||800, srcH=canvas.height||800;
     const rc=document.createElement('canvas');
-    rc.width=srcW*SCALE; rc.height=srcH*SCALE;
+    rc.width=srcW*2; rc.height=srcH*2;
     const rx=rc.getContext('2d');
-    rx.scale(SCALE,SCALE);
-    const FRAME_INTERVAL=400;
-    const frameCount=Math.min(allRecords.length,30);
-    const totalFrames=frameCount+4;
+    rx.scale(2,2);
+    const allR=records.flat();
+    const frameCount=Math.max(allR.length,1);
+    const totalFrames=Math.min(frameCount,30)+4;
     function drawLiveFrame(glowIdx){
         rx.clearRect(0,0,srcW,srcH);
         if(mainImg.src) rx.drawImage(mainImg,0,0,srcW,srcH);
@@ -681,16 +741,14 @@ function generateLiveVideo(){
             });
             rx.restore();
         });
-        allRecords.forEach((r,ri)=>{
-            if(!r.img) return;
+        allR.forEach((r,ri)=>{
+            if(!r||!r.img) return;
             rx.save(); rx.translate(r.x,r.y); rx.rotate(r.angle||0);
             if(ri===glowIdx){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0;
-                rx.shadowColor=r.glowColor||'#ffe0ee';
-                rx.shadowBlur=36;
+                rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
                 rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
-                rx.shadowBlur=16;
-                rx.shadowColor='#ffffff';
+                rx.shadowBlur=16; rx.shadowColor='#ffffff';
                 rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
                 rx.shadowBlur=0;
             } else {
@@ -701,17 +759,14 @@ function generateLiveVideo(){
     }
     drawLiveFrame(-1);
     let stream;
-    try { stream=rc.captureStream(0); } catch(e){ _doLivePngSequence(allRecords,btn); return; }
+    try{ stream=rc.captureStream(0); }catch(e){ _doLivePngSequence(allRecords,btn); return; }
     const chunks=[];
     let recorder;
-    try {
-        recorder=new MediaRecorder(stream,{ mimeType, videoBitsPerSecond: 8000000 });
-    } catch(e){
-        _doLivePngSequence(allRecords,btn); return;
-    }
+    try{ recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:8000000}); }
+    catch(e){ _doLivePngSequence(allRecords,btn); return; }
     recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
     recorder.onstop=()=>{
-        if(chunks.length===0){ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; alert('录制失败，请重试'); return; }
+        if(!chunks.length){ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; alert('录制失败，请重试'); return; }
         const ext=mimeType.includes('mp4')?'mp4':'webm';
         const blob=new Blob(chunks,{type:mimeType});
         const url=URL.createObjectURL(blob);
@@ -719,13 +774,11 @@ function generateLiveVideo(){
         const now=new Date();
         const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
         a.download=`pancakesticker_live_${ts}.${ext}`;
-        a.href=url; a.click();
-        URL.revokeObjectURL(url);
-        btn.disabled=false; btn.textContent='生成';
-        progressWrap.style.display='none';
+        a.href=url; a.click(); URL.revokeObjectURL(url);
+        btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
     };
-    recorder.onerror=()=>{ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; alert('录制出错，请重试'); };
-    try { recorder.start(); } catch(e){ _doLivePngSequence(allRecords,btn); return; }
+    recorder.onerror=()=>{ btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none'; };
+    try{ recorder.start(); }catch(e){ _doLivePngSequence(allRecords,btn); return; }
     let fi=0;
     const timer=setInterval(()=>{
         const glowIdx=(fi<2||fi>=totalFrames-2)?-1:(fi-2);
@@ -733,13 +786,9 @@ function generateLiveVideo(){
         try{ if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame(); }catch(e){}
         fi++;
         progressBar.style.width=(fi/totalFrames*100)+'%';
-        if(fi>=totalFrames){
-            clearInterval(timer);
-            setTimeout(()=>{ try{recorder.stop();}catch(e){} },400);
-        }
-    }, FRAME_INTERVAL);
+        if(fi>=totalFrames){ clearInterval(timer); setTimeout(()=>{ try{recorder.stop();}catch(e){} },400); }
+    },400);
 }
-// 降级方案：逐帧下载PNG
 function _doLivePngSequence(allRecords,btn){
     btn.disabled=true; btn.textContent='生成中...';
     const frameCount=Math.min(allRecords.length,12);
@@ -747,7 +796,7 @@ function _doLivePngSequence(allRecords,btn){
     function nextFrame(){
         if(fi>=frameCount){ btn.disabled=false; btn.textContent='生成'; return; }
         const fc=document.createElement('canvas');
-        fc.width=canvas.width; fc.height=canvas.height;
+        fc.width=canvas.width||800; fc.height=canvas.height||800;
         const fx=fc.getContext('2d');
         if(mainImg.src) fx.drawImage(mainImg,0,0,fc.width,fc.height);
         textLayers.forEach(l=>{
@@ -763,11 +812,7 @@ function _doLivePngSequence(allRecords,btn){
         });
         allRecords.forEach((r,ri)=>{
             fx.save(); fx.translate(r.x,r.y); fx.rotate(r.angle||0);
-            if(ri===fi){
-                fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40;
-                fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
-                fx.shadowColor='#ffffff'; fx.shadowBlur=18;
-            }
+            if(ri===fi){ fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40; fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH); fx.shadowColor='#ffffff'; fx.shadowBlur=18; }
             fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
             fx.shadowBlur=0; fx.restore();
         });
@@ -778,8 +823,9 @@ function _doLivePngSequence(allRecords,btn){
     }
     nextFrame();
 }
+
 // ============================================================
-//  其他
+//  其他工具函数（原版）
 // ============================================================
 function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
@@ -808,7 +854,6 @@ imgInput.onchange=(e)=>{
         mainImg.onload=()=>{
             canvas.width=mainImg.width; canvas.height=mainImg.height;
             dropZone.classList.add('has-img');
-            // FIX4: 图片加载完马上分析主色
             photoColorPalette=extractPhotoColors(mainImg);
             draw();
         };
@@ -816,207 +861,162 @@ imgInput.onchange=(e)=>{
     };
     reader.readAsDataURL(e.target.files[0]);
 };
+
 // ============================================================
-//  马赛克画板功能
+//  马赛克画板
 // ============================================================
 (function(){
-    const COLS = 20, ROWS = 20;  // 格子数
-    const CANVAS_PX = 320;       // 内部分辨率
-    const CELL = CANVAS_PX / COLS;
-    const CELL_OUT = 48;         // 生成贴纸每格像素
+    const COLS=20, ROWS=20;
+    const CANVAS_PX=320;
+    const CELL=CANVAS_PX/COLS;
+    const CELL_OUT=48;
+    const mc=document.getElementById('mosaicCanvas');
+    const mctx=mc.getContext('2d');
+    mc.width=mc.height=CANVAS_PX;
 
-    const mc   = document.getElementById('mosaicCanvas');
-    const mctx = mc.getContext('2d');
-    mc.width = mc.height = CANVAS_PX;
+    const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+    let mMode='pen', mDown=false, mLastDataUrl=null;
 
-    const grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
-    let mMode  = 'pen';   // 'pen' | 'bucket' | 'eraser'
-    let mDown  = false;
-    let mLastDataUrl = null;
-
-    // 绘制所有格子
     function mRedrawAll(){
-        mctx.clearRect(0, 0, CANVAS_PX, CANVAS_PX);
-        for(let r=0; r<ROWS; r++)
-            for(let c=0; c<COLS; c++)
-                mDrawCell(r, c);
+        mctx.clearRect(0,0,CANVAS_PX,CANVAS_PX);
+        for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) mDrawCell(r,c);
     }
-    function mDrawCell(r, c){
+    function mDrawCell(r,c){
         const x=c*CELL, y=r*CELL;
-        if(grid[r][c]){
-            mctx.fillStyle = grid[r][c];
-            mctx.fillRect(x, y, CELL, CELL);
-        } else {
-            mctx.clearRect(x, y, CELL, CELL);
-        }
-        mctx.strokeStyle = 'rgba(255,133,162,0.15)';
-        mctx.lineWidth = 0.5;
-        mctx.strokeRect(x+.5, y+.5, CELL-1, CELL-1);
+        if(grid[r][c]){ mctx.fillStyle=grid[r][c]; mctx.fillRect(x,y,CELL,CELL); }
+        else { mctx.clearRect(x,y,CELL,CELL); }
+        mctx.strokeStyle='rgba(255,133,162,0.15)'; mctx.lineWidth=0.5;
+        mctx.strokeRect(x+.5,y+.5,CELL-1,CELL-1);
     }
     mRedrawAll();
 
-    // 坐标换算
-    function mGetCell(clientX, clientY){
-        const rect = mc.getBoundingClientRect();
-        const col = Math.floor((clientX - rect.left) / rect.width  * COLS);
-        const row = Math.floor((clientY - rect.top)  / rect.height * ROWS);
-        return {row, col};
+    function mGetCell(clientX,clientY){
+        const rect=mc.getBoundingClientRect();
+        const col=Math.floor((clientX-rect.left)/rect.width*COLS);
+        const row=Math.floor((clientY-rect.top)/rect.height*ROWS);
+        return{row,col};
     }
-
-    // 油漆桶 flood fill（BFS）
-    function mFloodFill(startR, startC, fillColor){
-        const targetColor = grid[startR][startC];
-        if(targetColor === fillColor) return;
-        const q = [[startR, startC]];
-        const visited = Array.from({length:ROWS}, ()=>Array(COLS).fill(false));
-        visited[startR][startC] = true;
+    function mFloodFill(startR,startC,fillColor){
+        const targetColor=grid[startR][startC];
+        if(targetColor===fillColor) return;
+        const q=[[startR,startC]];
+        const visited=Array.from({length:ROWS},()=>Array(COLS).fill(false));
+        visited[startR][startC]=true;
         while(q.length){
-            const [r,c] = q.shift();
-            grid[r][c] = fillColor;
-            mDrawCell(r, c);
+            const[r,c]=q.shift();
+            grid[r][c]=fillColor; mDrawCell(r,c);
             [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc])=>{
                 if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&!visited[nr][nc]&&grid[nr][nc]===targetColor){
-                    visited[nr][nc]=true;
-                    q.push([nr,nc]);
+                    visited[nr][nc]=true; q.push([nr,nc]);
                 }
             });
         }
     }
-
-    // 点击/涂色处理
-    function mAct(clientX, clientY){
-        const {row, col} = mGetCell(clientX, clientY);
+    function mAct(clientX,clientY){
+        const{row,col}=mGetCell(clientX,clientY);
         if(row<0||row>=ROWS||col<0||col>=COLS) return;
-        if(mMode === 'bucket'){
-            mFloodFill(row, col, currentColor);
-        } else if(mMode === 'eraser'){
-            if(grid[row][col] !== null){ grid[row][col]=null; mDrawCell(row,col); }
-        } else {
-            // pen
-            if(grid[row][col] !== currentColor){ grid[row][col]=currentColor; mDrawCell(row,col); }
-        }
+        if(mMode==='bucket'){ mFloodFill(row,col,currentColor); }
+        else if(mMode==='eraser'){ if(grid[row][col]!==null){grid[row][col]=null;mDrawCell(row,col);} }
+        else { if(grid[row][col]!==currentColor){grid[row][col]=currentColor;mDrawCell(row,col);} }
     }
+    mc.addEventListener('mousedown',e=>{mDown=true;mAct(e.clientX,e.clientY);});
+    mc.addEventListener('mousemove',e=>{if(mDown&&mMode!=='bucket')mAct(e.clientX,e.clientY);});
+    window.addEventListener('mouseup',()=>mDown=false);
+    mc.addEventListener('touchstart',e=>{e.preventDefault();mAct(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+    mc.addEventListener('touchmove',e=>{e.preventDefault();if(mMode!=='bucket')mAct(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
 
-    mc.addEventListener('mousedown', e=>{ mDown=true; mAct(e.clientX,e.clientY); });
-    mc.addEventListener('mousemove', e=>{ if(mDown&&mMode!=='bucket') mAct(e.clientX,e.clientY); });
-    window.addEventListener('mouseup', ()=>mDown=false);
-    mc.addEventListener('touchstart', e=>{ e.preventDefault(); mAct(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
-    mc.addEventListener('touchmove',  e=>{ e.preventDefault(); if(mMode!=='bucket') mAct(e.touches[0].clientX,e.touches[0].clientY); },{passive:false});
-
-    // 工具切换
-    window.mosaicSetMode = function(mode){
-        mMode = mode;
-        document.getElementById('mosaicBucketBtn').classList.toggle('active', mode==='bucket');
-        document.getElementById('mosaicPenBtn').classList.toggle('active',    mode==='pen');
-        document.getElementById('mosaicEraserBtn').classList.toggle('active', mode==='eraser');
-        mc.style.cursor = mode==='eraser'?'cell':mode==='bucket'?'copy':'crosshair';
+    window.mosaicSetMode=function(mode){
+        mMode=mode;
+        document.getElementById('mosaicBucketBtn').classList.toggle('active',mode==='bucket');
+        document.getElementById('mosaicPenBtn').classList.toggle('active',mode==='pen');
+        document.getElementById('mosaicEraserBtn').classList.toggle('active',mode==='eraser');
+        mc.style.cursor=mode==='eraser'?'cell':mode==='bucket'?'copy':'crosshair';
     };
-    mosaicSetMode('pen'); // 默认画笔
-
-    // 清空
-    window.mosaicClear = function(){
+    window.mosaicClear=function(){
         for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=null;
         mRedrawAll();
         document.getElementById('mosaicPreviewRow').style.display='none';
     };
-
-    // 生成贴纸 → 直接放到主画布
-    window.mosaicGenerate = function(){
-        const hasContent = grid.some(row=>row.some(c=>c!==null));
-        if(!hasContent){ alert('请先涂色再生成 🎨'); return; }
-        const btn = document.getElementById('mosaicGenBtn');
+    window.mosaicGenerate=function(){
+        const hasContent=grid.some(row=>row.some(c=>c!==null));
+        if(!hasContent){alert('请先涂色再生成 🎨');return;}
+        const btn=document.getElementById('mosaicGenBtn');
         btn.disabled=true; btn.textContent='生成中…';
-
-        const out = document.createElement('canvas');
-        out.width = COLS * CELL_OUT;
-        out.height = ROWS * CELL_OUT;
-        const octx = out.getContext('2d');
-        const sImg = stickers[curIdx];
-
+        const out=document.createElement('canvas');
+        out.width=COLS*CELL_OUT; out.height=ROWS*CELL_OUT;
+        const octx=out.getContext('2d');
+        const sImg=stickers[curIdx];
         for(let r=0;r<ROWS;r++){
             for(let c=0;c<COLS;c++){
                 if(!grid[r][c]) continue;
                 const x=c*CELL_OUT, y=r*CELL_OUT;
                 if(sImg&&sImg.complete&&sImg.naturalWidth){
                     octx.globalCompositeOperation='source-over';
-                    octx.drawImage(sImg, x, y, CELL_OUT, CELL_OUT);
+                    octx.drawImage(sImg,x,y,CELL_OUT,CELL_OUT);
                     octx.globalCompositeOperation='multiply';
-                    octx.fillStyle=grid[r][c];
-                    octx.fillRect(x, y, CELL_OUT, CELL_OUT);
+                    octx.fillStyle=grid[r][c]; octx.fillRect(x,y,CELL_OUT,CELL_OUT);
                     octx.globalCompositeOperation='destination-in';
-                    octx.drawImage(sImg, x, y, CELL_OUT, CELL_OUT);
+                    octx.drawImage(sImg,x,y,CELL_OUT,CELL_OUT);
                     octx.globalCompositeOperation='source-over';
                 } else {
-                    octx.fillStyle=grid[r][c];
-                    octx.fillRect(x, y, CELL_OUT, CELL_OUT);
+                    octx.fillStyle=grid[r][c]; octx.fillRect(x,y,CELL_OUT,CELL_OUT);
                 }
             }
         }
-
-        const dataUrl = out.toDataURL('image/png');
-        // 显示预览缩略图
-        document.getElementById('mosaicThumb').src = dataUrl;
-        document.getElementById('mosaicPreviewRow').style.display = 'flex';
+        const dataUrl=out.toDataURL('image/png');
+        mLastDataUrl=dataUrl;
+        document.getElementById('mosaicThumb').src=dataUrl;
+        document.getElementById('mosaicPreviewRow').style.display='flex';
         btn.disabled=false; btn.textContent='✨ 生成贴纸';
-
-        // 直接放到主画布中央
-        const mainCanvas = document.getElementById('myCanvas');
-        const img = new Image();
-        img.onload = function(){
-            // 画布没有底图时给个默认尺寸
-            if(!mainCanvas.width || mainCanvas.width < 10){
-                mainCanvas.width  = 800;
-                mainCanvas.height = 800;
+        // 直接放到主画布
+        const img=new Image();
+        img.onload=function(){
+            const mainCanvas=document.getElementById('myCanvas');
+            if(!mainCanvas.width||mainCanvas.width<10){
+                mainCanvas.width=800; mainCanvas.height=800;
                 document.getElementById('dropZone').classList.add('has-img');
             }
-            const sz = parseInt(document.getElementById('sizeSlider').value) * 3;
-            const ratio = img.naturalWidth / img.naturalHeight;
-            const sW = sz * (ratio>=1 ? 1 : ratio);
-            const sH = sz / (ratio>=1 ? ratio : 1);
-            const rec = {
-                x: mainCanvas.width/2,
-                y: mainCanvas.height/2,
-                img, sizeW:sW, sizeH:sH,
-                angle: 0,
+            const sz=parseInt(document.getElementById('sizeSlider').value)*3;
+            const ratio=img.naturalWidth/img.naturalHeight;
+            const sW=sz*(ratio>=1?1:ratio);
+            const sH=sz/(ratio>=1?ratio:1);
+            const rec={
+                x:mainCanvas.width/2, y:mainCanvas.height/2,
+                img, sizeW:sW, sizeH:sH, angle:0,
                 glowing:true, glowColor:'#ff85a2'
             };
             records.push([rec]);
             draw();
-            setTimeout(()=>{ rec.glowing=false; draw(); }, 800);
+            setTimeout(()=>{rec.glowing=false;draw();},800);
         };
-        img.src = dataUrl;
+        img.src=dataUrl;
     };
-
-    // 保留 use 按钮兼容（现在生成时已自动放置，按钮可再次触发）
-    window.mosaicUseSticker = function(){
-        const thumb = document.getElementById('mosaicThumb');
-        if(!thumb.src) return;
-        const mainCanvas = document.getElementById('myCanvas');
-        const img = new Image();
-        img.onload = function(){
-            if(!mainCanvas.width || mainCanvas.width < 10){
-                mainCanvas.width = 800; mainCanvas.height = 800;
+    window.mosaicUseSticker=function(){
+        if(!mLastDataUrl) return;
+        const mainCanvas=document.getElementById('myCanvas');
+        const img=new Image();
+        img.onload=function(){
+            if(!mainCanvas.width||mainCanvas.width<10){
+                mainCanvas.width=800; mainCanvas.height=800;
                 document.getElementById('dropZone').classList.add('has-img');
             }
-            const sz = parseInt(document.getElementById('sizeSlider').value) * 3;
-            const ratio = img.naturalWidth / img.naturalHeight;
-            const sW = sz*(ratio>=1?1:ratio);
-            const sH = sz/(ratio>=1?ratio:1);
+            const sz=parseInt(document.getElementById('sizeSlider').value)*3;
+            const ratio=img.naturalWidth/img.naturalHeight;
+            const sW=sz*(ratio>=1?1:ratio);
+            const sH=sz/(ratio>=1?ratio:1);
             records.push([{
                 x:mainCanvas.width/2, y:mainCanvas.height/2,
                 img, sizeW:sW, sizeH:sH, angle:0,
                 glowing:true, glowColor:'#ff85a2'
             }]);
             draw();
-            setTimeout(()=>{ records.flat().slice(-1)[0].glowing=false; draw(); }, 800);
+            setTimeout(()=>{records.flat().slice(-1)[0].glowing=false;draw();},800);
         };
-        img.src = thumb.src;
+        img.src=mLastDataUrl;
     };
 })();
-
 
 init();
 </script>
 </body>
 </html>
-            
