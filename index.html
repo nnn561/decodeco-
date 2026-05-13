@@ -8,11 +8,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
         :root {
-            --book-cover: #ff;
+            --book-cover: #ff66ab;
             --page-white: #ffffff;
-            --pink-accent: #ff66ab;
+            --pink-accent: #ff85a2;
             --ring-gray: #c0c0c0;
-            --spine-pink: #e01090;
+            --spine-pink: #d44090;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
@@ -299,6 +299,7 @@
 <div class="title-header">
     <img src="title pic" alt="Pancake Sticker Book">
 </div>
+
 <div class="book-container">
     <div class="top-page" id="topPage">
         <div class="page-corner" id="pageCorner" onclick="flipPage()">
@@ -349,7 +350,7 @@
         <!-- 第3页：马赛克画板 -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="mosaic-board-wrap">
-                <div class="mosaic-label">涂色生成贴纸</div>
+                <div class="mosaic-label">🎨 马赛克涂色 → 生成贴纸</div>
                 <canvas id="mosaicCanvas"></canvas>
                 <div class="mosaic-toolbar">
                     <div class="mosaic-color-dot" id="mosaicColorDot" onclick="document.getElementById('colorBtn').click()" title="选色（点击打开色环）"></div>
@@ -357,13 +358,13 @@
                     <button class="mosaic-tool-btn active" id="mosaicPenBtn" onclick="mosaicSetMode('pen')" title="画笔">✏️</button>
                     <button class="mosaic-tool-btn" id="mosaicEraserBtn" onclick="mosaicSetMode('eraser')" title="橡皮">🧹</button>
                     <button class="mosaic-tool-btn" onclick="mosaicClear()" title="清空">🗑️</button>
-                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">生成贴纸</button>
+                    <button class="mosaic-gen-btn" id="mosaicGenBtn" onclick="mosaicGenerate()">✨ 生成贴纸</button>
                 </div>
                 <div class="mosaic-preview-row" id="mosaicPreviewRow">
                     <img class="mosaic-preview-thumb" id="mosaicThumb" alt="">
                     <div style="flex:1">
-                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">贴纸已放到画布上</div>
-                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">再贴一次</button>
+                        <div style="font-size:11px;color:#ff85a2;margin-bottom:6px;">贴纸已放到画布上 🎀</div>
+                        <button class="mosaic-use-btn" onclick="mosaicUseSticker()">再贴一次 →</button>
                     </div>
                 </div>
             </div>
@@ -606,7 +607,7 @@ function init(){
                 stickerUploadedImg=img;
                 const pv=document.getElementById('imgUploadPreview');
                 pv.src=f.target.result; pv.style.display='block';
-                document.getElementById('imgUploadLabel').textContent='已选择';
+                document.getElementById('imgUploadLabel').textContent='✅ 已选择';
             };
             img.src=f.target.result;
         };
@@ -694,7 +695,7 @@ function animateLiveDots(){
 function flipPage(){
     currentPage = (currentPage % 3) + 1;
     const icon = document.getElementById('pageCornerIcon');
-    const icons = ['▷','▶▷','▷'];
+    const icons = ['▷','▶▷','↩'];
     icon.textContent = icons[currentPage-1];
     document.getElementById('pageCorner').classList.toggle('flipped', currentPage > 1);
     document.getElementById('pageContent1').style.display = currentPage===1?'block':'none';
@@ -720,7 +721,7 @@ function updatePreRender(){
     preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
 }
 
-// ============================================================
+/ ============================================================
 //  文字/Emoji 生成大贴纸（原版）
 // ============================================================
 function generateTextStickers(){
@@ -785,7 +786,7 @@ function generateImgStickers(){
 }
 function _buildImgLayer(){
     const step=_stepFromDensity('densitySlider2');
-    const MAX=160;
+    const MAX=320;
     const iw=stickerUploadedImg.naturalWidth, ih=stickerUploadedImg.naturalHeight;
     const sc=Math.min(MAX/iw,MAX/ih,1);
     const sw=Math.max(1,Math.round(iw*sc)), sh=Math.max(1,Math.round(ih*sc));
@@ -1174,14 +1175,6 @@ function _doLivePngSequence(allRecords,btn){
             const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio));
             const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
             fx.save(); fx.translate(l.x,l.y); fx.rotate(l.rotation||0);
-            l.points.forEach(p=>{
-                const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
-                if(img) fx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
-            });
-            fx.restore();
-        });
-        allRecords.forEach((r,ri)=>{
-            fx.save(); fx.translate(r.x,r.y); fx.rotate(r.angle||0);
             if(ri===fi){ fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40; fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH); fx.shadowColor='#ffffff'; fx.shadowBlur=18; }
             fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
             fx.shadowBlur=0; fx.restore();
@@ -1309,7 +1302,7 @@ imgInput.onchange=(e)=>{
     };
     window.mosaicGenerate=function(){
         const hasContent=grid.some(row=>row.some(c=>c!==null));
-        if(!hasContent){alert('请先涂色再生成 ');return;}
+        if(!hasContent){alert('请先涂色再生成 🎨');return;}
         const btn=document.getElementById('mosaicGenBtn');
         btn.disabled=true; btn.textContent='生成中…';
         const out=document.createElement('canvas');
@@ -1337,7 +1330,7 @@ imgInput.onchange=(e)=>{
         mLastDataUrl=dataUrl;
         document.getElementById('mosaicThumb').src=dataUrl;
         document.getElementById('mosaicPreviewRow').style.display='flex';
-        btn.disabled=false; btn.textContent='生成贴纸';
+        btn.disabled=false; btn.textContent='✨ 生成贴纸';
         // 直接放到主画布
         const img=new Image();
         img.onload=function(){
@@ -1346,10 +1339,9 @@ imgInput.onchange=(e)=>{
                 mainCanvas.width=800; mainCanvas.height=800;
                 document.getElementById('dropZone').classList.add('has-img');
             }
-            const sz=parseInt(document.getElementById('sizeSlider').value)*3;
-            const ratio=img.naturalWidth/img.naturalHeight;
-            const sW=sz*(ratio>=1?1:ratio);
-            const sH=sz/(ratio>=1?ratio:1);
+            // 固定用画布宽度的60%显示马赛克贴纸
+            const sW=mainCanvas.width*0.6;
+            const sH=sW*(img.naturalHeight/img.naturalWidth);
             const rec={
                 x:mainCanvas.width/2, y:mainCanvas.height/2,
                 img, sizeW:sW, sizeH:sH, angle:0,
@@ -1370,10 +1362,8 @@ imgInput.onchange=(e)=>{
                 mainCanvas.width=800; mainCanvas.height=800;
                 document.getElementById('dropZone').classList.add('has-img');
             }
-            const sz=parseInt(document.getElementById('sizeSlider').value)*8;
-            const ratio=img.naturalWidth/img.naturalHeight;
-            const sW=sz*(ratio>=1?1:ratio);
-            const sH=sz/(ratio>=1?ratio:1);
+            const sW=mainCanvas.width*0.6;
+            const sH=sW*(img.naturalHeight/img.naturalWidth);
             records.push([{
                 x:mainCanvas.width/2, y:mainCanvas.height/2,
                 img, sizeW:sW, sizeH:sH, angle:0,
@@ -1390,4 +1380,3 @@ init();
 </script>
 </body>
 </html>
- 
