@@ -10,7 +10,9 @@
         :root { --book-cover: #fabecc; --page-white: #ffffff; --pink-accent: #ff85a2; --ring-gray: #7d7d7d; --spine-pink: #f8a5bc; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 15px 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-color: #ffffff; }
-        .title-header { font-size: 24px; color: #fff; font-weight: bold; margin-bottom: 10px; text-shadow: 2px 2px 0px var(--pink-accent); text-align: center; }
+         .title-header {text-align: center;
+    margin-bottom: 10px;}
+.title-header img {max-width: 100%; height: auto;max-height: 80px;}
         .book-container { width: 94%; max-width: 420px; background: var(--book-cover); padding: 12px; border-radius: 15px 40px 40px 15px; box-shadow: 0 20px 40px rgba(214,51,132,0.2); position: relative; display: flex; flex-direction: column; margin: 0 auto; }
         .top-page, .bottom-page { background: var(--page-white); padding: 15px; position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; box-shadow: inset 1px 1px 10px rgba(0,0,0,0.03); }
         .top-page { border-radius: 12px 25px 0 0; z-index: 2; overflow: hidden; }
