@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -71,7 +71,6 @@
         .record-progress { display:none; width:100%; height:4px; background:#ffd6e0; border-radius:4px; margin-top:4px; }
         .record-progress-bar { height:100%; background:var(--pink-accent); border-radius:4px; transition:width 0.3s; width:0%; }
         
-        /* 平板版样式 */
         @media (min-width: 600px) {
             .book-container { max-width: 768px; padding: 20px; }
             .sticker-grid { grid-template-columns: repeat(6, 1fr); gap: 15px; }
@@ -131,13 +130,12 @@
             </div>
         </div>
 
-        <!-- P3: 电子画布 -->
+        <!-- P3: 纯电子画布 (无多余钻石) -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
                     <span>手绘电子画布</span>
                 </div>
-                <!-- 电子画布区域 -->
                 <canvas id="userDrawCanvas" width="300" height="150" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
                     <button class="gen-btn" style="background:#ffccbb; flex:1;" onclick="clearDrawCanvas()">清空</button>
@@ -152,7 +150,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col">
-                <div class="slider-row"><span>钻石大小（联动可缩放贴纸图层）</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小 (联动缩放贴纸/外框/画布)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -182,7 +180,7 @@
             <canvas id="myCanvas"></canvas>
         </div>
         
-        <!-- 外框生成区域 -->
+        <!-- 外框生成区域 (粉色按钮，支持动态联动) -->
         <div class="frame-action-bar">
             <button onclick="generateFrame('heart')">爱心外框</button>
             <button onclick="generateFrame('square')">方框</button>
@@ -216,9 +214,6 @@
     <button onclick="closeRandomModal(null)" style="margin-top:12px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
 <script>
-// ============================================================
-//  核心变量
-// ============================================================
 const canvas  = document.getElementById('myCanvas');
 const mainCtx = canvas.getContext('2d');
 const imgInput = document.getElementById('imgInput');
@@ -235,13 +230,11 @@ let colorHistory       = [];
 let currentPage        = 1;
 let stickerUploadedImg = null;
 
-// 手绘层变量
 const uCanvas = document.getElementById('userDrawCanvas');
 const uCtx = uCanvas.getContext('2d', { willReadFrequently: true });
 let isUDraw = false;
 let uDrawPaths = [];
 
-// 大贴纸交互
 let selectedLayer   = null;
 let isDraggingLayer = false;
 let isRotatingLayer = false;
@@ -263,9 +256,6 @@ const harmonyPalettes = [
     ["#DDA0DD","#D4AFFF","#E8C4F0","#C4A8FF"],
 ];
 
-// ============================================================
-//  颜色与基础工具
-// ============================================================
 function rgbToHsl(r,g,b){
     r/=255;g/=255;b/=255;
     const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
@@ -283,13 +273,8 @@ function hslToRgb(h,s,l){
     const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
     return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
 }
-function rgbToHex(r,g,b){
-    return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
-}
-function hexToRgb(hex){
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return{r,g,b};
-}
+function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
+function hexToRgb(hex){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return{r,g,b}; }
 
 function extractPhotoColors(imgEl){
     const sc=document.createElement('canvas'); sc.width=40; sc.height=40;
@@ -313,20 +298,13 @@ function extractPhotoColors(imgEl){
         buckets[key].count++; buckets[key].rs+=r; buckets[key].gs+=g; buckets[key].bs+=b;
     });
     const sorted=Object.values(buckets).sort((a,b)=>b.count-a.count).slice(0,6);
-    const palette=sorted.map(bkt=>{
+    return sorted.map(bkt=>{
         const r=bkt.rs/bkt.count, g=bkt.gs/bkt.count, bv=bkt.bs/bkt.count;
         let [h,s,l]=rgbToHsl(r,g,bv);
         s=Math.min(1,s*1.5+0.1); l=Math.min(0.80,Math.max(0.42,l));
         const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
         return rgbToHex(Math.round(h2r(p,q,h+1/3)*255),Math.round(h2r(p,q,h)*255),Math.round(h2r(p,q,h-1/3)*255));
     });
-    const extra=[];
-    palette.slice(0,3).forEach(hex=>{
-        const {r,g,b}=hexToRgb(hex); let [h,s,l]=rgbToHsl(r,g,b);
-        const q1=l<0.5?l*(1+s):l+s-l*s,p1=2*l-q1; const h2=(h+0.08)%1;
-        extra.push(rgbToHex(Math.round(h2r(p1,q1,h2+1/3)*255),Math.round(h2r(p1,q1,h2)*255),Math.round(h2r(p1,q1,h2-1/3)*255)));
-    });
-    return [...palette,...extra];
 }
 
 function makeColoredSticker(sImg, color, w, h) {
@@ -340,9 +318,6 @@ function makeColoredSticker(sImg, color, w, h) {
 }
 function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
 
-// ============================================================
-//  初始化加载
-// ============================================================
 function init(){
     renderStickersSkeleton(1);
     for(let i=1;i<=12;i++){
@@ -382,10 +357,10 @@ function init(){
     };
     initUDrawEvents();
 }
+
 function renderStickersSkeleton(page){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
     const isDesktop = window.innerWidth >= 600;
-    const perPage = isDesktop ? 12 : 6;
     const start = isDesktop ? 0 : (page===1?0:page===2?6:0);
     const end = isDesktop ? 12 : (page===1?6:page===2?12:6);
     
@@ -452,9 +427,6 @@ function animateLiveDots(){
     },350);
 }
 
-// ============================================================
-//  翻页逻辑 (3页循环)
-// ============================================================
 function flipPage(){
     currentPage = (currentPage % 3) + 1;
     const isFlipped = (currentPage !== 1);
@@ -467,15 +439,11 @@ function flipPage(){
     renderStickersSkeleton(currentPage);
 }
 
-// ============================================================
-//  手绘电子画布功能 (Page 3)
-// ============================================================
 function initUDrawEvents(){
     const saveState = () => {
         uDrawPaths.push(uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height));
         if(uDrawPaths.length > 15) uDrawPaths.shift();
     };
-
     const getPos = (e) => {
         const rect = uCanvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -485,60 +453,37 @@ function initUDrawEvents(){
             y: (clientY - rect.top) * (uCanvas.height / rect.height)
         };
     };
-
     const startDraw = (e) => {
-        e.preventDefault();
-        saveState();
-        isUDraw = true;
+        e.preventDefault(); saveState(); isUDraw = true;
         const p = getPos(e);
-        uCtx.beginPath();
-        uCtx.moveTo(p.x, p.y);
-        uCtx.strokeStyle = currentColor;
-        uCtx.lineWidth = 4;
-        uCtx.lineCap = 'round';
-        uCtx.lineJoin = 'round';
+        uCtx.beginPath(); uCtx.moveTo(p.x, p.y);
+        uCtx.strokeStyle = currentColor; uCtx.lineWidth = 4; uCtx.lineCap = 'round'; uCtx.lineJoin = 'round';
     };
-
     const drawLine = (e) => {
-        if(!isUDraw) return;
-        e.preventDefault();
-        const p = getPos(e);
-        uCtx.lineTo(p.x, p.y);
-        uCtx.stroke();
+        if(!isUDraw) return; e.preventDefault();
+        const p = getPos(e); uCtx.lineTo(p.x, p.y); uCtx.stroke();
     };
-
     const stopDraw = () => { isUDraw = false; };
 
     uCanvas.addEventListener('mousedown', startDraw);
     uCanvas.addEventListener('mousemove', drawLine);
     uCanvas.addEventListener('mouseup', stopDraw);
     uCanvas.addEventListener('mouseout', stopDraw);
-
     uCanvas.addEventListener('touchstart', startDraw, {passive:false});
     uCanvas.addEventListener('touchmove', drawLine, {passive:false});
     uCanvas.addEventListener('touchend', stopDraw);
 }
 
-function clearDrawCanvas() {
-    uDrawPaths = [];
-    uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height);
-}
-
+function clearDrawCanvas() { uDrawPaths = []; uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height); }
 function undoDrawCanvas() {
-    if(uDrawPaths.length > 0) {
-        const last = uDrawPaths.pop();
-        uCtx.putImageData(last, 0, 0);
-    } else {
-        uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height);
-    }
+    if(uDrawPaths.length > 0) { uCtx.putImageData(uDrawPaths.pop(), 0, 0); }
+    else { uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height); }
 }
 
 function generateDrawStickers() {
     if(!mainImg.src) return imgInput.click();
-    
     const imgData = uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height).data;
-    const tw = uCanvas.width;
-    const th = uCanvas.height;
+    const tw = uCanvas.width, th = uCanvas.height;
     const step = 6; 
     const points = [];
     
@@ -546,38 +491,28 @@ function generateDrawStickers() {
         for(let x=0; x<tw; x+=step) {
             const idx = (y*tw + x)*4;
             if(imgData[idx+3] > 10) { 
-                const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2];
-                points.push({ dx: x - tw/2, dy: y - th/2, color: rgbToHex(r,g,b) });
+                points.push({ dx: x - tw/2, dy: y - th/2, color: rgbToHex(imgData[idx], imgData[idx+1], imgData[idx+2]) });
             }
         }
     }
-    
     if(!points.length) return;
-
     const dotSize = parseInt(document.getElementById('sizeSlider').value);
     
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
         x: canvas.width/2, y: canvas.height/2,
-        scale: 1.0, 
-        ratio: stickerRatio, origWidth: tw, origHeight: th,
-        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true
+        scale: 1.0, ratio: stickerRatio, origWidth: tw, origHeight: th,
+        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: false
     };
-    
     _buildCache(layer);
     textLayers.push(layer);
     selectedLayer = layer;
     draw();
 }
 
-// ============================================================
-//  外框生成 (转化为可拖动图层)
-// ============================================================
 function generateFrame(shape) {
     if(!mainImg.src) { alert('请先上传图片激活主画布'); return imgInput.click(); }
-    
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.width, h = canvas.height;
     const dotSize = parseInt(document.getElementById('sizeSlider').value);
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
     
@@ -592,15 +527,11 @@ function generateFrame(shape) {
 
     if(shape === 'square') {
         let pad = step;
-        let boxW = w - 2*pad;
-        let boxH = h - 2*pad;
-        
+        let boxW = w - 2*pad, boxH = h - 2*pad;
         if(boxW > 0 && boxH > 0) {
             let stepsX = Math.max(1, Math.floor(boxW / step));
             let stepsY = Math.max(1, Math.floor(boxH / step));
-            let stepX = boxW / stepsX;
-            let stepY = boxH / stepsY;
-            
+            let stepX = boxW / stepsX, stepY = boxH / stepsY;
             for(let i=0; i<stepsX; i++) tempPts.push({x: pad + i*stepX, y: pad});
             for(let i=0; i<stepsY; i++) tempPts.push({x: w - pad, y: pad + i*stepY});
             for(let i=0; i<stepsX; i++) tempPts.push({x: w - pad - i*stepX, y: h - pad});
@@ -616,7 +547,7 @@ function generateFrame(shape) {
                 tempPts.push({x: cx + r*Math.cos(a), y: cy + r*Math.sin(a)});
             }
         }
-  } else if(shape === 'heart') {
+    } else if(shape === 'heart') {
         let sc = Math.min(w, h)/40; 
         let rawPts = [];
         for(let i=0; i<150; i++) {
@@ -629,28 +560,20 @@ function generateFrame(shape) {
         let curr = rawPts[0];
         for(let i=1; i<rawPts.length; i++) {
             let d = Math.hypot(rawPts[i].x - curr.x, rawPts[i].y - curr.y);
-            if(d >= step) {
-                tempPts.push(rawPts[i]);
-                curr = rawPts[i];
-            }
+            if(d >= step) { tempPts.push(rawPts[i]); curr = rawPts[i]; }
         }
     }
-
     if(!tempPts.length) return;
 
     let points = tempPts.map(p => {
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        return { dx: p.x - cx, dy: p.y - cy, color: color };
+        return { dx: p.x - cx, dy: p.y - cy, color: palette[Math.floor(Math.random() * palette.length)] };
     });
     
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
-        x: cx, y: cy,
-        scale: 1.0,
-        ratio: stickerRatio, origWidth: w, origHeight: h,
-        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true
+        x: cx, y: cy, scale: 1.0, ratio: stickerRatio, origWidth: w, origHeight: h,
+        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: true, shapeType: shape
     };
-    
     _buildCache(layer);
     textLayers.push(layer);
     selectedLayer = layer;
@@ -666,7 +589,6 @@ function updatePreRender(){
     preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
 }
 
-// 文字/ Emoji 大贴纸
 function generateTextStickers(){
     if(!mainImg.src)return imgInput.click();
     const text=document.getElementById('stickerTextInput').value; if(!text)return;
@@ -678,8 +600,7 @@ function _buildTextLayer(text){
     const fSize=60;
     const tc=document.createElement('canvas'), tx=tc.getContext('2d');
     tx.font=`bold ${fSize}px Arial`;
-    const tw=Math.ceil(tx.measureText(text).width)+80;
-    const th=Math.ceil(fSize*2.5);
+    const tw=Math.ceil(tx.measureText(text).width)+80, th=Math.ceil(fSize*2.5);
     tc.width=tw; tc.height=th;
     tx.font=`bold ${fSize}px Arial`; tx.textBaseline='middle'; tx.textAlign='center';
     tx.fillStyle='black'; tx.fillText(text,tw/2,th/2);
@@ -707,15 +628,14 @@ function _buildTextLayer(text){
         x:canvas.width/2, y:canvas.height/2,
         scale:parseInt(document.getElementById('textScaleSlider').value)/10,
         ratio:stickerRatio, origWidth:tw, origHeight:th,
-        dotSize, rotation:0, stickerIdx: curIdx, useOrig,
+        dotSize, rotation:0, stickerIdx: curIdx, useOrig, isDynamicFrame: false
     };
-    _buildCache(layer);
+_buildCache(layer);
     textLayers.push(layer);
     selectedLayer=layer;
     draw();
 }
 
-// 图片贴纸
 function generateImgStickers(){
     if(!mainImg.src)return imgInput.click();
     if(!stickerUploadedImg){alert('请先上传图片');return;}
@@ -750,7 +670,7 @@ function _buildImgLayer(){
         x:canvas.width/2, y:canvas.height/2,
         scale:parseInt(document.getElementById('textScaleSlider2').value)/10,
         ratio:stickerRatio, origWidth:sw, origHeight:sh,
-        dotSize, rotation:0, stickerIdx:curIdx, useOrig:true,
+        dotSize, rotation:0, stickerIdx:curIdx, useOrig:true, isDynamicFrame: false
     };
     _buildCache(layer);
     textLayers.push(layer);
@@ -775,7 +695,6 @@ function _buildCache(l){
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
 
-// 主绘制
 function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
@@ -806,7 +725,7 @@ function draw(isExporting){
             const dotY=bh+46;
             mainCtx.beginPath(); mainCtx.arc(0,dotY,38,0,Math.PI*2);
             mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
-            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.setLineDash([]); mainCtx.stroke();
+            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.stroke();
             mainCtx.beginPath(); mainCtx.arc(0,dotY,32,0,Math.PI*2);
             mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
             mainCtx.fillStyle='#fff'; mainCtx.font='bold 28px Arial';
@@ -817,7 +736,6 @@ function draw(isExporting){
     });
 }
 
-// 触摸交互
 const getCanvasPos=(e)=>{
     const r=canvas.getBoundingClientRect();
     const cx=e.touches?e.touches[0].clientX:e.clientX;
@@ -878,14 +796,65 @@ canvas.addEventListener('touchmove',(e)=>{
 
 canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
 
-// 滑块
+// 核心联动滑块：控制外框与所有图层的钻石大小
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value); document.getElementById('sizeVal').innerText=val;
     if(selectedLayer){
         selectedLayer.dotSize=val;
+        // 如果是动态外框，大小时同步重新计算外框点阵间距
+        if(selectedLayer.isDynamicFrame){
+            const shape = selectedLayer.shapeType;
+            const w = canvas.width, h = canvas.height;
+            const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
+            const sImg = stickers[selectedLayer.stickerIdx] || stickers[0];
+            const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
+            const step = Math.max(val * (ratio >= 1 ? 1 : ratio), val / (ratio >= 1 ? ratio : 1)) * 0.75;
+            let tempPts = [];
+            let cx = w/2, cy = h/2;
+            if(shape === 'square') {
+                let pad = step;
+                let boxW = w - 2*pad, boxH = h - 2*pad;
+                if(boxW > 0 && boxH > 0) {
+                    let stepsX = Math.max(1, Math.floor(boxW / step));
+                    let stepsY = Math.max(1, Math.floor(boxH / step));
+                    let stepX = boxW / stepsX, stepY = boxH / stepsY;
+                    for(let i=0; i<stepsX; i++) tempPts.push({x: pad + i*stepX, y: pad});
+                    for(let i=0; i<stepsY; i++) tempPts.push({x: w - pad, y: pad + i*stepY});
+                    for(let i=0; i<stepsX; i++) tempPts.push({x: w - pad - i*stepX, y: h - pad});
+                    for(let i=0; i<stepsY; i++) tempPts.push({x: pad, y: h - pad - i*stepY});
+                }
+            } else if(shape === 'circle') {
+                let r = Math.min(w, h)/2 - step;
+                if(r > 0) {
+                    let c = 2 * Math.PI * r;
+                    let steps = Math.max(4, Math.floor(c / step));
+                    for(let i=0; i<steps; i++) {
+                        let a = (i/steps) * 2 * Math.PI;
+                        tempPts.push({x: cx + r*Math.cos(a), y: cy + r*Math.sin(a)});
+                    }
+                }
+            } else if(shape === 'heart') {
+                let sc = Math.min(w, h)/40; 
+                let rawPts = [];
+                for(let i=0; i<150; i++) {
+                    let t = (i/150) * 2 * Math.PI;
+                    let hx = 16 * Math.pow(Math.sin(t), 3);
+                    let hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                    rawPts.push({x: cx + hx*sc, y: cy + hy*sc - 10*sc}); 
+                }
+                tempPts = [rawPts[0]];
+                let curr = rawPts[0];
+                for(let i=1; i<rawPts.length; i++) {
+                    let d = Math.hypot(rawPts[i].x - curr.x, rawPts[i].y - curr.y);
+                    if(d >= step) { tempPts.push(rawPts[i]); curr = rawPts[i]; }
+                }
+            }
+            selectedLayer.points = tempPts.map(p => ({ dx: p.x - cx, dy: p.y - cy, color: palette[Math.floor(Math.random() * palette.length)] }));
+        }
         _buildCache(selectedLayer); draw();
     }
 };
+
 document.getElementById('textScaleSlider').oninput=function(){
     document.getElementById('textScaleVal').innerText=(parseInt(this.value)/10).toFixed(1);
     if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
@@ -896,7 +865,6 @@ document.getElementById('textScaleSlider2').oninput=function(){
 };
 document.getElementById('rotateSlider').oninput=function(){ document.getElementById('rotVal').innerText=this.value+'°'; };
 
-// 色环
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[{component:iro.ui.Wheel},{component:iro.ui.Slider,options:{sliderType:'value'}}]});
 colorPicker.on('color:change',(c)=>{
     currentColor=c.hexString;
@@ -1019,7 +987,6 @@ function _doLivePngSequence(allRecords,btn){
         const fc=document.createElement('canvas'); fc.width=canvas.width; fc.height=canvas.height;
         const fx=fc.getContext('2d');
         if(mainImg.src) fx.drawImage(mainImg,0,0,fc.width,fc.height);
-        textLayers.forEach(l=>{ /* fallback */ });
         allRecords.forEach((r,ri)=>{
             fx.save(); fx.translate(r.x,r.y); fx.rotate(r.angle||0);
             if(ri===fi){ fx.shadowColor=r.glowColor||'#ffe0ee'; fx.shadowBlur=40; fx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH); fx.shadowColor='#ffffff'; fx.shadowBlur=18; }
@@ -1048,7 +1015,7 @@ imgInput.onchange=(e)=>{
         mainImg=new Image();
         mainImg.onload=()=>{
             canvas.width=mainImg.width; canvas.height=mainImg.height; dropZone.classList.add('has-img');
-            photoColorPalette=extractPhotoColors(mainImg); draw();
+    photoColorPalette=extractPhotoColors(mainImg); draw();
         };
         mainImg.src=f.target.result;
     };
