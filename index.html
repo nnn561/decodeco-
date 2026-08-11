@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -53,7 +53,7 @@
         .canvas-area.has-img .plus-icon { display: none; }
         .bottom-action-bar, .frame-action-bar { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
         .bottom-action-bar button, .frame-action-bar button { flex: 1; padding: 10px 2px; border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 11px; background: var(--pink-accent); box-shadow: 0 3px 0 #e66a85; cursor: pointer; }
-        .frame-action-bar button { background: #b5ead7; box-shadow: 0 3px 0 #95d3bd; color: #333;}
+        .frame-action-bar button { background: #ffabbd; box-shadow: 0 3px 0 #e66a85; }
         #pickerContainer { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 20px; z-index: 9999; box-shadow: 0 10px 50px rgba(0,0,0,0.3); width: min(300px, 90vw); max-height: 90vh; overflow-y: auto; }
         .color-preview-bar { width: 100%; height: 34px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); font-size: 13px; }
         .swatch-title { font-size: 10px; color: #999; margin: 10px 0 5px; }
@@ -135,7 +135,7 @@
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
-                    <span>手绘电子画布（生成随机大小钻石）</span>
+                    <span>手绘电子画布</span>
                 </div>
                 <!-- 电子画布区域 -->
                 <canvas id="userDrawCanvas" width="300" height="150" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
@@ -152,7 +152,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col">
-                <div class="slider-row"><span>钻石大小（联动贴纸中钻石大小）</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小（联动可缩放贴纸图层）</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -187,7 +187,6 @@
             <button onclick="generateFrame('heart')">爱心外框</button>
             <button onclick="generateFrame('square')">方框</button>
             <button onclick="generateFrame('circle')">圆形外框</button>
-            <button onclick="generateFrame('ellipse')">椭圆外框</button>
         </div>
 
         <div class="bottom-action-bar">
@@ -383,14 +382,13 @@ function init(){
     };
     initUDrawEvents();
 }
-
 function renderStickersSkeleton(page){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
     const isDesktop = window.innerWidth >= 600;
     const perPage = isDesktop ? 12 : 6;
     const start = isDesktop ? 0 : (page===1?0:page===2?6:0);
     const end = isDesktop ? 12 : (page===1?6:page===2?12:6);
-     // 如果是平板桌面版展示全部，无需翻页隐藏贴纸
+    
     for(let i=start;i<end;i++){
         const slot=document.createElement('div');
         slot.className='sticker-slot loading'+(curIdx===i?' active':'');
@@ -541,13 +539,13 @@ function generateDrawStickers() {
     const imgData = uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height).data;
     const tw = uCanvas.width;
     const th = uCanvas.height;
-    const step = 6; // 提取像素的步长
+    const step = 6; 
     const points = [];
     
     for(let y=0; y<th; y+=step) {
         for(let x=0; x<tw; x+=step) {
             const idx = (y*tw + x)*4;
-            if(imgData[idx+3] > 10) { // 如果不是完全透明
+            if(imgData[idx+3] > 10) { 
                 const r = imgData[idx], g = imgData[idx+1], b = imgData[idx+2];
                 points.push({ dx: x - tw/2, dy: y - th/2, color: rgbToHex(r,g,b) });
             }
@@ -556,122 +554,107 @@ function generateDrawStickers() {
     
     if(!points.length) return;
 
-    const baseSize = parseInt(document.getElementById('sizeSlider').value);
+    const dotSize = parseInt(document.getElementById('sizeSlider').value);
     
-    // 生成各自独立的记录，因为要求大小随机
-    const drawRecords = points.map(p => {
-        const sImg = stickers[curIdx] || stickers[0];
-        if(!sImg) return null;
-        const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
-        
-        // 随机缩放系数 0.4x - 1.2x
-        const randomScale = 0.4 + Math.random() * 0.8;
-        const size = baseSize * randomScale;
-        
-        const w = ratio >= 1 ? 150 : 150*ratio;
-        const h = ratio >= 1 ? 150/ratio : 150;
-        const ci = canvasToImg(makeColoredSticker(sImg, p.color, w, h));
-        
-        return {
-            x: canvas.width/2 + p.dx,
-            y: canvas.height/2 + p.dy,
-            img: ci,
-            sizeW: size*(ratio>=1?1:ratio),
-            sizeH: size/(ratio>=1?ratio:1),
-            angle: Math.random() * Math.PI * 2,
-            glowing: false,
-            glowColor: p.color
-        };
-    }).filter(x=>x);
-
-    if(drawRecords.length) {
-        records.push(drawRecords);
-        draw();
-    }
+    const layer = {
+        points, colorCacheMap:{}, defaultImg: preRenderedSticker,
+        x: canvas.width/2, y: canvas.height/2,
+        scale: 1.0, 
+        ratio: stickerRatio, origWidth: tw, origHeight: th,
+        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true
+    };
+    
+    _buildCache(layer);
+    textLayers.push(layer);
+    selectedLayer = layer;
+    draw();
 }
 
 // ============================================================
-//  外框生成
+//  外框生成 (转化为可拖动图层)
 // ============================================================
 function generateFrame(shape) {
     if(!mainImg.src) { alert('请先上传图片激活主画布'); return imgInput.click(); }
     
     const w = canvas.width;
     const h = canvas.height;
-    const size = parseInt(document.getElementById('sizeSlider').value);
-    // 根据历史颜色生成
+    const dotSize = parseInt(document.getElementById('sizeSlider').value);
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
     
     const sImg = stickers[curIdx] || stickers[0];
     const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
-    const sW = size * (ratio >= 1 ? 1 : ratio);
-    const sH = size / (ratio >= 1 ? ratio : 1);
-    const step = Math.max(sW, sH) * 0.75; // 钻石间隔密度
+    const sW = dotSize * (ratio >= 1 ? 1 : ratio);
+    const sH = dotSize / (ratio >= 1 ? ratio : 1);
+    const step = Math.max(sW, sH) * 0.75; 
     
-    let points = [];
+    let tempPts = [];
     let cx = w/2, cy = h/2;
 
     if(shape === 'square') {
         let pad = step;
-        for(let x=pad; x<=w-pad; x+=step) { points.push({x, y:pad}); points.push({x, y:h-pad}); }
-        for(let y=pad; y<=h-pad; y+=step) { points.push({x:pad, y}); points.push({x:w-pad, y}); }
+        let boxW = w - 2*pad;
+        let boxH = h - 2*pad;
+        
+        if(boxW > 0 && boxH > 0) {
+            let stepsX = Math.max(1, Math.floor(boxW / step));
+            let stepsY = Math.max(1, Math.floor(boxH / step));
+            let stepX = boxW / stepsX;
+            let stepY = boxH / stepsY;
+            
+            for(let i=0; i<stepsX; i++) tempPts.push({x: pad + i*stepX, y: pad});
+            for(let i=0; i<stepsY; i++) tempPts.push({x: w - pad, y: pad + i*stepY});
+            for(let i=0; i<stepsX; i++) tempPts.push({x: w - pad - i*stepX, y: h - pad});
+            for(let i=0; i<stepsY; i++) tempPts.push({x: pad, y: h - pad - i*stepY});
+        }
     } else if(shape === 'circle') {
         let r = Math.min(w, h)/2 - step;
-        let c = 2 * Math.PI * r;
-        let steps = Math.floor(c / step);
-        for(let i=0; i<steps; i++) {
-            let a = (i/steps) * 2 * Math.PI;
-            points.push({x: cx + r*Math.cos(a), y: cy + r*Math.sin(a)});
+        if(r > 0) {
+            let c = 2 * Math.PI * r;
+            let steps = Math.max(4, Math.floor(c / step));
+            for(let i=0; i<steps; i++) {
+                let a = (i/steps) * 2 * Math.PI;
+                tempPts.push({x: cx + r*Math.cos(a), y: cy + r*Math.sin(a)});
+            }
         }
-    } else if(shape === 'ellipse') {
-        let rx = w/2 - step;
-        let ry = h/2 - step;
-        let c = 2 * Math.PI * Math.sqrt((rx*rx + ry*ry)/2);
-        let steps = Math.floor(c / step);
-        for(let i=0; i<steps; i++) {
-            let a = (i/steps) * 2 * Math.PI;
-            points.push({x: cx + rx*Math.cos(a), y: cy + ry*Math.sin(a)});
-        }
-    } else if(shape === 'heart') {
-        let sc = Math.min(w, h)/40; // 爱心缩放系数
-        let tempPts = [];
+  } else if(shape === 'heart') {
+        let sc = Math.min(w, h)/40; 
+        let rawPts = [];
         for(let i=0; i<150; i++) {
             let t = (i/150) * 2 * Math.PI;
             let hx = 16 * Math.pow(Math.sin(t), 3);
             let hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-            tempPts.push({x: cx + hx*sc, y: cy + hy*sc - 10*sc}); // 稍微向上偏移
+            rawPts.push({x: cx + hx*sc, y: cy + hy*sc - 10*sc}); 
         }
-        // 按步长重新采样
-        points = [tempPts[0]];
-        let curr = tempPts[0];
-        for(let i=1; i<tempPts.length; i++) {
-            let d = Math.hypot(tempPts[i].x - curr.x, tempPts[i].y - curr.y);
+        tempPts = [rawPts[0]];
+        let curr = rawPts[0];
+        for(let i=1; i<rawPts.length; i++) {
+            let d = Math.hypot(rawPts[i].x - curr.x, rawPts[i].y - curr.y);
             if(d >= step) {
-                points.push(tempPts[i]);
-                curr = tempPts[i];
+                tempPts.push(rawPts[i]);
+                curr = rawPts[i];
             }
         }
     }
 
-    // 转化为钻石记录
-    const cw = ratio >= 1 ? 150 : 150*ratio;
-    const ch = ratio >= 1 ? 150/ratio : 150;
-    
-    let frameRecords = points.map(p => {
+    if(!tempPts.length) return;
+
+    let points = tempPts.map(p => {
         const color = palette[Math.floor(Math.random() * palette.length)];
-        const ci = canvasToImg(makeColoredSticker(sImg, color, cw, ch));
-        return {
-            x: p.x, y: p.y, img: ci,
-            sizeW: sW, sizeH: sH,
-            angle: Math.random() * Math.PI*2,
-            glowing: false, glowColor: color
-        };
+        return { dx: p.x - cx, dy: p.y - cy, color: color };
     });
     
-    if(frameRecords.length) {
-        records.push(frameRecords);
-        draw();
-    }
+    const layer = {
+        points, colorCacheMap:{}, defaultImg: preRenderedSticker,
+        x: cx, y: cy,
+        scale: 1.0,
+        ratio: stickerRatio, origWidth: w, origHeight: h,
+        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true
+    };
+    
+    _buildCache(layer);
+    textLayers.push(layer);
+    selectedLayer = layer;
+    draw();
 }
 
 function updatePreRender(){
@@ -1047,6 +1030,7 @@ function _doLivePngSequence(allRecords,btn){
     }
     nextFrame();
 }
+
 function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function smartUndo(){ if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;} else records.pop(); draw(); }
