@@ -625,13 +625,13 @@ function _buildTextLayer(text){
         ratio:stickerRatio, origWidth:tw, origHeight:th,
         dotSize, rotation:0, stickerIdx: curIdx, useOrig, isDynamicFrame: false
     };
-_buildCache(layer);
+    _buildCache(layer);
     textLayers.push(layer);
     selectedLayer=layer;
     draw();
 }
 function generateImgStickers(){
-if(!mainImg.src)return imgInput.click();
+    if(!mainImg.src)return imgInput.click();
     if(!stickerUploadedImg){alert('请先上传图片');return;}
     document.getElementById('genTip2').style.display='block';
     setTimeout(()=>{ _buildImgLayer(); document.getElementById('genTip2').style.display='none'; },20);
@@ -675,6 +675,10 @@ function _stepFromDensity(sliderId){
     const v=parseInt(document.getElementById(sliderId).value);
     return v===6?5:v===8?4:v===10?3:2;
 }
+
+// ==========================================
+// 修复点：这里的 forEach 已经被正确拼写
+// ==========================================
 function _buildCache(l){
     const sImg=stickers[l.stickerIdx||curIdx];
     if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
@@ -683,10 +687,11 @@ function _buildCache(l){
     const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
     const newCache={};
     const uniqueColors=[...new Set(l.points.map(p=>p.color).filter(Boolean))];
-    uniqueColors.forEac(col=>{ newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh)); });
+    uniqueColors.forEach(col=>{ newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh)); });
     l.colorCacheMap=newCache;
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
+
 function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
@@ -983,8 +988,7 @@ function _doLivePngSequence(allRecords,btn){
         a.href=fc.toDataURL('image/png'); a.click(); fi++; setTimeout(nextFrame,400);
     }
     nextFrame();
-}
-function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
+}function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function smartUndo(){ if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;} else records.pop(); draw(); }
 function clearAll(){ if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){textLayers=[];records=[];selectedLayer=null;draw();} }
