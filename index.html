@@ -129,13 +129,11 @@
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
-
-        <!-- P3: 纯电子画布与独立色环 -->
+        <!-- P3: 纯电子画布 (无多余钻石) -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
                     <span>手绘电子画布</span>
-                    <div class="current-color-dot" id="p3ColorBtn" style="width:24px;height:24px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.2);cursor:pointer;background:#FFB7B2;"></div>
                 </div>
                 <canvas id="userDrawCanvas" width="300" height="150" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
@@ -145,7 +143,6 @@
                 </div>
             </div>
         </div>
-
         <div class="controls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
@@ -181,7 +178,7 @@
             <canvas id="myCanvas"></canvas>
         </div>
         
-        <!-- 外框生成区域 -->
+        <!-- 外框生成区域 (粉色按钮，支持动态联动) -->
         <div class="frame-action-bar">
             <button onclick="generateFrame('heart')">爱心外框</button>
             <button onclick="generateFrame('square')">方框</button>
@@ -345,7 +342,7 @@ function init(){
                 document.getElementById('imgUploadLabel').textContent='✅ 已选择';
             };
             img.src=f.target.result;
-};
+        };
         reader.readAsDataURL(file);
     };
     initUDrawEvents();
@@ -425,6 +422,14 @@ function flipPage(){
     document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
     document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
     document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
+
+    // 根据要求：在P3时隐藏钻石外框(stickerGrid)和旋钮(slider-col)，仅保留电子画布和色环
+    document.getElementById('stickerGrid').style.display = currentPage === 3 ? 'none' : 'grid';
+    const sliderCol = document.querySelector('.slider-col');
+    if (sliderCol) {
+        sliderCol.style.display = currentPage === 3 ? 'none' : 'block';
+    }
+
     renderStickersSkeleton(currentPage);
 }
 function initUDrawEvents(){
@@ -469,7 +474,8 @@ function generateDrawStickers() {
     if(!mainImg.src) return imgInput.click();
     const imgData = uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height).data;
     const tw = uCanvas.width, th = uCanvas.height;
-    const step = 6; 
+    // 与第一二页的钻石密度联动
+    const step = _stepFromDensity('densitySlider'); 
     const points = [];
     
     for(let y=0; y<th; y+=step) {
@@ -481,12 +487,15 @@ function generateDrawStickers() {
         }
     }
     if(!points.length) return;
-const dotSize = parseInt(document.getElementById('sizeSlider').value);
+    const dotSize = parseInt(document.getElementById('sizeSlider').value);
     
+    // 与第一二页的贴纸大小联动
+    const scaleVal = parseInt(document.getElementById('textScaleSlider').value) / 10;
+
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
         x: canvas.width/2, y: canvas.height/2,
-        scale: 1.0, ratio: stickerRatio, origWidth: tw, origHeight: th,
+        scale: scaleVal, ratio: stickerRatio, origWidth: tw, origHeight: th,
         dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: false
     };
     _buildCache(layer);
@@ -504,7 +513,10 @@ function generateFrame(shape) {
     const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
     const sW = dotSize * (ratio >= 1 ? 1 : ratio);
     const sH = dotSize / (ratio >= 1 ? ratio : 1);
-    const step = Math.max(sW, sH) * 0.75; 
+    
+    // 与第一二页的钻石密度联动计算间距
+    const densityFactor = _stepFromDensity('densitySlider') / 5; 
+    const step = Math.max(sW, sH) * 0.75 * densityFactor; 
     
     let tempPts = [];
     let cx = w/2, cy = h/2;
@@ -551,9 +563,12 @@ function generateFrame(shape) {
         return { dx: p.x - cx, dy: p.y - cy, color: palette[Math.floor(Math.random() * palette.length)] };
     });
     
+    // 与第一二页的贴纸大小联动
+    const scaleVal = parseInt(document.getElementById('textScaleSlider').value) / 10;
+
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
-        x: cx, y: cy, scale: 1.0, ratio: stickerRatio, origWidth: w, origHeight: h,
+        x: cx, y: cy, scale: scaleVal, ratio: stickerRatio, origWidth: w, origHeight: h,
         dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: true, shapeType: shape
     };
     _buildCache(layer);
@@ -610,13 +625,13 @@ function _buildTextLayer(text){
         ratio:stickerRatio, origWidth:tw, origHeight:th,
         dotSize, rotation:0, stickerIdx: curIdx, useOrig, isDynamicFrame: false
     };
-    _buildCache(layer);
+_buildCache(layer);
     textLayers.push(layer);
     selectedLayer=layer;
     draw();
 }
 function generateImgStickers(){
-    if(!mainImg.src)return imgInput.click();
+if(!mainImg.src)return imgInput.click();
     if(!stickerUploadedImg){alert('请先上传图片');return;}
     document.getElementById('genTip2').style.display='block';
     setTimeout(()=>{ _buildImgLayer(); document.getElementById('genTip2').style.display='none'; },20);
@@ -668,7 +683,7 @@ function _buildCache(l){
     const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
     const newCache={};
     const uniqueColors=[...new Set(l.points.map(p=>p.color).filter(Boolean))];
-    uniqueColors.forEach(col=>{ newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh)); });
+    uniqueColors.forEac(col=>{ newCache[col]=canvasToImg(makeColoredSticker(sImg,col,dw,dh)); });
     l.colorCacheMap=newCache;
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
@@ -713,7 +728,7 @@ function draw(isExporting){
     });
 }
 const getCanvasPos=(e)=>{
-const r=canvas.getBoundingClientRect();
+    const r=canvas.getBoundingClientRect();
     const cx=e.touches?e.touches[0].clientX:e.clientX;
     const cy=e.touches?e.touches[0].clientY:e.clientY;
     return{x:(cx-r.left)*(canvas.width/r.width), y:(cy-r.top)*(canvas.height/r.height)};
@@ -768,19 +783,23 @@ canvas.addEventListener('touchmove',(e)=>{
     e.preventDefault();
 },{passive:false});
 canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
-
 // 核心联动滑块：控制外框与所有图层的钻石大小
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value); document.getElementById('sizeVal').innerText=val;
     if(selectedLayer){
         selectedLayer.dotSize=val;
+        // 如果是动态外框，大小时同步重新计算外框点阵间距
         if(selectedLayer.isDynamicFrame){
             const shape = selectedLayer.shapeType;
             const w = canvas.width, h = canvas.height;
             const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
             const sImg = stickers[selectedLayer.stickerIdx] || stickers[0];
             const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
-            const step = Math.max(val * (ratio >= 1 ? 1 : ratio), val / (ratio >= 1 ? ratio : 1)) * 0.75;
+            
+            // 加入第一二页的密度联动
+            const densityFactor = _stepFromDensity('densitySlider') / 5;
+            const step = Math.max(val * (ratio >= 1 ? 1 : ratio), val / (ratio >= 1 ? ratio : 1)) * 0.75 * densityFactor;
+
             let tempPts = [];
             let cx = w/2, cy = h/2;
             if(shape === 'square') {
@@ -835,18 +854,15 @@ document.getElementById('textScaleSlider2').oninput=function(){
     if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
 };
 document.getElementById('rotateSlider').oninput=function(){ document.getElementById('rotVal').innerText=this.value+'°'; };
-
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[{component:iro.ui.Wheel},{component:iro.ui.Slider,options:{sliderType:'value'}}]});
 colorPicker.on('color:change',(c)=>{
     currentColor=c.hexString;
     document.getElementById('colorBtn').style.backgroundColor=currentColor;
-    document.getElementById('drawColorBtn').style.backgroundColor=currentColor;
     document.getElementById('colorPreview').innerText=currentColor;
     document.getElementById('colorPreview').style.backgroundColor=currentColor;
     document.getElementById('currentSwatch').style.backgroundColor=currentColor;
     updatePreRender();
 });
-
 document.getElementById('colorBtn').addEventListener('click',(e)=>{
     e.stopPropagation();
     document.getElementById('pickerContainer').style.display='block';
@@ -854,14 +870,6 @@ document.getElementById('colorBtn').addEventListener('click',(e)=>{
     document.getElementById('currentSwatch').style.backgroundColor=currentColor;
     updateHistorySwatches();
 });
-document.getElementById('drawColorBtn').addEventListener('click',(e)=>{
-    e.stopPropagation();
-    document.getElementById('pickerContainer').style.display='block';
-    document.getElementById('overlay').style.display='block';
-    document.getElementById('currentSwatch').style.backgroundColor=currentColor;
-    updateHistorySwatches();
-});
-
 function closePicker(){
     if(!colorHistory.includes(currentColor)){
         colorHistory.push(currentColor);
@@ -993,7 +1001,7 @@ imgInput.onchange=(e)=>{
         mainImg=new Image();
         mainImg.onload=()=>{
             canvas.width=mainImg.width; canvas.height=mainImg.height; dropZone.classList.add('has-img');
-            photoColorPalette=extractPhotoColors(mainImg); draw();
+    photoColorPalette=extractPhotoColors(mainImg); draw();
         };
         mainImg.src=f.target.result;
     };
