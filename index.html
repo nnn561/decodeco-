@@ -1012,17 +1012,23 @@ function startVideoGeneration(mode, dir='down') {
     const rx = rc.getContext('2d'); 
     rx.scale(SCALE, SCALE);
     
-    const totalFrames = 24; 
-    const FRAME_INTERVAL = 150;
+    const totalFrames = 28; 
+    const FRAME_INTERVAL = 130;
     
+    // 计算空间梯度（从左到右，从下到上，值域 0~2）
+    function getSpatialIndex(absX, absY) {
+        const normX = Math.max(0, Math.min(1, absX / canvas.width)); // 左0 -> 右1
+        const normY = Math.max(0, Math.min(1, (canvas.height - absY) / canvas.height)); // 下0 -> 上1
+        return normX + normY; 
+    }
+
     function drawVideoFrame(fi){
         rx.clearRect(0, 0, canvas.width, canvas.height);
         if(mainImg.src) rx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
         
-        let globalDist = fi * (Math.max(canvas.width, canvas.height) / totalFrames) * 0.8;
         const cx = canvas.width / 2, cy = canvas.height / 2;
 
-        // 生成贴纸（文字/图片/手绘/外框）：逐个钻石进行发光或坠落计算
+        // 1. 生成贴纸图层：计算每个钻石点的绝对位置梯度
         textLayers.forEach(l => {
             const linked = l.dotSize / 6; 
             const dw = Math.max(1, linked * (l.ratio >= 1 ? 1 : l.ratio)); 
@@ -1032,14 +1038,19 @@ function startVideoGeneration(mode, dir='down') {
             rx.translate(l.x, l.y);
             rx.rotate(l.rotation || 0);
 
-            l.points.forEach((p, pi) => {
+            l.points.forEach((p) => {
+                // 计算当前钻石在全画布上的绝对坐标
+                const absX = l.x + p.dx * l.scale;
+                const absY = l.y + p.dy * l.scale;
+                const spatialIndex = getSpatialIndex(absX, absY);
+
                 let pOffsetX = 0, pOffsetY = 0;
                 
-                // 1. 逐个坠落计算
+                // 从左到右从下到上：逐个坠落
                 if(mode === 'fall'){
-                    let pDelay = (pi % 10) * 1.5; // 给每个钻石设定交错延时
+                    let pDelay = spatialIndex * 5.5; // 从左下到右上依次增加延时
                     let effectiveFi = Math.max(0, fi - pDelay);
-                    let pDist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 8)) * 0.8;
+                    let pDist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
 
                     if(dir === 'down') pOffsetY = pDist;
                     else if(dir === 'up') pOffsetY = -pDist;
@@ -1056,8 +1067,9 @@ function startVideoGeneration(mode, dir='down') {
                 const img = p.color ? (l.colorCacheMap[p.color] || l.defaultImg) : l.defaultImg;
                 if(img) {
                     rx.save();
-                    // 2. 逐个闪烁发光计算
-                    if(mode === 'glow' && ((pi + fi) % 4 === 0)) {
+                    // 从左到右从下到上：扫光闪烁
+                    const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
+                    if(isGlowing) {
                         rx.shadowOffsetX = 0;
                         rx.shadowOffsetY = 0;
                         rx.shadowColor = p.color || '#ffe0ee';
@@ -1070,24 +1082,33 @@ function startVideoGeneration(mode, dir='down') {
             rx.restore();
         });
 
-        // 单个钻石：保留原逻辑不动
-        allRecords.forEach((r, ri) => {
+        // 2. 单个钻石图层：同步应用左下到右上梯度
+        allRecords.forEach((r) => {
+            const spatialIndex = getSpatialIndex(r.x, r.y);
             let offsetX = 0, offsetY = 0;
+            
             if(mode === 'fall'){
-                if(dir === 'down') offsetY = globalDist;
-                else if(dir === 'up') offsetY = -globalDist;
-                else if(dir === 'left') offsetX = -globalDist;
-                else if(dir === 'right') offsetX = globalDist;
+                let pDelay = spatialIndex * 5.5;
+                let effectiveFi = Math.max(0, fi - pDelay);
+                let dist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
+
+                if(dir === 'down') offsetY = dist;
+                else if(dir === 'up') offsetY = -dist;
+                else if(dir === 'left') offsetX = -dist;
+                else if(dir === 'right') offsetX = dist;
                 else if(dir === 'outward'){
                     let angle = Math.atan2(r.y - cy, r.x - cx);
-                    offsetX = Math.cos(angle) * globalDist; 
-                    offsetY = Math.sin(angle) * globalDist;
+                    offsetX = Math.cos(angle) * dist; 
+                    offsetY = Math.sin(angle) * dist;
                 }
             }
+
             rx.save(); 
             rx.translate(r.x + offsetX, r.y + offsetY); 
             rx.rotate(r.angle || 0);
-            if(mode === 'glow' && (ri % 3 === fi % 3)){
+
+            const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
+            if(isGlowing){
                 rx.shadowOffsetX = 0; 
                 rx.shadowOffsetY = 0; 
                 rx.shadowColor = r.glowColor || '#ffe0ee'; 
