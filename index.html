@@ -106,8 +106,8 @@
 
 <!-- 手机版 / 平板版(横屏) 切换按钮 -->
 <div class="view-switch-bar">
-    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">📱 手机版</button>
-    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">💻 平板版(横屏)</button>
+    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">竖版</button>
+    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">横版</button>
 </div>
 
 <div class="book-container" id="bookContainer">
@@ -122,9 +122,9 @@
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--pink-accent);font-weight:bold;flex-wrap:wrap;">
-                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前单色</label>
+                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前颜色</label>
                     <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="emoji"> Emoji原色</label>
-                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="randomHistory"> 历史颜色随机</label>
+                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="randomHistory"> 历史颜色</label>
                 </div>
                 <div class="gen-row">
                     <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
@@ -162,7 +162,7 @@
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
-                    <span>手绘电子画布</span>
+                    <span>电子画布</span>
                 </div>
                 <canvas id="userDrawCanvas" width="300" height="130" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
@@ -188,7 +188,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col" id="mainSliderCol">
-                <div class="slider-row"><span>钻石大小 (联动缩放)</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -223,7 +223,7 @@
             <button onclick="generateFrame('heart')">爱心外框</button>
             <button onclick="generateFrame('square')">方框</button>
             <button onclick="generateFrame('circle')">圆形外框</button>
-            <button onclick="generateFrame('star')">五角星外框</button>
+            <button onclick="generateFrame('star')">星星外框</button>
         </div>
         <div class="bottom-action-bar">
             <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
@@ -258,14 +258,14 @@
 <!-- 视频生成模式弹窗 -->
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">✨ 外围闪光模式</button>
-    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">💨 散落坠落模式（选择方向）</div>
+    <button class="modal-btn" onclick="startVideoGeneration('glow')">外围闪光模式</button>
+    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">⬆️ 向上</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">⬇️ 向下</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">⬅️ 向左</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">➡️ 向右</button>
-        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">🎆 四周发散</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">向下</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">向左</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">向右</button>
+        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">发散</button>
     </div>
     <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
@@ -987,101 +987,156 @@ function closeVideoModal() {
 
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
-    const allRecords=records.flat();
-    if(allRecords.length===0 && textLayers.length===0){alert('请先在画布上放置钻石或文字贴纸');return;}
+    const allRecords = records.flat();
+    if(allRecords.length === 0 && textLayers.length === 0){ alert('请先在画布上放置钻石或文字贴纸'); return; }
     
-    const btn=document.getElementById('liveBtn');
-    const progressWrap=document.getElementById('recordProgress');
-    const progressBar=document.getElementById('recordProgressBar');
+    const btn = document.getElementById('liveBtn');
+    const progressWrap = document.getElementById('recordProgress');
+    const progressBar = document.getElementById('recordProgressBar');
     
     const mimeType = (() => {
-        const types=['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
-        if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported) return null;
-        return types.find(m=>MediaRecorder.isTypeSupported(m))||null;
+        const types = ['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+        if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return null;
+        return types.find(m => MediaRecorder.isTypeSupported(m)) || null;
     })();
     
     if(!mimeType){ alert('您的浏览器暂不支持生成动态视频'); return; }
     
-    btn.disabled=true; btn.textContent='录制中...';
-    progressWrap.style.display='block'; progressBar.style.width='0%';
+    btn.disabled = true; btn.textContent = '录制中...';
+    progressWrap.style.display = 'block'; progressBar.style.width = '0%';
     
-    const SCALE=2; const rc=document.createElement('canvas'); rc.width=canvas.width*SCALE; rc.height=canvas.height*SCALE;
-    const rx=rc.getContext('2d'); rx.scale(SCALE,SCALE);
-    const totalFrames = 24; const FRAME_INTERVAL = 150;
+    const SCALE = 2; 
+    const rc = document.createElement('canvas'); 
+    rc.width = canvas.width * SCALE; 
+    rc.height = canvas.height * SCALE;
+    const rx = rc.getContext('2d'); 
+    rx.scale(SCALE, SCALE);
+    
+    const totalFrames = 24; 
+    const FRAME_INTERVAL = 150;
     
     function drawVideoFrame(fi){
-        rx.clearRect(0,0,canvas.width,canvas.height);
-        if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
+        rx.clearRect(0, 0, canvas.width, canvas.height);
+        if(mainImg.src) rx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
         
-        let dist = fi * (Math.max(canvas.width, canvas.height) / totalFrames) * 0.8;
+        let globalDist = fi * (Math.max(canvas.width, canvas.height) / totalFrames) * 0.8;
         const cx = canvas.width / 2, cy = canvas.height / 2;
 
-        textLayers.forEach(l=>{
-            let offsetX = 0, offsetY = 0;
-            if(mode === 'fall'){
-                if(dir==='down') offsetY = dist;
-                else if(dir==='up') offsetY = -dist;
-                else if(dir==='left') offsetX = -dist;
-                else if(dir==='right') offsetX = dist;
-                else if(dir==='outward'){
-                    let angle = Math.atan2(l.y - cy, l.x - cx);
-                    offsetX = Math.cos(angle) * dist; offsetY = Math.sin(angle) * dist;
+        // 生成贴纸（文字/图片/手绘/外框）：逐个钻石进行发光或坠落计算
+        textLayers.forEach(l => {
+            const linked = l.dotSize / 6; 
+            const dw = Math.max(1, linked * (l.ratio >= 1 ? 1 : l.ratio)); 
+            const dh = Math.max(1, linked / (l.ratio >= 1 ? l.ratio : 1));
+            
+            rx.save();
+            rx.translate(l.x, l.y);
+            rx.rotate(l.rotation || 0);
+
+            l.points.forEach((p, pi) => {
+                let pOffsetX = 0, pOffsetY = 0;
+                
+                // 1. 逐个坠落计算
+                if(mode === 'fall'){
+                    let pDelay = (pi % 10) * 1.5; // 给每个钻石设定交错延时
+                    let effectiveFi = Math.max(0, fi - pDelay);
+                    let pDist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 8)) * 0.8;
+
+                    if(dir === 'down') pOffsetY = pDist;
+                    else if(dir === 'up') pOffsetY = -pDist;
+                    else if(dir === 'left') pOffsetX = -pDist;
+                    else if(dir === 'right') pOffsetX = pDist;
+                    else if(dir === 'outward'){
+                        let angle = Math.atan2(p.dy, p.dx);
+                        if(p.dx === 0 && p.dy === 0) angle = 0;
+                        pOffsetX = Math.cos(angle) * pDist;
+                        pOffsetY = Math.sin(angle) * pDist;
+                    }
                 }
-            }
-            const linked=l.dotSize/6; const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio)); const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
-            rx.save(); rx.translate(l.x + offsetX, l.y + offsetY); rx.rotate(l.rotation||0);
-            l.points.forEach(p=>{
-                const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
-                if(img) rx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
+
+                const img = p.color ? (l.colorCacheMap[p.color] || l.defaultImg) : l.defaultImg;
+                if(img) {
+                    rx.save();
+                    // 2. 逐个闪烁发光计算
+                    if(mode === 'glow' && ((pi + fi) % 4 === 0)) {
+                        rx.shadowOffsetX = 0;
+                        rx.shadowOffsetY = 0;
+                        rx.shadowColor = p.color || '#ffe0ee';
+                        rx.shadowBlur = 22;
+                    }
+                    rx.drawImage(img, p.dx * l.scale + pOffsetX - dw/2, p.dy * l.scale + pOffsetY - dh/2, dw, dh);
+                    rx.restore();
+                }
             });
             rx.restore();
         });
 
-        allRecords.forEach((r,ri)=>{
+        // 单个钻石：保留原逻辑不动
+        allRecords.forEach((r, ri) => {
             let offsetX = 0, offsetY = 0;
             if(mode === 'fall'){
-                if(dir==='down') offsetY = dist;
-                else if(dir==='up') offsetY = -dist;
-                else if(dir==='left') offsetX = -dist;
-                else if(dir==='right') offsetX = dist;
-                else if(dir==='outward'){
+                if(dir === 'down') offsetY = globalDist;
+                else if(dir === 'up') offsetY = -globalDist;
+                else if(dir === 'left') offsetX = -globalDist;
+                else if(dir === 'right') offsetX = globalDist;
+                else if(dir === 'outward'){
                     let angle = Math.atan2(r.y - cy, r.x - cx);
-                    offsetX = Math.cos(angle) * dist; offsetY = Math.sin(angle) * dist;
+                    offsetX = Math.cos(angle) * globalDist; 
+                    offsetY = Math.sin(angle) * globalDist;
                 }
             }
-
-            rx.save(); rx.translate(r.x + offsetX, r.y + offsetY); rx.rotate(r.angle||0);
+            rx.save(); 
+            rx.translate(r.x + offsetX, r.y + offsetY); 
+            rx.rotate(r.angle || 0);
             if(mode === 'glow' && (ri % 3 === fi % 3)){
-                rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
-                rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH); rx.shadowBlur=0;
+                rx.shadowOffsetX = 0; 
+                rx.shadowOffsetY = 0; 
+                rx.shadowColor = r.glowColor || '#ffe0ee'; 
+                rx.shadowBlur = 36;
+                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
+                rx.shadowBlur = 16; 
+                rx.shadowColor = '#ffffff';
+                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
+                rx.shadowBlur = 0;
             } else { 
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH); 
+                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
             }
             rx.restore();
         });
     }
-
+    
     drawVideoFrame(0);
-    const stream=rc.captureStream(0); const chunks=[];
-    const recorder=new MediaRecorder(stream,{ mimeType, videoBitsPerSecond: 20000000 });
-    recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
-    recorder.onstop=()=>{
-        const ext=mimeType.includes('mp4')?'mp4':'webm'; const blob=new Blob(chunks,{type:mimeType});
-        const url=URL.createObjectURL(blob); const a=document.createElement('a'); const now=new Date();
-        const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-        a.download=`pancakesticker_video_${ts}.${ext}`; a.href=url; a.click();
-        URL.revokeObjectURL(url); btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
+    const stream = rc.captureStream(0); 
+    const chunks = [];
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 20000000 });
+    
+    recorder.ondataavailable = e => { if(e.data && e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = () => {
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'; 
+        const blob = new Blob(chunks, { type: mimeType });
+        const url = URL.createObjectURL(blob); 
+        const a = document.createElement('a'); 
+        const now = new Date();
+        const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        a.download = `pancakesticker_video_${ts}.${ext}`; 
+        a.href = url; 
+        a.click();
+        URL.revokeObjectURL(url); 
+        btn.disabled = false; 
+        btn.textContent = '生成'; 
+        progressWrap.style.display = 'none';
     };
     
     recorder.start();
-    let fi=0;
-    const timer=setInterval(()=>{
+    let fi = 0;
+    const timer = setInterval(() => {
         drawVideoFrame(fi);
         if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame();
-        fi++; progressBar.style.width=(fi/totalFrames*100)+'%';
-        if(fi>=totalFrames){ clearInterval(timer); setTimeout(()=>recorder.stop(),300); }
+        fi++; 
+        progressBar.style.width = (fi / totalFrames * 100) + '%';
+        if(fi >= totalFrames){ 
+            clearInterval(timer); 
+            setTimeout(() => recorder.stop(), 300); 
+        }
     }, FRAME_INTERVAL);
 }
 
