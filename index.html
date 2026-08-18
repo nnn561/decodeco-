@@ -112,8 +112,8 @@
   <img src="IMG_20260713_162936.png" alt="Pancake Sticker Book">
 </div>
 <div class="view-switch-bar">
-    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">📱 手机版</button>
-    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">💻 平板版(横屏)</button>
+    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">竖版</button>
+    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">横版</button>
 </div>
 <div class="book-container" id="bookContainer">
     <div class="top-page" id="topPage">
@@ -126,7 +126,7 @@
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--pink-accent);font-weight:bold;flex-wrap:wrap;">
-                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前单色</label>
+                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前颜色</label>
                     <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="emoji"> Emoji原色</label>
                     <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="randomHistory"> 历史颜色随机</label>
                 </div>
@@ -282,10 +282,10 @@
         </div>
         
         <div class="frame-action-bar">
-            <button onclick="generateFrame('heart')">爱心外框</button>
-            <button onclick="generateFrame('square')">方框</button>
+            <button onclick="generateFrame('heart')">心形外框</button>
+            <button onclick="generateFrame('square')">方形外框</button>
             <button onclick="generateFrame('circle')">圆形外框</button>
-            <button onclick="generateFrame('star')">五角星外框</button>
+            <button onclick="generateFrame('star')">星形外框</button>
         </div>
         <div class="bottom-action-bar">
             <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
@@ -315,14 +315,14 @@
 </div>
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">✨ 外围闪光模式</button>
-    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">💨 散落坠落模式（选择方向）</div>
+    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
+    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">⬆️ 向上</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">⬇️ 向下</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">⬅️ 向左</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">➡️ 向右</button>
-        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">🎆 四周发散</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">向下</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">向左</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">向右</button>
+        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">四周发散</button>
     </div>
     <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
