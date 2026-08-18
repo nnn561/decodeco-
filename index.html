@@ -1151,18 +1151,42 @@ function download(){
     link.download=`pancakesticker_${ts}.png`; link.href=canvas.toDataURL('image/png'); link.click();
     selectedLayer=prev; draw();
 }
-imgInput.onchange=(e)=>{
-    const reader=new FileReader();
-    reader.onload=(f)=>{
-        mainImg=new Image();
-        mainImg.onload=()=>{
-            canvas.width=mainImg.width; canvas.height=mainImg.height; dropZone.classList.add('has-img');
-            photoColorPalette=extractPhotoColors(mainImg); draw();
+imgInput.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (f) => {
+        const tempImg = new Image();
+        tempImg.crossOrigin = "anonymous";
+        tempImg.onload = () => {
+            // 限制最大宽高防止手机内存爆掉或视频录制崩溃（最大限制 1200 像素）
+            let w = tempImg.naturalWidth;
+            let h = tempImg.naturalHeight;
+            const MAX_SIZE = 1200;
+            if (w > MAX_SIZE || h > MAX_SIZE) {
+                if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+                else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+            }
+            const oc = document.createElement('canvas');
+            oc.width = w; oc.height = h;
+            const ox = oc.getContext('2d');
+            ox.drawImage(tempImg, 0, 0, w, h);
+
+            mainImg = new Image();
+            mainImg.onload = () => {
+                canvas.width = mainImg.width; 
+                canvas.height = mainImg.height; 
+                dropZone.classList.add('has-img');
+                photoColorPalette = extractPhotoColors(mainImg); 
+                draw();
+            };
+            mainImg.src = oc.toDataURL('image/jpeg', 0.9);
         };
-        mainImg.src=f.target.result;
+        tempImg.src = f.target.result;
     };
-    reader.readAsDataURL(e.target.files[0]);
+    reader.readAsDataURL(file);
 };
+
 init();
 </script>
 </body>
