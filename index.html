@@ -156,28 +156,36 @@
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
+                <!-- P3: 纯电子画布 (加调控旋钮/滑块) -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
                     <span>手绘电子画布</span>
                 </div>
-                <canvas id="userDrawCanvas" width="300" height="130" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
+                <canvas id="userDrawCanvas" width="300" height="200" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
                     <button class="gen-btn" style="background:#ffccbb; flex:1;" onclick="clearDrawCanvas()">清空</button>
                     <button class="gen-btn" style="background:#ffabbd; flex:1;" onclick="undoDrawCanvas()">撤回</button>
                     <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
                 </div>
                 
-                <!-- P3 专属调控旋钮 / 滑块 -->
-  id="p3ScaleSlider" min="5" max="50" value="10">
-                    <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
-                    <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
-                    <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
-                    <input type="range" id="p3SizeSlider" min="30" max="300" value="80">
+                <!-- P3 专属调控旋钮与滑块：色环在左，旋钮在右 -->
+                <div style="margin-top:10px; border-top:1px dashed #ffcad4; padding-top:8px; display:flex; gap:12px; align-items:center;">
+                    <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                        <div class="current-color-dot" id="p3ColorBtn" style="background:#FFB7B2; width:42px; height:42px;"></div>
+                    </div>
+                    <div style="flex:1;">
+                        <div class="slider-row"><span>贴纸大小</span><span id="p3ScaleVal">1.0</span></div>
+                        <input type="range" id="p3ScaleSlider" min="5" max="50" value="10">
+                        <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
+                        <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" onclick="updateP3DensityLabel(this.value)">
+                        <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
+                        <input type="range" id="p3SizeSlider" min="30" max="300" value="80">
+                    </div>
                 </div>
             </div>
         </div>
-   
+
         <div class="controls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
