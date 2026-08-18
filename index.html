@@ -37,7 +37,15 @@
         .page-corner:active::before { border-width: 0 66px 66px 0; }
         .page-corner-icon { position: absolute; top: 8px; right: 8px; font-size: 14px; color: white; pointer-events: none; transition: transform 0.3s; }
         .page-corner.flipped .page-corner-icon { transform: rotate(180deg); }
-        .page-corner-badge { position: absolute; top: 4px; right: 20px; font-size: 10px; color: white; font-weight: bold; pointer-events: none; z-index: 11;}
+        .page-corner-badge { position: absolute; top: 4px; right: 20px; font-size: 10px; color: white; font-weight: bold; pointer-events: none; z-index: 11;}       
+ /* 横屏模式下，将翻页角移至左下方 */
+        body.tablet-mode .page-corner { top: auto; bottom: 0; right: auto; left: 0; }
+        body.tablet-mode .page-corner::before { right: auto; left: 0; border-width: 56px 56px 0 0; border-color: var(--pink-accent) transparent transparent transparent; filter: drop-shadow(2px -2px 4px rgba(255,133,162,0.5)); }
+        body.tablet-mode .page-corner:active::before { border-width: 66px 66px 0 0; }
+        body.tablet-mode .page-corner-icon { top: auto; bottom: 8px; right: auto; left: 8px; transform: rotate(90deg); }
+        body.tablet-mode .page-corner.flipped .page-corner-icon { transform: rotate(270deg); }
+        body.tablet-mode .page-corner-badge { top: auto; bottom: 4px; right: auto; left: 20px; }
+
         .sticker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; margin-bottom: 5px; justify-items: center; }
         .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
         .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
@@ -149,23 +157,32 @@
             </div>
         </div>
 
+                <!-- P3: 纯电子画布 (加调控旋钮/滑块) -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
                     <span>手绘电子画布</span>
                 </div>
-                <canvas id="userDrawCanvas" width="300" height="130" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
+                <canvas id="userDrawCanvas" width="300" height="200" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
                     <button class="gen-btn" style="background:#ffccbb; flex:1;" onclick="clearDrawCanvas()">清空</button>
                     <button class="gen-btn" style="background:#ffabbd; flex:1;" onclick="undoDrawCanvas()">撤回</button>
                     <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
                 </div>
                 
-                <div style="margin-top:10px; border-top:1px dashed #ffcad4; padding-top:6px;">
-                    <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
-                    <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
-                    <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
-                    <input type="range" id="p3SizeSlider" min="30" max="300" value="80">
+                <!-- P3 专属调控旋钮与滑块：色环在左，旋钮在右 -->
+                <div style="margin-top:10px; border-top:1px dashed #ffcad4; padding-top:8px; display:flex; gap:12px; align-items:center;">
+                    <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                        <div class="current-color-dot" id="p3ColorBtn" style="background:#FFB7B2; width:42px; height:42px;"></div>
+                    </div>
+                    <div style="flex:1;">
+                        <div class="slider-row"><span>贴纸大小</span><span id="p3ScaleVal">1.0</span></div>
+                        <input type="range" id="p3ScaleSlider" min="5" max="50" value="10">
+                        <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
+                        <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" onclick="updateP3DensityLabel(this.value)">
+                        <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
+                        <input type="range" id="p3SizeSlider" min="30" max="300" value="80">
+                    </div>
                 </div>
             </div>
         </div>
