@@ -103,13 +103,10 @@
 <div class="title-header">
   <img src="IMG_20260713_162936.png" alt="Pancake Sticker Book">
 </div>
-
-<!-- 手机版 / 平板版(横屏) 切换按钮 -->
 <div class="view-switch-bar">
-    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">竖版</button>
-    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">横版</button>
+    <button class="switch-btn active" id="btnMobile" onclick="switchDeviceMode('mobile')">📱 手机版</button>
+    <button class="switch-btn" id="btnTablet" onclick="switchDeviceMode('tablet')">💻 平板版(横屏)</button>
 </div>
-
 <div class="book-container" id="bookContainer">
     <div class="top-page" id="topPage">
         <div class="page-corner" id="pageCorner" onclick="flipPage()">
@@ -118,27 +115,23 @@
         </div>
         <div class="sticker-grid" id="stickerGrid"></div>
         
-        <!-- P1: 文字贴纸 -->
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:11px;color:var(--pink-accent);font-weight:bold;flex-wrap:wrap;">
-                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前颜色</label>
+                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="current" checked> 当前单色</label>
                     <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="emoji"> Emoji原色</label>
-                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="randomHistory"> 历史颜色</label>
+                    <label style="cursor:pointer;"><input type="radio" name="textColorMode" value="randomHistory"> 历史颜色随机</label>
                 </div>
                 <div class="gen-row">
                     <input type="text" id="stickerTextInput" placeholder="输入文字/emoji/颜文字">
                     <button class="gen-btn" onclick="generateTextStickers()">生成</button>
                 </div>
                 <div class="gen-tip" id="genTip1">生成中...</div>
-                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal">3.0</span></div>
-                <input type="range" id="textScaleSlider" min="10" max="300" value="30">
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
                 <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
             </div>
         </div>
         
-        <!-- P2: 图片贴纸 -->
         <div class="page-content" id="pageContent2" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成贴纸</div>
@@ -150,19 +143,16 @@
                     <button class="gen-btn" onclick="generateImgStickers()">生成</button>
                 </div>
                 <div class="gen-tip" id="genTip2">生成中...</div>
-                <div class="slider-row"><span>贴纸大小</span><span id="textScaleVal2">3.0</span></div>
-                <input type="range" id="textScaleSlider2" min="10" max="300" value="30">
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
                 <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
 
-        <!-- P3: 纯电子画布 (加调控旋钮/滑块) -->
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
-                    <span>电子画布</span>
+                    <span>手绘电子画布</span>
                 </div>
                 <canvas id="userDrawCanvas" width="300" height="130" style="background:#fff;border:1.5px dashed #ffcad4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:8px;">
@@ -171,10 +161,7 @@
                     <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
                 </div>
                 
-                <!-- P3 专属调控旋钮 / 滑块 -->
                 <div style="margin-top:10px; border-top:1px dashed #ffcad4; padding-top:6px;">
-                    <div class="slider-row"><span>贴纸大小</span><span id="p3ScaleVal">1.0</span></div>
-                    <input type="range" id="p3ScaleSlider" min="5" max="50" value="10">
                     <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
                     <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
                     <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
@@ -188,7 +175,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col" id="mainSliderCol">
-                <div class="slider-row"><span>钻石大小</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小 (联动)</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -218,12 +205,11 @@
             <canvas id="myCanvas"></canvas>
         </div>
         
-        <!-- 外框生成区域 (新增五角星边框) -->
         <div class="frame-action-bar">
             <button onclick="generateFrame('heart')">爱心外框</button>
             <button onclick="generateFrame('square')">方框</button>
             <button onclick="generateFrame('circle')">圆形外框</button>
-            <button onclick="generateFrame('star')">星星外框</button>
+            <button onclick="generateFrame('star')">五角星外框</button>
         </div>
         <div class="bottom-action-bar">
             <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
@@ -234,7 +220,6 @@
         <input type="file" id="imgInput" accept="image/*" style="display:none">
     </div>
 </div>
-
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
     <div id="iroPicker" style="display:flex;justify-content:center;"></div>
@@ -246,26 +231,22 @@
     <div class="color-swatches" id="presetSwatches"></div>
     <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
 </div>
-
-<!-- 随机选择弹窗 -->
 <div id="randomModal" class="modal-box">
     <div class="modal-title">选择随机颜色来源</div>
     <button class="modal-btn" onclick="closeRandomModal('photo')">图片同色系</button>
     <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
     <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
-
-<!-- 视频生成模式弹窗 -->
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">外围闪光模式</button>
-    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式</div>
+    <button class="modal-btn" onclick="startVideoGeneration('glow')">✨ 外围闪光模式</button>
+    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">💨 散落坠落模式（选择方向）</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">向下</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">向左</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">向右</button>
-        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">发散</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">⬆️ 向上</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">⬇️ 向下</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">⬅️ 向左</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">➡️ 向右</button>
+        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">🎆 四周发散</button>
     </div>
     <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
@@ -292,10 +273,15 @@ const uCtx = uCanvas.getContext('2d', { willReadFrequently: true });
 let isUDraw = false;
 let uDrawPaths = [];
 let selectedLayer   = null;
+
 let isDraggingLayer = false;
 let isRotatingLayer = false;
+let isScalingLayer = false;
+
 let rotStart        = { touchAngle: 0, layerAngle: 0 };
+let scaleStart      = { dist: 0, scale: 1 };
 let layerCenter     = { x: 0, y: 0 };
+
 let lastRandomType  = null;
 let photoColorPalette = [];
 const baseUrl = "https://cdn.jsdelivr.net/gh/nnn561/decodeco-@main/";
@@ -324,7 +310,6 @@ function switchDeviceMode(mode) {
         btnT.classList.remove('active');
     }
 }
-
 function rgbToHsl(r,g,b){
     r/=255;g/=255;b/=255;
     const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
@@ -343,7 +328,6 @@ function hslToRgb(h,s,l){
     return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
 }
 function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
-
 function extractPhotoColors(imgEl){
     const sc=document.createElement('canvas'); sc.width=40; sc.height=40;
     const sx=sc.getContext('2d'); sx.drawImage(imgEl,0,0,40,40);
@@ -379,12 +363,12 @@ function makeColoredSticker(sImg, color, w, h) {
     const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
     const ox=oc.getContext('2d');
     ox.drawImage(sImg,0,0,w,h);
-    ox.globalCompositeOperation='multiply'; ox.fillStyle=color; ox.fillRect(0,0,w,h);
+    ox.globalCompositeOperation='multiply'; ox.fillStyle=color;
+    ox.fillRect(0,0,w,h);
     ox.globalCompositeOperation='destination-in'; ox.drawImage(sImg,0,0,w,h);
     return oc;
 }
 function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
-
 function init(){
     renderStickersSkeleton(1);
     for(let i=1;i<=12;i++){
@@ -408,7 +392,8 @@ function init(){
     initPresetSwatches();
     animateLiveDots();
     document.getElementById('stickerImgInput').onchange=function(e){
-        const file=e.target.files[0]; if(!file)return;
+        const file=e.target.files[0];
+        if(!file)return;
         const reader=new FileReader();
         reader.onload=(f)=>{
             const img=new Image();
@@ -423,18 +408,13 @@ function init(){
         reader.readAsDataURL(file);
     };
     initUDrawEvents();
-
-    document.getElementById('p3ScaleSlider').oninput = function() {
-        document.getElementById('p3ScaleVal').innerText = (parseInt(this.value)/10).toFixed(1);
-        if(selectedLayer) { selectedLayer.scale = parseInt(this.value)/10; draw(); }
-    };
+    
     document.getElementById('p3SizeSlider').oninput = function() {
         const val = parseInt(this.value);
         document.getElementById('p3SizeVal').innerText = val;
         if(selectedLayer) { selectedLayer.dotSize = val; _buildCache(selectedLayer); draw(); }
     };
 }
-
 function renderStickersSkeleton(page){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
     const isDesktop = window.innerWidth >= 600;
@@ -461,7 +441,8 @@ function renderStickersSkeleton(page){
                 updatePreRender();
             };
         })();
-        slot.appendChild(imgEl); grid.appendChild(slot);
+        slot.appendChild(imgEl);
+        grid.appendChild(slot);
     }
 }
 function initPresetSwatches(){
@@ -486,7 +467,8 @@ function updateHistorySwatches(){
         delBtn.onclick=(e)=>{ e.stopPropagation(); colorHistory.splice(realIdx,1); updateHistorySwatches(); };
         s.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);},{passive:true});
         s.addEventListener('touchend',()=>clearTimeout(pressTimer));
-        s.addEventListener('mousedown',()=>{pressTimer=setTimeout(()=>{ delBtn.style.display='block'; },500);});
+        s.addEventListener('mousedown',()=>{pressTimer=setTimeout(()=>{ delBtn.style.display='block';
+        },500);});
         s.addEventListener('mouseup',()=>clearTimeout(pressTimer));
         wrap.appendChild(s); wrap.appendChild(delBtn); c.appendChild(wrap);
     });
@@ -510,13 +492,11 @@ function flipPage(){
     document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
     document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
     document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
-
     document.getElementById('stickerGrid').style.display = currentPage === 3 ? 'none' : 'grid';
     const mainSliderCol = document.getElementById('mainSliderCol');
     if (mainSliderCol) {
         mainSliderCol.style.display = currentPage === 3 ? 'none' : 'block';
     }
-
     renderStickersSkeleton(currentPage);
 }
 function initUDrawEvents(){
@@ -541,7 +521,8 @@ function initUDrawEvents(){
     };
     const drawLine = (e) => {
         if(!isUDraw) return; e.preventDefault();
-        const p = getPos(e); uCtx.lineTo(p.x, p.y); uCtx.stroke();
+        const p = getPos(e);
+        uCtx.lineTo(p.x, p.y); uCtx.stroke();
     };
     const stopDraw = () => { isUDraw = false; };
     uCanvas.addEventListener('mousedown', startDraw);
@@ -552,18 +533,19 @@ function initUDrawEvents(){
     uCanvas.addEventListener('touchmove', drawLine, {passive:false});
     uCanvas.addEventListener('touchend', stopDraw);
 }
-function clearDrawCanvas() { uDrawPaths = []; uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height); }
+function clearDrawCanvas() { uDrawPaths = []; uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height);
+}
 function undoDrawCanvas() {
-    if(uDrawPaths.length > 0) { uCtx.putImageData(uDrawPaths.pop(), 0, 0); }
+    if(uDrawPaths.length > 0) { uCtx.putImageData(uDrawPaths.pop(), 0, 0);
+    }
     else { uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height); }
 }
-
 function generateDrawStickers() {
     if(!mainImg.src) return imgInput.click();
     const imgData = uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height).data;
     const tw = uCanvas.width, th = uCanvas.height;
     
-    const step = _stepFromDensity('p3DensitySlider'); 
+    const step = _stepFromDensity('p3DensitySlider');
     const points = [];
     
     for(let y=0; y<th; y+=step) {
@@ -576,8 +558,7 @@ function generateDrawStickers() {
     }
     if(!points.length) return;
     const dotSize = parseInt(document.getElementById('p3SizeSlider').value);
-    const scaleVal = parseInt(document.getElementById('p3ScaleSlider').value) / 10;
-
+    const scaleVal = 1.0; 
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
         x: canvas.width/2, y: canvas.height/2,
@@ -589,10 +570,9 @@ function generateDrawStickers() {
     selectedLayer = layer;
     draw();
 }
-
-/* 1 外框适配：刚生成时与画面大小匹配 (scale设为1.0) 5 五角星外框 */
 function generateFrame(shape) {
-    if(!mainImg.src) { alert('请先上传图片激活主画布'); return imgInput.click(); }
+    if(!mainImg.src) { alert('请先上传图片激活主画布');
+        return imgInput.click(); }
     const w = canvas.width, h = canvas.height;
     const dotSize = parseInt(document.getElementById('sizeSlider').value);
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
@@ -602,12 +582,11 @@ function generateFrame(shape) {
     const sW = dotSize * (ratio >= 1 ? 1 : ratio);
     const sH = dotSize / (ratio >= 1 ? ratio : 1);
     
-    const densityFactor = _stepFromDensity('densitySlider') / 5; 
+    const densityFactor = _stepFromDensity('densitySlider') / 5;
     const step = Math.max(sW, sH) * 0.75 * densityFactor; 
     
     let tempPts = [];
     let cx = w/2, cy = h/2;
-
     if(shape === 'square') {
         let pad = step;
         let boxW = w - 2*pad, boxH = h - 2*pad;
@@ -631,13 +610,13 @@ function generateFrame(shape) {
             }
         }
     } else if(shape === 'heart') {
-        let sc = Math.min(w, h)/40; 
+        let sc = Math.min(w, h)/40;
         let rawPts = [];
         for(let i=0; i<150; i++) {
             let t = (i/150) * 2 * Math.PI;
             let hx = 16 * Math.pow(Math.sin(t), 3);
             let hy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-            rawPts.push({x: cx + hx*sc, y: cy + hy*sc - 10*sc}); 
+            rawPts.push({x: cx + hx*sc, y: cy + hy*sc - 10*sc});
         }
         tempPts = [rawPts[0]];
         let curr = rawPts[0];
@@ -665,13 +644,10 @@ function generateFrame(shape) {
             }
         }
     }
-
     if(!tempPts.length) return;
     let points = tempPts.map(p => {
         return { dx: p.x - cx, dy: p.y - cy, color: palette[Math.floor(Math.random() * palette.length)] };
     });
-    
-    // 生成外框时将 scale 设为 1.0，完全适配画布大小
     const layer = {
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
         x: cx, y: cy, scale: 1.0, ratio: stickerRatio, origWidth: w, origHeight: h,
@@ -682,7 +658,6 @@ function generateFrame(shape) {
     selectedLayer = layer;
     draw();
 }
-
 function updatePreRender(){
     const sImg=stickers[curIdx];
     if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
@@ -691,15 +666,12 @@ function updatePreRender(){
     const h=stickerRatio>=1?150/stickerRatio:150;
     preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
 }
-
 function generateTextStickers(){
     if(!mainImg.src)return imgInput.click();
     const text=document.getElementById('stickerTextInput').value; if(!text)return;
     document.getElementById('genTip1').style.display='block';
     setTimeout(()=>{ _buildTextLayer(text); document.getElementById('genTip1').style.display='none'; },20);
 }
-
-/* 2 文字生成添加依据历史颜色随机 */
 function _buildTextLayer(text){
     const colorMode = document.querySelector('input[name="textColorMode"]:checked').value;
     const fSize=60;
@@ -713,7 +685,6 @@ function _buildTextLayer(text){
     const step=_stepFromDensity('densitySlider');
     const points=[];
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
-
     for(let y=0;y<th;y+=step){
         for(let x=0;x<tw;x+=step){
             const idx=(y*tw+x)*4;
@@ -735,7 +706,7 @@ function _buildTextLayer(text){
     const layer={
         points, colorCacheMap:{}, defaultImg: preRenderedSticker,
         x:canvas.width/2, y:canvas.height/2,
-        scale:parseInt(document.getElementById('textScaleSlider').value)/10,
+        scale: 3.0,
         ratio:stickerRatio, origWidth:tw, origHeight:th,
         dotSize, rotation:0, stickerIdx: curIdx, useOrig:(colorMode!=='current'), isDynamicFrame: false
     };
@@ -744,7 +715,6 @@ function _buildTextLayer(text){
     selectedLayer=layer;
     draw();
 }
-
 function generateImgStickers(){
     if(!mainImg.src)return imgInput.click();
     if(!stickerUploadedImg){alert('请先上传图片');return;}
@@ -757,7 +727,8 @@ function _buildImgLayer(){
     const iw=stickerUploadedImg.naturalWidth, ih=stickerUploadedImg.naturalHeight;
     const sc=Math.min(MAX/iw,MAX/ih,1);
     const sw=Math.max(1,Math.round(iw*sc)), sh=Math.max(1,Math.round(ih*sc));
-    const tc=document.createElement('canvas'); tc.width=sw; tc.height=sh;
+    const tc=document.createElement('canvas'); tc.width=sw;
+    tc.height=sh;
     tc.getContext('2d').drawImage(stickerUploadedImg,0,0,sw,sh);
     const raw=tc.getContext('2d').getImageData(0,0,sw,sh).data;
     function q(v){return Math.round(v/16)*16;}
@@ -777,7 +748,7 @@ function _buildImgLayer(){
     const layer={
         points, colorCacheMap:{}, defaultImg:preRenderedSticker,
         x:canvas.width/2, y:canvas.height/2,
-        scale:parseInt(document.getElementById('textScaleSlider2').value)/10,
+        scale: 3.0,
         ratio:stickerRatio, origWidth:sw, origHeight:sh,
         dotSize, rotation:0, stickerIdx:curIdx, useOrig:true, isDynamicFrame: false
     };
@@ -790,7 +761,6 @@ function _stepFromDensity(sliderId){
     const v=parseInt(document.getElementById(sliderId).value);
     return v===6?5:v===8?4:v===10?3:2;
 }
-
 function _buildCache(l){
     const sImg=stickers[l.stickerIdx||curIdx];
     if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
@@ -803,7 +773,6 @@ function _buildCache(l){
     l.colorCacheMap=newCache;
     l.defaultImg=canvasToImg(makeColoredSticker(sImg,currentColor,dw,dh));
 }
-
 function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
@@ -826,25 +795,35 @@ function draw(isExporting){
             if(img)mainCtx.drawImage(img,p.dx*l.scale-dw/2,p.dy*l.scale-dh/2,dw,dh);
         });
         if(l===selectedLayer&&!isExporting){
-            const bw=(l.origWidth/2)*l.scale*0.55;
+             const bw=(l.origWidth/2)*l.scale*0.55;
             const bh=(l.origHeight/2)*l.scale*0.55;
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
             mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
             mainCtx.setLineDash([]);
-            const dotY=bh+46;
-            mainCtx.beginPath(); mainCtx.arc(0,dotY,38,0,Math.PI*2);
+            
+            // 右下角：旋转控制圆钮
+            const rotX = bw; 
+            const rotY = bh;
+            mainCtx.beginPath(); mainCtx.arc(rotX, rotY, 20, 0, Math.PI*2);
             mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.stroke();
-            mainCtx.beginPath(); mainCtx.arc(0,dotY,32,0,Math.PI*2);
-            mainCtx.fillStyle="#ff85a2"; mainCtx.fill();
-            mainCtx.fillStyle='#fff'; mainCtx.font='bold 28px Arial';
+            mainCtx.fillStyle="#ff85a2"; mainCtx.font='bold 20px Arial';
             mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
-            mainCtx.fillText('\u21bb',0,dotY+1);
+            mainCtx.fillText('\u21bb', rotX, rotY+2); // ↻
+
+            // 左下角：缩放控制圆钮
+            const scaX = -bw; 
+            const scaY = bh;
+            mainCtx.beginPath(); mainCtx.arc(scaX, scaY, 20, 0, Math.PI*2);
+            mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
+            mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.stroke();
+            mainCtx.fillStyle="#ff85a2"; mainCtx.font='bold 20px Arial';
+            mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
+            mainCtx.fillText('\u2921', scaX, scaY); // ⤡
         }
         mainCtx.restore();
     });
 }
-
 const getCanvasPos=(e)=>{
     const r=canvas.getBoundingClientRect();
     const cx=e.touches?e.touches[0].clientX:e.clientX;
@@ -853,24 +832,47 @@ const getCanvasPos=(e)=>{
 };
 function hitLayer(px,py,l){
     const dx=px-l.x, dy=py-l.y; const rot=-(l.rotation||0);
-    const lx=dx*Math.cos(rot)-dy*Math.sin(rot); const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
+    const lx=dx*Math.cos(rot)-dy*Math.sin(rot);
+    const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
     return Math.abs(lx)<=(l.origWidth/2)*l.scale*0.92 && Math.abs(ly)<=(l.origHeight/2)*l.scale*0.92;
 }
 function hitRotateDot(px,py,l){
-    const rot=l.rotation||0; const bh=(l.origHeight/2)*l.scale*0.55+46;
-    const dotX=l.x+(-Math.sin(rot))*bh; const dotY=l.y+(Math.cos(rot))*bh;
-    return Math.hypot(px-dotX,py-dotY)<52;
+    const bw = (l.origWidth/2) * l.scale * 0.55;
+    const bh = (l.origHeight/2) * l.scale * 0.55;
+    const rot = l.rotation || 0;
+    // Rotate Right-Bottom corner (bw, bh) to world space
+    const dotX = l.x + (bw * Math.cos(rot) - bh * Math.sin(rot));
+    const dotY = l.y + (bw * Math.sin(rot) + bh * Math.cos(rot));
+    return Math.hypot(px-dotX, py-dotY) < 30; // touch radius
+}
+function hitScaleDot(px,py,l){
+    const bw = (l.origWidth/2) * l.scale * 0.55;
+    const bh = (l.origHeight/2) * l.scale * 0.55;
+    const rot = l.rotation || 0;
+    // Rotate Left-Bottom corner (-bw, bh) to world space
+    const dotX = l.x + (-bw * Math.cos(rot) - bh * Math.sin(rot));
+    const dotY = l.y + (-bw * Math.sin(rot) + bh * Math.cos(rot));
+    return Math.hypot(px-dotX, py-dotY) < 30;
 }
 
 canvas.addEventListener('touchstart',(e)=>{
     if(!mainImg.src)return;
     const p=getCanvasPos(e);
-    if(selectedLayer&&hitRotateDot(p.x,p.y,selectedLayer)){
-        isRotatingLayer=true;
-        layerCenter={x:selectedLayer.x, y:selectedLayer.y};
-        rotStart.touchAngle=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
-        rotStart.layerAngle=selectedLayer.rotation||0;
-        return;
+    if(selectedLayer){
+        if(hitRotateDot(p.x, p.y, selectedLayer)){
+            isRotatingLayer = true;
+            layerCenter = {x: selectedLayer.x, y: selectedLayer.y};
+            rotStart.touchAngle = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x);
+            rotStart.layerAngle = selectedLayer.rotation || 0;
+            return;
+        }
+        if(hitScaleDot(p.x, p.y, selectedLayer)){
+            isScalingLayer = true;
+            layerCenter = {x: selectedLayer.x, y: selectedLayer.y};
+            scaleStart.dist = Math.hypot(p.x - layerCenter.x, p.y - layerCenter.y);
+            scaleStart.scale = selectedLayer.scale;
+            return;
+        }
     }
     let found=null;
     for(let i=textLayers.length-1;i>=0;i--){
@@ -885,7 +887,8 @@ canvas.addEventListener('touchstart',(e)=>{
     selectedLayer=null;
     const size=parseInt(document.getElementById('sizeSlider').value);
     const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
-    const sW=size*(stickerRatio>=1?1:stickerRatio); const sH=size/(stickerRatio>=1?stickerRatio:1);
+    const sW=size*(stickerRatio>=1?1:stickerRatio);
+    const sH=size/(stickerRatio>=1?stickerRatio:1);
     const rec={x:p.x,y:p.y,img:preRenderedSticker,sizeW:sW,sizeH:sH,angle,glowing:true,glowColor:currentColor};
     records.push([rec]); draw();
     setTimeout(()=>{rec.glowing=false;draw();},600);
@@ -893,16 +896,28 @@ canvas.addEventListener('touchstart',(e)=>{
 
 canvas.addEventListener('touchmove',(e)=>{
     const p=getCanvasPos(e);
-    if(isRotatingLayer&&selectedLayer){
-        const curA=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
-        selectedLayer.rotation=rotStart.layerAngle+(curA-rotStart.touchAngle);
+    if(isRotatingLayer && selectedLayer){
+        const curA = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x);
+        selectedLayer.rotation = rotStart.layerAngle + (curA - rotStart.touchAngle);
         draw();
-    }else if(isDraggingLayer&&selectedLayer){
+    }else if(isScalingLayer && selectedLayer){
+        const curDist = Math.hypot(p.x - layerCenter.x, p.y - layerCenter.y);
+        if(scaleStart.dist > 5) {
+            let newScale = scaleStart.scale * (curDist / scaleStart.dist);
+            // 限制缩放极值避免画面崩溃
+            selectedLayer.scale = Math.max(0.1, Math.min(newScale, 15));
+            draw();
+        }
+    }else if(isDraggingLayer && selectedLayer){
         selectedLayer.x=p.x; selectedLayer.y=p.y; draw();
     }
     e.preventDefault();
 },{passive:false});
-canvas.addEventListener('touchend',()=>{isDraggingLayer=false;isRotatingLayer=false;});
+canvas.addEventListener('touchend',()=>{
+    isDraggingLayer=false;
+    isRotatingLayer=false;
+    isScalingLayer=false;
+});
 
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value); document.getElementById('sizeVal').innerText=val;
@@ -911,16 +926,8 @@ document.getElementById('sizeSlider').oninput=function(){
         _buildCache(selectedLayer); draw();
     }
 };
-document.getElementById('textScaleSlider').oninput=function(){
-    document.getElementById('textScaleVal').innerText=(parseInt(this.value)/10).toFixed(1);
-    if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
-};
-document.getElementById('textScaleSlider2').oninput=function(){
-    document.getElementById('textScaleVal2').innerText=(parseInt(this.value)/10).toFixed(1);
-    if(selectedLayer){selectedLayer.scale=parseInt(this.value)/10; draw();}
-};
-document.getElementById('rotateSlider').oninput=function(){ document.getElementById('rotVal').innerText=this.value+'°'; };
 
+document.getElementById('rotateSlider').oninput=function(){ document.getElementById('rotVal').innerText=this.value+'°'; };
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[{component:iro.ui.Wheel},{component:iro.ui.Slider,options:{sliderType:'value'}}]});
 colorPicker.on('color:change',(c)=>{
     currentColor=c.hexString;
@@ -946,11 +953,11 @@ function closePicker(){
     document.getElementById('overlay').style.display='none';
 }
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
-
 function handleRandomClick(){
     if(!mainImg.src) return;
     if(lastRandomType) _doRandom(lastRandomType);
-    else { document.getElementById('randomModal').style.display='block'; document.getElementById('overlay').style.display='block'; }
+    else { document.getElementById('randomModal').style.display='block'; document.getElementById('overlay').style.display='block';
+    }
 }
 function closeRandomModal(type){
     document.getElementById('randomModal').style.display='none'; document.getElementById('overlay').style.display='none';
@@ -959,7 +966,8 @@ function closeRandomModal(type){
 function _doRandom(type){
     if(!mainImg.src) return;
     let palette = type==='history' ? (colorHistory.length>=2 ? colorHistory : macaronColors) : (photoColorPalette.length>=3 ? photoColorPalette : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]);
-    const num = 12; const g = []; const sz = parseInt(document.getElementById('sizeSlider').value);
+    const num = 12;
+    const g = []; const sz = parseInt(document.getElementById('sizeSlider').value);
     for(let i=0;i<num;i++){
         const loadedIdx = stickers.map((s,idx)=>s&&s.complete&&s.naturalWidth>0?idx:-1).filter(x=>x>=0);
         if(loadedIdx.length===0) continue;
@@ -974,7 +982,7 @@ function _doRandom(type){
     if(g.length){records.push(g);draw();}
 }
 
-/* 4 视频生成弹窗控制与两种模式算法 */
+/* 4 视频生成弹窗控制与两种模式算法（增强版：提高导出兼容性） */
 function openVideoModal() {
     if(!mainImg.src){alert('请先上传图片');return;}
     document.getElementById('videoModal').style.display = 'block';
@@ -984,197 +992,165 @@ function closeVideoModal() {
     document.getElementById('videoModal').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
 }
-
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
     const allRecords = records.flat();
-    if(allRecords.length === 0 && textLayers.length === 0){ alert('请先在画布上放置钻石或文字贴纸'); return; }
+    if(allRecords.length === 0 && textLayers.length === 0){alert('请先在画布上放置钻石或文字贴纸');return;}
     
-    const btn = document.getElementById('liveBtn');
-    const progressWrap = document.getElementById('recordProgress');
-    const progressBar = document.getElementById('recordProgressBar');
-    
+    const btn=document.getElementById('liveBtn');
+    const progressWrap=document.getElementById('recordProgress');
+    const progressBar=document.getElementById('recordProgressBar');
     const mimeType = (() => {
-        const types = ['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
-        if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return null;
-        return types.find(m => MediaRecorder.isTypeSupported(m)) || null;
+        const types=['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+        if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported) return null;
+        return types.find(m=>MediaRecorder.isTypeSupported(m))||null;
     })();
-    
     if(!mimeType){ alert('您的浏览器暂不支持生成动态视频'); return; }
     
-    btn.disabled = true; btn.textContent = '录制中...';
-    progressWrap.style.display = 'block'; progressBar.style.width = '0%';
+    btn.disabled=true; btn.textContent='录制中...';
+    progressWrap.style.display='block'; progressBar.style.width='0%';
     
-    const SCALE = 2; 
-    const rc = document.createElement('canvas'); 
-    rc.width = canvas.width * SCALE; 
-    rc.height = canvas.height * SCALE;
-    const rx = rc.getContext('2d'); 
-    rx.scale(SCALE, SCALE);
-    
-    const totalFrames = 28; 
-    const FRAME_INTERVAL = 130;
-    
-    // 计算空间梯度（从左到右，从下到上，值域 0~2）
+    const SCALE=2; const rc=document.createElement('canvas'); rc.width=canvas.width*SCALE;
+    rc.height=canvas.height*SCALE;
+    const rx=rc.getContext('2d'); rx.scale(SCALE,SCALE);
+    const totalFrames = 28; const FRAME_INTERVAL = 130;
+
     function getSpatialIndex(absX, absY) {
-        const normX = Math.max(0, Math.min(1, absX / canvas.width)); // 左0 -> 右1
-        const normY = Math.max(0, Math.min(1, (canvas.height - absY) / canvas.height)); // 下0 -> 上1
+        const normX = Math.max(0, Math.min(1, absX / canvas.width));
+        const normY = Math.max(0, Math.min(1, (canvas.height - absY) / canvas.height));
         return normX + normY; 
     }
 
     function drawVideoFrame(fi){
-        rx.clearRect(0, 0, canvas.width, canvas.height);
-        if(mainImg.src) rx.drawImage(mainImg, 0, 0, canvas.width, canvas.height);
+        rx.clearRect(0,0,canvas.width,canvas.height);
+        if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
         
         const cx = canvas.width / 2, cy = canvas.height / 2;
-
-        // 1. 生成贴纸图层：计算每个钻石点的绝对位置梯度
-        textLayers.forEach(l => {
-            const linked = l.dotSize / 6; 
-            const dw = Math.max(1, linked * (l.ratio >= 1 ? 1 : l.ratio)); 
-            const dh = Math.max(1, linked / (l.ratio >= 1 ? l.ratio : 1));
+        textLayers.forEach(l=>{
+            const linked=l.dotSize/6; const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio)); const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
+            rx.save(); rx.translate(l.x, l.y); rx.rotate(l.rotation||0);
             
-            rx.save();
-            rx.translate(l.x, l.y);
-            rx.rotate(l.rotation || 0);
-
-            l.points.forEach((p) => {
-                // 计算当前钻石在全画布上的绝对坐标
+            l.points.forEach(p=>{
                 const absX = l.x + p.dx * l.scale;
                 const absY = l.y + p.dy * l.scale;
                 const spatialIndex = getSpatialIndex(absX, absY);
-
                 let pOffsetX = 0, pOffsetY = 0;
                 
-                // 从左到右从下到上：逐个坠落
                 if(mode === 'fall'){
-                    let pDelay = spatialIndex * 5.5; // 从左下到右上依次增加延时
+                    let pDelay = spatialIndex * 5.5; 
                     let effectiveFi = Math.max(0, fi - pDelay);
                     let pDist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
 
-                    if(dir === 'down') pOffsetY = pDist;
-                    else if(dir === 'up') pOffsetY = -pDist;
-                    else if(dir === 'left') pOffsetX = -pDist;
-                    else if(dir === 'right') pOffsetX = pDist;
-                    else if(dir === 'outward'){
+                    if(dir==='down') pOffsetY = pDist;
+                    else if(dir==='up') pOffsetY = -pDist;
+                    else if(dir==='left') pOffsetX = -pDist;
+                    else if(dir==='right') pOffsetX = pDist;
+                    else if(dir==='outward'){
                         let angle = Math.atan2(p.dy, p.dx);
                         if(p.dx === 0 && p.dy === 0) angle = 0;
                         pOffsetX = Math.cos(angle) * pDist;
                         pOffsetY = Math.sin(angle) * pDist;
                     }
                 }
-
-                const img = p.color ? (l.colorCacheMap[p.color] || l.defaultImg) : l.defaultImg;
+                const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
                 if(img) {
                     rx.save();
-                    // 从左到右从下到上：扫光闪烁
                     const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
                     if(isGlowing) {
-                        rx.shadowOffsetX = 0;
-                        rx.shadowOffsetY = 0;
-                        rx.shadowColor = p.color || '#ffe0ee';
-                        rx.shadowBlur = 22;
+                        rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=p.color||'#ffe0ee'; rx.shadowBlur=22;
                     }
-                    rx.drawImage(img, p.dx * l.scale + pOffsetX - dw/2, p.dy * l.scale + pOffsetY - dh/2, dw, dh);
+                    rx.drawImage(img,p.dx*l.scale+pOffsetX-dw/2,p.dy*l.scale+pOffsetY-dh/2,dw,dh);
                     rx.restore();
                 }
             });
             rx.restore();
         });
-
-        // 2. 单个钻石图层：同步应用左下到右上梯度
-        allRecords.forEach((r) => {
+        
+        allRecords.forEach((r)=>{
             const spatialIndex = getSpatialIndex(r.x, r.y);
             let offsetX = 0, offsetY = 0;
-            
             if(mode === 'fall'){
                 let pDelay = spatialIndex * 5.5;
                 let effectiveFi = Math.max(0, fi - pDelay);
                 let dist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
 
-                if(dir === 'down') offsetY = dist;
-                else if(dir === 'up') offsetY = -dist;
-                else if(dir === 'left') offsetX = -dist;
-                else if(dir === 'right') offsetX = dist;
-                else if(dir === 'outward'){
+                if(dir==='down') offsetY = dist;
+                else if(dir==='up') offsetY = -dist;
+                else if(dir==='left') offsetX = -dist;
+                else if(dir==='right') offsetX = dist;
+                else if(dir==='outward'){
                     let angle = Math.atan2(r.y - cy, r.x - cx);
-                    offsetX = Math.cos(angle) * dist; 
-                    offsetY = Math.sin(angle) * dist;
+                    offsetX = Math.cos(angle) * dist; offsetY = Math.sin(angle) * dist;
                 }
             }
-
-            rx.save(); 
-            rx.translate(r.x + offsetX, r.y + offsetY); 
-            rx.rotate(r.angle || 0);
-
+            rx.save(); rx.translate(r.x + offsetX, r.y + offsetY); rx.rotate(r.angle||0);
+            
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
             if(isGlowing){
-                rx.shadowOffsetX = 0; 
-                rx.shadowOffsetY = 0; 
-                rx.shadowColor = r.glowColor || '#ffe0ee'; 
-                rx.shadowBlur = 36;
-                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH);
-                rx.shadowBlur = 16; 
-                rx.shadowColor = '#ffffff';
-                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
-                rx.shadowBlur = 0;
+                rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=16; rx.shadowColor='#ffffff';
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.shadowBlur=0;
             } else { 
-                rx.drawImage(r.img, -r.sizeW/2, -r.sizeH/2, r.sizeW, r.sizeH); 
+                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
             }
             rx.restore();
         });
     }
-    
+
     drawVideoFrame(0);
-    const stream = rc.captureStream(0); 
-    const chunks = [];
-    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 20000000 });
+    // 这里设置了 30 的强制帧率进行捕获，解决大部分移动端空转和下载失败的bug
+    const stream=rc.captureStream(30); 
+    const chunks=[];
+    const recorder=new MediaRecorder(stream,{ mimeType, videoBitsPerSecond: 20000000 });
     
-    recorder.ondataavailable = e => { if(e.data && e.data.size > 0) chunks.push(e.data); };
-    recorder.onstop = () => {
-        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'; 
-        const blob = new Blob(chunks, { type: mimeType });
-        const url = URL.createObjectURL(blob); 
-        const a = document.createElement('a'); 
-        const now = new Date();
-        const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-        a.download = `pancakesticker_video_${ts}.${ext}`; 
-        a.href = url; 
-        a.click();
-        URL.revokeObjectURL(url); 
-        btn.disabled = false; 
-        btn.textContent = '生成'; 
-        progressWrap.style.display = 'none';
+    recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
+    recorder.onstop=()=>{
+        if (chunks.length === 0) {
+            alert('视频下载失败，该浏览器可能不支持视频编码导出，请尝试保存图片功能。');
+            btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
+            return;
+        }
+        const ext=mimeType.includes('mp4')?'mp4':'webm'; 
+        const blob=new Blob(chunks,{type:mimeType});
+        const url=URL.createObjectURL(blob); 
+        const a=document.createElement('a'); 
+        const now=new Date();
+        const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        a.download=`pancakesticker_video_${ts}.${ext}`; a.href=url; a.click();
+        URL.revokeObjectURL(url); btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
     };
     
-    recorder.start();
-    let fi = 0;
-    const timer = setInterval(() => {
+    try {
+        recorder.start();
+    } catch(err) {
+        alert('启动视频录制失败，请检查浏览器权限。');
+        btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
+        return;
+    }
+    
+    let fi=0;
+    const timer=setInterval(()=>{
         drawVideoFrame(fi);
-        if(stream.getTracks()[0].requestFrame) stream.getTracks()[0].requestFrame();
-        fi++; 
-        progressBar.style.width = (fi / totalFrames * 100) + '%';
-        if(fi >= totalFrames){ 
-            clearInterval(timer); 
-            setTimeout(() => recorder.stop(), 300); 
-        }
+        fi++; progressBar.style.width=(fi/totalFrames*100)+'%';
+        if(fi>=totalFrames){ clearInterval(timer); setTimeout(()=>recorder.stop(),300); }
     }, FRAME_INTERVAL);
 }
 
 function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateP3DensityLabel(v){document.getElementById('p3DensityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
-
 function smartUndo(){ if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;} else records.pop(); draw(); }
 function clearAll(){ if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){textLayers=[];records=[];selectedLayer=null;draw();} }
 function download(){
-    const prev=selectedLayer; selectedLayer=null; draw(true);
+    const prev=selectedLayer;
+    selectedLayer=null; draw(true);
     const link=document.createElement('a'); const now=new Date();
     const ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
     link.download=`pancakesticker_${ts}.png`; link.href=canvas.toDataURL('image/png'); link.click();
     selectedLayer=prev; draw();
 }
-
 imgInput.onchange=(e)=>{
     const reader=new FileReader();
     reader.onload=(f)=>{
@@ -1187,7 +1163,6 @@ imgInput.onchange=(e)=>{
     };
     reader.readAsDataURL(e.target.files[0]);
 };
-
 init();
 </script>
 </body>
