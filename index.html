@@ -1089,7 +1089,10 @@ function startVideoGeneration(mode, dir='down') {
     const SCALE=2; const rc=document.createElement('canvas'); rc.width=canvas.width*SCALE;
     rc.height=canvas.height*SCALE;
     const rx=rc.getContext('2d'); rx.scale(SCALE,SCALE);
-    const totalFrames = 28; const FRAME_INTERVAL = 130;
+    
+    // 增加总帧数并加快绘制频率，使动画更流畅自然
+    const totalFrames = 40; 
+    const FRAME_INTERVAL = 60;
 
     function getSpatialIndex(absX, absY) {
         const normX = Math.max(0, Math.min(1, absX / canvas.width));
@@ -1102,6 +1105,7 @@ function startVideoGeneration(mode, dir='down') {
         if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
         
         const cx = canvas.width / 2, cy = canvas.height / 2;
+        
         textLayers.forEach(l=>{
             const linked=l.dotSize/6; const dw=Math.max(1,linked*(l.ratio>=1?1:l.ratio)); const dh=Math.max(1,linked/(l.ratio>=1?l.ratio:1));
             rx.save(); rx.translate(l.x, l.y); rx.rotate(l.rotation||0);
@@ -1112,10 +1116,19 @@ function startVideoGeneration(mode, dir='down') {
                 const spatialIndex = getSpatialIndex(absX, absY);
                 let pOffsetX = 0, pOffsetY = 0;
                 
+                // 伪随机哈希算法：生成 0~1 的随机小数，保持每颗钻石位置对应的随机值固定不变
+                const randomJitter = Math.abs(Math.sin(absX * 12.9898 + absY * 78.233) * 43758.5453) % 1;
+
                 if(mode === 'fall'){
-                    let pDelay = spatialIndex * 5.5; 
+                    // 计算基础延迟（基于左下到右上）加上 0~4 帧的随机扰动错落感
+                    let pDelay = spatialIndex * 8 + randomJitter * 4; 
                     let effectiveFi = Math.max(0, fi - pDelay);
-                    let pDist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
+                    
+                    // 重力加速坠落特效 (Ease-In Cubic)
+                    let progress = Math.min(1, effectiveFi / 18); // 限制在 18 帧内落地
+                    let easeProgress = progress * progress * progress; // 三次方倍增，产生重力加速效果
+                    
+                    let pDist = easeProgress * (Math.max(canvas.width, canvas.height) * 1.2); // 坠落总距离
 
                     if(dir==='down') pOffsetY = pDist;
                     else if(dir==='up') pOffsetY = -pDist;
@@ -1131,7 +1144,8 @@ function startVideoGeneration(mode, dir='down') {
                 const img=p.color?(l.colorCacheMap[p.color]||l.defaultImg):l.defaultImg;
                 if(img) {
                     rx.save();
-                    const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
+                    // 发光也加上随机错落感
+                    const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
                     if(isGlowing) {
                         rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=p.color||'#ffe0ee'; rx.shadowBlur=22;
                     }
@@ -1144,11 +1158,16 @@ function startVideoGeneration(mode, dir='down') {
         
         allRecords.forEach((r)=>{
             const spatialIndex = getSpatialIndex(r.x, r.y);
+            const randomJitter = Math.abs(Math.sin(r.x * 12.9898 + r.y * 78.233) * 43758.5453) % 1;
             let offsetX = 0, offsetY = 0;
+            
             if(mode === 'fall'){
-                let pDelay = spatialIndex * 5.5;
+                let pDelay = spatialIndex * 8 + randomJitter * 4;
                 let effectiveFi = Math.max(0, fi - pDelay);
-                let dist = effectiveFi * (Math.max(canvas.width, canvas.height) / (totalFrames - 11)) * 0.8;
+                
+                let progress = Math.min(1, effectiveFi / 18);
+                let easeProgress = progress * progress * progress;
+                let dist = easeProgress * (Math.max(canvas.width, canvas.height) * 1.2);
 
                 if(dir==='down') offsetY = dist;
                 else if(dir==='up') offsetY = -dist;
@@ -1161,7 +1180,7 @@ function startVideoGeneration(mode, dir='down') {
             }
             rx.save(); rx.translate(r.x + offsetX, r.y + offsetY); rx.rotate(r.angle||0);
             
-            const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 4 + fi) % 5 === 0);
+            const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
                 rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
@@ -1176,7 +1195,6 @@ function startVideoGeneration(mode, dir='down') {
     }
 
     drawVideoFrame(0);
-    // 这里设置了 30 的强制帧率进行捕获，解决大部分移动端空转和下载失败的bug
     const stream=rc.captureStream(30); 
     const chunks=[];
     const recorder=new MediaRecorder(stream,{ mimeType, videoBitsPerSecond: 20000000 });
