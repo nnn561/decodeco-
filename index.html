@@ -51,6 +51,8 @@
         .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
+.sticker-slot.multi-selected { border-color: #ff6b8f; box-shadow: 0 0 0 2px rgba(255,107,143,0.16); background: #fff7fa; }
+.sticker-slot.multi-selected::after { content: '✓'; position:absolute; top:3px; right:5px; width:18px; height:18px; border-radius:50%; background:var(--pink-accent); color:#fff; font-size:12px; line-height:18px; text-align:center; font-weight:bold; }
         .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
         .sticker-item.loaded { opacity: 1; }
         .page-content { width: 100%; }
@@ -107,7 +109,7 @@
     </style>
 </head>
 <body>
-<div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null);closeVideoModal();"></div>
+<div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null);closeVideoModal();closeFillModal();"></div>
 <div class="title-header">
   <img src="IMG_20260713_162936.png" alt="Pancake Sticker Book">
 </div>
@@ -122,6 +124,7 @@
             <div class="page-corner-icon">▷</div>
         </div>
         <div class="sticker-grid" id="stickerGrid"></div>
+  <div style="width:100%;font-size:10px;color:#ff9ab2;text-align:center;margin:-1px 0 7px;">点击钻石可多选｜满屏/随机将使用已选钻石</div>
         
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
@@ -313,6 +316,13 @@
     <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
     <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
+<div id="fillModal" class="modal-box">
+  <div class="modal-title">满屏钻石</div>
+  <div style="font-size:12px;color:#ff85a2;margin-bottom:10px;line-height:1.6;">已选择的钻石会按整齐网格铺满图片；颜色可跟随历史颜色或图片同色系，密度跟随当前钻石密度滑块。</div>
+  <button class="modal-btn" onclick="startFullCanvasFill('photo')">图片同色系铺满</button>
+  <button class="modal-btn modal-btn-sub" onclick="startFullCanvasFill('history')">历史颜色铺满</button>
+  <button onclick="closeFillModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
+</div>
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
     <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
@@ -494,12 +504,12 @@ function init(){
 function renderStickersSkeleton(page){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
     const isDesktop = window.innerWidth >= 600;
-    const start = isDesktop ? 0 : (page===1?0:page===2?6:0);
-    const end = isDesktop ? 12 : (page===1?6:page===2?12:6);
+    const start = isDesktop ? 0 : ((page-1)*4);
+    const end = isDesktop ? 12 : Math.min(start+4,12);
     
     for(let i=start;i<end;i++){
         const slot=document.createElement('div');
-        slot.className='sticker-slot loading'+(curIdx===i?' active':'');
+        slot.className='sticker-slot loading'+(curIdx===i?' active':'')+(selectedStickerIdxs.includes(i)?' multi-selected':'');
         slot.setAttribute('data-sticker-idx',i);
         const imgEl=document.createElement('img');
         imgEl.className='sticker-item';
@@ -512,8 +522,17 @@ function renderStickersSkeleton(page){
             const idx=i;
             return ()=>{
                 curIdx=idx;
-                document.querySelectorAll('.sticker-slot').forEach(el=>el.classList.remove('active'));
-                slot.classList.add('active');
+                if(selectedStickerIdxs.includes(idx)){
+                    if(selectedStickerIdxs.length>1) selectedStickerIdxs=selectedStickerIdxs.filter(v=>v!==idx);
+                }else{
+                    selectedStickerIdxs.push(idx);
+                }
+                document.querySelectorAll('.sticker-slot').forEach(el=>{
+                    el.classList.remove('active','multi-selected');
+                    const n=parseInt(el.getAttribute('data-sticker-idx'));
+                    if(n===curIdx) el.classList.add('active');
+                    if(selectedStickerIdxs.includes(n)) el.classList.add('multi-selected');
+                });
                 updatePreRender();
             };
         })();
@@ -568,10 +587,10 @@ function flipPage(){
     document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
     document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
     document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
-    document.getElementById('stickerGrid').style.display = currentPage === 3 ? 'none' : 'grid';
+    document.getElementById('stickerGrid').style.display = 'grid';
     const mainSliderCol = document.getElementById('mainSliderCol');
     if (mainSliderCol) {
-        mainSliderCol.style.display = currentPage === 3 ? 'none' : 'block';
+        mainSliderCol.style.display = 'block';
     }
     renderStickersSkeleton(currentPage);
 }
@@ -648,7 +667,7 @@ function generateDrawStickers() {
 }
 function generateFrame(shape) {
     if(!mainImg.src) { alert('请先上传图片激活主画布');
-        return imgInput.click(); }
+return imgInput.click(); }
     const w = canvas.width, h = canvas.height;
     const dotSize = parseInt(document.getElementById('sizeSlider').value);
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
@@ -854,9 +873,11 @@ function draw(isExporting){
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
     records.flat().forEach(r=>{
         mainCtx.save();
+        mainCtx.globalAlpha=isExporting?1:(r.animAlpha==null?1:r.animAlpha);
         mainCtx.translate(r.x,r.y); mainCtx.rotate(r.angle||0);
+        const as=isExporting?1:(r.animScale==null?1:r.animScale);
         if(r.glowing&&!isExporting){mainCtx.shadowColor=r.glowColor||'#ffddee';mainCtx.shadowBlur=22;}
-        mainCtx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+        mainCtx.drawImage(r.img,-r.sizeW*as/2,-r.sizeH*as/2,r.sizeW*as,r.sizeH*as);
         mainCtx.shadowBlur=0;
         mainCtx.restore();
     });
@@ -963,11 +984,11 @@ canvas.addEventListener('touchstart',(e)=>{
     selectedLayer=null;
     const size=parseInt(document.getElementById('sizeSlider').value);
     const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
-    const sW=size*(stickerRatio>=1?1:stickerRatio);
-    const sH=size/(stickerRatio>=1?stickerRatio:1);
-    const rec={x:p.x,y:p.y,img:preRenderedSticker,sizeW:sW,sizeH:sH,angle,glowing:true,glowColor:currentColor};
-    records.push([rec]); draw();
-    setTimeout(()=>{rec.glowing=false;draw();},600);
+    const idx=curIdx;
+    const rec=createDiamondRecord(p.x,p.y,idx,currentColor,size,angle);
+    rec.img=preRenderedSticker; rec.glowing=true;
+    records.push([rec]); animateDiamondRecords([rec],0);
+    setTimeout(()=>{rec.glowing=false;draw();},700);
 },{passive:true});
 
 canvas.addEventListener('touchmove',(e)=>{
@@ -1039,23 +1060,111 @@ function closeRandomModal(type){
     document.getElementById('randomModal').style.display='none'; document.getElementById('overlay').style.display='none';
     if(!type) return; lastRandomType = type; _doRandom(type);
 }
+function getSelectedStickerPool(){
+    const pool=(selectedStickerIdxs.length?selectedStickerIdxs:[curIdx]).filter(idx=>stickers[idx]&&stickers[idx].complete&&stickers[idx].naturalWidth>0);
+    return pool.length?pool:[curIdx];
+}
+function colorHash(str){
+    let h=0; for(let i=0;i<str.length;i++) h=((h<<5)-h)+str.charCodeAt(i)|0; return Math.abs(h);
+}
+function stickerForColor(color, pointIndex=0){
+    const pool=getSelectedStickerPool();
+    if(pool.length===1) return pool[0];
+    const base=colorHash(String(color).toLowerCase());
+    return pool[(base + pointIndex*17) % pool.length];
+}
+function getActiveDensityValue(){
+    const ids=['densitySlider','densitySlider2','p3DensitySlider'];
+    for(const id of ids){ const el=document.getElementById(id); if(el && document.activeElement===el) return el.value; }
+    return document.getElementById('densitySlider')?.value || '6';
+}
+function getActiveDensityLabel(){ return {'6':'少','8':'中','10':'多','12':'极多'}[getActiveDensityValue()]||'少'; }
+function getDensityStep(){ return _stepFromDensityByValue(parseInt(getActiveDensityValue())); }
+function _stepFromDensityByValue(v){ return v===6?5:v===8?4:v===10?3:2; }
+function animateDiamondRecords(group, perDiamond=75){
+    const token=++placingAnimationToken;
+    group.forEach((r,i)=>{
+        r.animProgress=0; r.animating=true;
+        r.startX=canvas.width/2; r.startY=-Math.max(r.sizeW,r.sizeH)*1.4;
+        r.delay=i*perDiamond;
+        r.startTime=performance.now()+r.delay;
+    });
+    function frame(now){
+        if(token!==placingAnimationToken) return;
+        let active=false;
+        group.forEach(r=>{
+            if(r.animating){
+                const t=(now-r.startTime)/260;
+                if(t<=0){active=true; return;}
+                const p=Math.min(1,t);
+                const ease=1-Math.pow(1-p,3);
+                r.x=r.startX+(r.targetX-r.startX)*ease;
+                r.y=r.startY+(r.targetY-r.startY)*ease;
+                r.animScale=1.15-0.15*ease;
+                r.animAlpha=0.35+0.65*ease;
+                if(p>=1){r.animating=false;r.animScale=1;r.animAlpha=1;r.x=r.targetX;r.y=r.targetY;} else active=true;
+            }
+        });
+        draw();
+        if(active) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+function createDiamondRecord(x,y,idx,color,size,angle=0){
+    const sImg=stickers[idx];
+    const ratio=sImg.naturalWidth/sImg.naturalHeight||1;
+    const ci=canvasToImg(makeColoredSticker(sImg,color,150*(ratio>=1?1:ratio),150/(ratio>=1?ratio:1)));
+    return {targetX:x,targetY:y,x,y,img:ci,sizeW:size*(ratio>=1?1:ratio),sizeH:size/(ratio>=1?ratio:1),angle,glowing:false,glowColor:color,animProgress:1,animScale:1,animAlpha:1};
+}
+function paletteForFill(type){
+    if(type==='history') return colorHistory.length?colorHistory.slice():macaronColors.slice();
+    return photoColorPalette.length?photoColorPalette.slice():macaronColors.slice();
+}
+function fillFullCanvas(){
+    if(!mainImg.src){alert('请先上传图片');return;}
+    document.getElementById('fillModal').style.display='block';
+    document.getElementById('overlay').style.display='block';
+}
+function closeFillModal(){
+    const m=document.getElementById('fillModal'); if(m)m.style.display='none';
+    const otherOpen=['pickerContainer','randomModal','videoModal'].some(id=>document.getElementById(id)?.style.display==='block');
+    if(!otherOpen) document.getElementById('overlay').style.display='none';
+}
+function startFullCanvasFill(type){
+    closeFillModal();
+    if(!mainImg.src)return;
+    const step=_stepFromDensityByValue(parseInt(getActiveDensityValue()));
+    const palette=paletteForFill(type);
+    const pool=getSelectedStickerPool();
+    const size=parseInt(document.getElementById('sizeSlider').value);
+    const spacing=Math.max(12,size*0.72)*step/5;
+    const group=[]; let order=0;
+    for(let y=spacing/2;y<canvas.height;y+=spacing){
+        for(let x=spacing/2;x<canvas.width;x+=spacing){
+            const color=palette[order%palette.length];
+            const idx=pool.indexOf(stickerForColor(color,order))>=0?stickerForColor(color,order):pool[order%pool.length];
+            const r=createDiamondRecord(x,y,idx,color,size*(0.86+((order*13)%17)/100));
+            r.angle=(order%4)*Math.PI/2; group.push(r); order++;
+        }
+    }
+    if(group.length){ records.push(group); animateDiamondRecords(group,55); }
+}
+
 function _doRandom(type){
     if(!mainImg.src) return;
-    let palette = type==='history' ? (colorHistory.length>=2 ? colorHistory : macaronColors) : (photoColorPalette.length>=3 ? photoColorPalette : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]);
+    let palette = type==='history' ? (colorHistory.length ? colorHistory : macaronColors) : (photoColorPalette.length ? photoColorPalette : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]);
     const num = 12;
-    const g = []; const sz = parseInt(document.getElementById('sizeSlider').value);
+    const group = []; const sz = parseInt(document.getElementById('sizeSlider').value);
+    const pool=getSelectedStickerPool();
     for(let i=0;i<num;i++){
-        const loadedIdx = stickers.map((s,idx)=>s&&s.complete&&s.naturalWidth>0?idx:-1).filter(x=>x>=0);
-        if(loadedIdx.length===0) continue;
-        const ri = loadedIdx[Math.floor(Math.random()*loadedIdx.length)];
-        const sImg = stickers[ri]; const ratio = sImg.naturalWidth/sImg.naturalHeight||1;
         const color = palette[Math.floor(Math.random()*palette.length)];
-        const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
-        const ci = canvasToImg(makeColoredSticker(sImg,color,w,h));
-        const size = sz*(0.65+Math.random()*0.7);
-        g.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, img:ci, sizeW:size*(ratio>=1?1:ratio), sizeH:size/(ratio>=1?ratio:1), angle:Math.random()*Math.PI*2, glowing:false, glowColor:color});
+        // 颜色决定形状的随机映射：同一颜色会优先使用固定的随机形状，同时保持整体有变化
+        const ri = pool[(colorHash(String(color))+i*19)%pool.length];
+        const size = sz*(0.72+Math.random()*0.56);
+        const r=createDiamondRecord(Math.random()*canvas.width,Math.random()*canvas.height,ri,color,size,Math.random()*Math.PI*2);
+        group.push(r);
     }
-    if(g.length){records.push(g);draw();}
+    if(group.length){records.push(group);animateDiamondRecords(group,90);}
 }
 
 /* 4 视频生成弹窗控制与两种模式算法（增强版：提高导出兼容性） */
@@ -1232,9 +1341,19 @@ function startVideoGeneration(mode, dir='down') {
     }, FRAME_INTERVAL);
 }
 
-function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
-function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
-function updateP3DensityLabel(v){document.getElementById('p3DensityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
+function setDensityLabels(v){
+    const label={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';
+    document.getElementById('densityVal').innerText=label;
+    document.getElementById('densityVal2').innerText=label;
+    document.getElementById('p3DensityVal').innerText=label;
+}
+function syncDensitySliders(sourceId,v){
+    ['densitySlider','densitySlider2','p3DensitySlider'].forEach(id=>{const el=document.getElementById(id);if(el&&id!==sourceId)el.value=v;});
+    setDensityLabels(v);
+}
+function updateDensityLabel(v){syncDensitySliders('densitySlider',v);}
+function updateDensityLabel2(v){syncDensitySliders('densitySlider2',v);}
+function updateP3DensityLabel(v){syncDensitySliders('p3DensitySlider',v);}
 function smartUndo(){ if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;} else records.pop(); draw(); }
 function clearAll(){ if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){textLayers=[];records=[];selectedLayer=null;draw();} }
 function download(){
