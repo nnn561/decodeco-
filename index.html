@@ -265,6 +265,8 @@
 
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
+    <button class="modal-btn"
+<button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上模式</button>
     <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
     <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
@@ -1187,18 +1189,27 @@ function startVideoGeneration(mode, dir='down') {
     rc.height=canvas.height*SCALE;
     const rx=rc.getContext('2d'); rx.scale(SCALE,SCALE);
     
-    const totalFrames = 40; 
-    const FRAME_INTERVAL = 60;
+    // 增加总帧数，给“逐个贴上”留足时间
+    const totalFrames = mode === 'sequence' ? 90 : 60; 
+    const FRAME_INTERVAL = 50;
+    
     function getSpatialIndex(absX, absY) {
         const normX = Math.max(0, Math.min(1, absX / canvas.width));
         const normY = Math.max(0, Math.min(1, (canvas.height - absY) / canvas.height));
         return normX + normY; 
     }
+
+    // 计算当前画布上一共有多少颗钻石，用于控制“逐个出现”的节奏
+    let totalDots = allRecords.length;
+    textLayers.forEach(l => totalDots += l.points.length);
+    const sequenceStep = Math.max(0.5, 60 / (totalDots || 1)); 
+
     function drawVideoFrame(fi){
         rx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
         
         const cx = canvas.width / 2, cy = canvas.height / 2;
+        let globalIndex = 0; // 全局索引，用于记录钻石贴入的先后顺序
         
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
@@ -1206,6 +1217,13 @@ function startVideoGeneration(mode, dir='down') {
             
             l.points.forEach(p=>{
                 const idx = (p.stickerIdx !== undefined) ? p.stickerIdx : (l.stickerIdx || curIdx);
+                // 确保随机颜色在视频中生效
+                const col = p.color || currentColor;
+                const key = idx + '_' + col;
+                const img = l.colorCacheMap[key] || l.defaultImg;
+                
+                if(!img) { globalIndex++; return; }
+
                 const sImg = stickers[idx] || stickers[0];
                 const ratio = (sImg && sImg.naturalWidth) ? sImg.naturalWidth / sImg.naturalHeight : 1;
                 const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
@@ -1214,15 +1232,25 @@ function startVideoGeneration(mode, dir='down') {
                 const absX = l.x + p.dx * l.scale;
                 const absY = l.y + p.dy * l.scale;
                 const spatialIndex = getSpatialIndex(absX, absY);
-                let pOffsetX = 0, pOffsetY = 0;
-                
                 const randomJitter = Math.abs(Math.sin(absX * 12.9898 + absY * 78.233) * 43758.5453) % 1;
+                
+                let pDelay = 0;
+                let popScale = 1;
+
+                if (mode === 'sequence') {
+                    // 【逐个贴上效果】根据生成的先后顺序赋予出场延迟
+                    pDelay = globalIndex * sequenceStep;
+                    if (fi < pDelay) { globalIndex++; return; } // 时间没到就不画这颗钻石
+                    popScale = Math.min(1, (fi - pDelay) / 3);  // 出现时加上从小到大“啵”的动效
+                } else if (mode === 'fall') {
+                    pDelay = spatialIndex * 8 + randomJitter * 4;
+                }
+
+                let pOffsetX = 0, pOffsetY = 0;
                 if(mode === 'fall'){
-                    let pDelay = spatialIndex * 8 + randomJitter * 4; 
                     let effectiveFi = Math.max(0, fi - pDelay);
                     let progress = Math.min(1, effectiveFi / 18);
                     let easeProgress = progress * progress * progress;
-                    
                     let pDist = easeProgress * (Math.max(canvas.width, canvas.height) * 1.2);
                     if(dir==='down') pOffsetY = pDist;
                     else if(dir==='up') pOffsetY = -pDist;
@@ -1235,17 +1263,17 @@ function startVideoGeneration(mode, dir='down') {
                         pOffsetY = Math.sin(angle) * pDist;
                     }
                 }
-                const key = idx + '_' + (p.color || currentColor);
-                const img = l.colorCacheMap[key] || l.defaultImg;
-                if(img) {
-                    rx.save();
-                    const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
-                    if(isGlowing) {
-                        rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=p.color||'#ffe0ee'; rx.shadowBlur=22;
-                    }
-                    rx.drawImage(img,p.dx*l.scale+pOffsetX-dw/2,p.dy*l.scale+pOffsetY-dh/2,dw,dh);
-                    rx.restore();
+                
+                rx.save();
+                const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
+                if(isGlowing) {
+                    rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=col||'#ffe0ee'; rx.shadowBlur=22;
                 }
+                // 应用尺寸控制
+                rx.drawImage(img, p.dx*l.scale+pOffsetX-(dw*popScale)/2, p.dy*l.scale+pOffsetY-(dh*popScale)/2, dw*popScale, dh*popScale);
+                rx.restore();
+
+                globalIndex++;
             });
             rx.restore();
         });
@@ -1253,12 +1281,22 @@ function startVideoGeneration(mode, dir='down') {
         allRecords.forEach((r)=>{
             const spatialIndex = getSpatialIndex(r.x, r.y);
             const randomJitter = Math.abs(Math.sin(r.x * 12.9898 + r.y * 78.233) * 43758.5453) % 1;
-            let offsetX = 0, offsetY = 0;
             
+            let pDelay = 0;
+            let popScale = 1;
+
+            if (mode === 'sequence') {
+                // 手绘或单点添加的贴纸也按先后顺序
+                pDelay = globalIndex * sequenceStep;
+                if (fi < pDelay) { globalIndex++; return; }
+                popScale = Math.min(1, (fi - pDelay) / 3);
+            } else if (mode === 'fall') {
+                pDelay = spatialIndex * 8 + randomJitter * 4;
+            }
+            
+            let offsetX = 0, offsetY = 0;
             if(mode === 'fall'){
-                let pDelay = spatialIndex * 8 + randomJitter * 4;
                 let effectiveFi = Math.max(0, fi - pDelay);
-                
                 let progress = Math.min(1, effectiveFi / 18);
                 let easeProgress = progress * progress * progress;
                 let dist = easeProgress * (Math.max(canvas.width, canvas.height) * 1.2);
@@ -1276,16 +1314,19 @@ function startVideoGeneration(mode, dir='down') {
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=0;
             } else { 
-                rx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
             }
             rx.restore();
+
+            globalIndex++;
         });
     }
+    
     drawVideoFrame(0);
     const stream=rc.captureStream(30); 
     const chunks=[];
@@ -1323,6 +1364,7 @@ function startVideoGeneration(mode, dir='down') {
         if(fi>=totalFrames){ clearInterval(timer); setTimeout(()=>recorder.stop(),300); }
     }, FRAME_INTERVAL);
 }
+
 
 function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
