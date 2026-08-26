@@ -344,6 +344,8 @@ const imgInput = document.getElementById('imgInput');
 const dropZone = document.getElementById('dropZone');
 let mainImg            = new Image();
 let stickers           = [];
+// 当前已选择的钻石，可多选；默认选择当前钻石
+let selectedStickerIdxs = [0];
 let records            = [];
 let textLayers         = [];
 let curIdx             = 0;
