@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -55,7 +56,7 @@
         .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
         .sticker-slot .check-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: var(--pink-accent); color: white; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: bold; }
         .sticker-slot.active .check-badge { display: flex; }
-        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
+        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 1; transition: opacity 0.3s; }
         .sticker-item.loaded { opacity: 1; }
         
         /* 右下角➕展开按钮 */
@@ -134,15 +135,10 @@
         
         <!-- 贴纸选择框 (点击➕可展开12贴纸，点击多选) -->
         <div class="sticker-container-box" id="stickerBoxArea">
-    <div class="sticker-grid" id="stickerGrid"></div>
-
-    <div class="expand-toggle-btn" id="expandBtn"
-         onclick="toggleStickerGrid()">+</div>
-
-    <div class="sticker-tip-txt">
-        点击钻石可多选 | 满屏/随机将使用已选钻石
-    </div>
-</div>
+            <div class="sticker-grid" id="stickerGrid"></div>
+            <div class="expand-toggle-btn" id="expandBtn" onclick="toggleStickerGrid()">+</div>
+            <div class="sticker-tip-txt">点击钻石可多选 | 满屏/随机将使用已选钻石</div>
+        </div>
         
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
@@ -271,6 +267,7 @@ const canvas  = document.getElementById('myCanvas');
 const mainCtx = canvas.getContext('2d');
 const imgInput = document.getElementById('imgInput');
 const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('click',()=>{ if(!mainImg.src || !mainImg.naturalWidth) imgInput.click(); });
 let mainImg            = new Image();
 let stickers           = [];
 let selectedStickerIndices = [0]; // 多选选中的贴纸索引
@@ -416,6 +413,12 @@ function init(){
             if(i-1===curIdx) updatePreRender();
         };
         img.onerror=()=>{
+            // CDN失败时尝试读取与HTML同目录的本地 sticker 文件
+            if(!img.dataset.localTried){
+                img.dataset.localTried='1';
+                img.src=`sticker${i}.png`;
+                return;
+            }
             const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
             if(slot) slot.classList.remove('loading');
         };
@@ -448,60 +451,58 @@ function init(){
     };
 }
 
+
 function renderStickersSkeleton(){
     const grid = document.getElementById('stickerGrid');
     if(!grid) return;
-
     grid.innerHTML = '';
 
-    for(let i = 0; i < 12; i++){
+    for(let i=0;i<12;i++){
         const slot = document.createElement('div');
-
         const isActive = selectedStickerIndices.includes(i);
+        slot.className = 'sticker-slot loading' + (isActive ? ' active' : '');
+        slot.setAttribute('data-sticker-idx', i);
 
-        slot.className = 'sticker-slot' + (isActive ? ' active' : '');
-        slot.dataset.stickerIdx = i;
+        const badge = document.createElement('div');
+        badge.className = 'check-badge';
+        badge.innerText = '✓';
+        slot.appendChild(badge);
 
-        slot.innerHTML = `
-            <div class="sticker-thumb-wrap">
-                <img class="sticker-item"
-                     src=""
-                     alt="sticker${i+1}">
-                <div class="sticker-selected-mask"></div>
-                <div class="sticker-selected-mark">✓</div>
-            </div>
-        `;
+        const imgEl = document.createElement('img');
+        imgEl.className = 'sticker-item';
+        imgEl.alt = 'sticker' + (i + 1);
 
-        slot.onclick = function(){
-            const idx = Number(this.dataset.stickerIdx);
+        const setStickerImage = () => {
+            const sImg = stickers[i];
+            if(sImg && sImg.complete && sImg.naturalWidth > 0){
+                imgEl.src = sImg.src;
+                imgEl.classList.add('loaded');
+                slot.classList.remove('loading');
+            }
+        };
+        setStickerImage();
 
-            if(selectedStickerIndices.includes(idx)){
-                // 至少保留一个贴纸
+        slot.onclick = () => {
+            const pos = selectedStickerIndices.indexOf(i);
+            if(pos > -1){
                 if(selectedStickerIndices.length > 1){
-                    selectedStickerIndices =
-                        selectedStickerIndices.filter(x => x !== idx);
+                    selectedStickerIndices.splice(pos, 1);
                 }
             }else{
-                selectedStickerIndices.push(idx);
+                selectedStickerIndices.push(i);
             }
-
-            // 当前贴纸设为最后点击的贴纸
-            curIdx = idx;
-
-            // 更新所有选中状态
-            document.querySelectorAll('.sticker-slot').forEach(s => {
-                const n = Number(s.dataset.stickerIdx);
-                s.classList.toggle(
-                    'active',
-                    selectedStickerIndices.includes(n)
-                );
+            curIdx = i;
+            document.querySelectorAll('.sticker-slot').forEach(el => {
+                const idx = Number(el.getAttribute('data-sticker-idx'));
+                el.classList.toggle('active', selectedStickerIndices.includes(idx));
             });
-
             updatePreRender();
             draw();
         };
 
+        slot.appendChild(imgEl);
         grid.appendChild(slot);
+        setStickerImage();
     }
 }
 function initPresetSwatches(){
@@ -646,7 +647,7 @@ function generateFrame(shape) {
     const densityFactor = _stepFromDensity('densitySlider') / 5;
     const step = Math.max(sW, sH) * 0.75 * densityFactor; 
     
-let tempPts = [];
+    let tempPts = [];
     let cx = w/2, cy = h/2;
     if(shape === 'square') {
         let pad = step;
@@ -1253,38 +1254,38 @@ function download(){
 }
 
 imgInput.onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (f) => {
-        const tempImg = new Image();
-        tempImg.crossOrigin = "anonymous";
-        tempImg.onload = () => {
-            let w = tempImg.naturalWidth;
-            let h = tempImg.naturalHeight;
-            const MAX_SIZE = 1200;
-            if (w > MAX_SIZE || h > MAX_SIZE) {
-                if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
-                else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
-            }
-            const oc =
-document.createElement('canvas');
-            oc.width = w; oc.height = h;
-            const ox = oc.getContext('2d');
-            ox.drawImage(tempImg, 0, 0, w, h);
-            mainImg = new Image();
-            mainImg.onload = () => {
-                canvas.width = mainImg.width; 
-                canvas.height = mainImg.height; 
-                dropZone.classList.add('has-img');
-                photoColorPalette = extractPhotoColors(mainImg); 
-                draw();
-            };
-            mainImg.src = oc.toDataURL('image/jpeg', 0.9);
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+
+    const tempImg = new Image();
+    tempImg.onload = () => {
+        let w = tempImg.naturalWidth;
+        let h = tempImg.naturalHeight;
+        const MAX_SIZE = 1200;
+        if(w > MAX_SIZE || h > MAX_SIZE){
+            if(w > h){ h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
+            else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
+        }
+
+        const oc = document.createElement('canvas');
+        oc.width = w; oc.height = h;
+        const ox = oc.getContext('2d');
+        ox.drawImage(tempImg, 0, 0, w, h);
+
+        const processed = new Image();
+        processed.onload = () => {
+            mainImg = processed;
+            canvas.width = processed.width;
+            canvas.height = processed.height;
+            dropZone.classList.add('has-img');
+            photoColorPalette = extractPhotoColors(mainImg);
+            draw();
+            URL.revokeObjectURL(tempUrl);
         };
-        tempImg.src = f.target.result;
+        processed.src = oc.toDataURL('image/jpeg', 0.9);
     };
-    reader.readAsDataURL(file);
+    const tempUrl = URL.createObjectURL(file);
+    tempImg.src = tempUrl;
 };
 
 init();
