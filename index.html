@@ -234,50 +234,16 @@
             <button onclick="generateFrame('star')">星形外框</button>
             <button style="background:#ffabbd;" onclick="generateFullPattern()">铺满</button>
         </div>
-        <div class="bottom-action-bar">
-            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
-            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
-            <button onclick="download()">保存</button>
+
+        <div class="modal-box" id="videoModal">
+            <div class="modal-title">选择视频效果</div>
+            <button class="modal-btn" onclick="startVideoGeneration('sequence')">逐个贴上</button>
+            <button class="modal-btn" onclick="startVideoGeneration('fall','down')">钻石下落</button>
+            <button class="modal-btn" onclick="startVideoGeneration('glow')">闪闪发光</button>
+            <button class="modal-btn" onclick="startVideoGeneration('pulse')">变大变小</button>
+            <button class="modal-btn" onclick="startVideoGeneration('randomColor')">随机颜色</button>
+            <button class="modal-btn modal-btn-sub" onclick="closeVideoModal()">取消</button>
         </div>
-        <input type="file" id="imgInput" accept="image/*" style="display:none">
-    </div>
-</div>
-
-<div id="pickerContainer">
-    <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
-    <div id="iroPicker" style="display:flex;justify-content:center;"></div>
-    <div class="swatch-title">正在使用</div>
-    <div style="height:34px;width:34px;border-radius:8px;border:2px solid var(--pink-accent);" id="currentSwatch"></div>
-    <div class="swatch-title">历史颜色</div>
-    <div class="color-swatches" id="historySwatches"></div>
-    <div class="swatch-title">初始颜色</div>
-    <div class="color-swatches" id="presetSwatches"></div>
-    <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
-</div>
-
-<div id="randomModal" class="modal-box">
-    <div class="modal-title">选择颜色来源</div>
-    <button class="modal-btn" onclick="closeRandomModal('photo')">图片同色系</button>
-    <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
-    <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
-</div>
-
-<div id="videoModal" class="modal-box">
-    <div class="modal-title">选择视频效果模式</div>
-    <button class="modal-btn"
-<button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上模式</button>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
-    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
-    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">向下</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">向左</button>
-        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">向右</button>
-        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">四周发散</button>
-    </div>
-    <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
-</div>
 
 <script>
 const canvas  = document.getElementById('myCanvas');
@@ -761,7 +727,7 @@ function _doFullPattern(type) {
             });
         }
         row++;
-    }
+   }
     
     if(!points.length) return;
     const layer = {
@@ -1192,6 +1158,43 @@ function startVideoGeneration(mode, dir='down') {
     // 增加总帧数，给“逐个贴上”留足时间
     const totalFrames = mode === 'sequence' ? 90 : 60; 
     const FRAME_INTERVAL = 50;
+
+        // 新增：单颗钻石轻微呼吸式缩放，范围约 96%～106%。
+        function getPulseScale(fi, seed) {
+            const phase = ((seed * 0.61803398875) % 1) * Math.PI * 2;
+            return 1 + Math.sin(fi * 0.20 + phase) * 0.05;
+        }
+
+        // 新增：随机颜色只从画布中已经出现过的颜色里抽取。
+        function buildVideoColorPalette() {
+            const set = new Set();
+            records.flat().forEach(r => { if (r.glowColor) set.add(r.glowColor); });
+            textLayers.forEach(l => l.points.forEach(p => { if (p.color) set.add(p.color); }));
+            if (currentColor) set.add(currentColor);
+            if (set.size < 2) macaronColors.forEach(c => set.add(c));
+            return [...set];
+        }
+
+        // 每颗钻石独立换色，每 8 帧换一次，避免一闪一闪过快。
+        function getRandomVideoColor(fi, seed, originalColor, palette) {
+            if (!palette.length) return originalColor || currentColor;
+            const slot = Math.floor(fi / 8);
+            const n = Math.abs(Math.sin(seed * 12.9898 + slot * 78.233) * 43758.5453);
+            return palette[Math.floor((n - Math.floor(n)) * palette.length)] || originalColor || currentColor;
+        }
+
+        // 给已经着色的单颗钻石重新换色，只改变颜色，不改变形状。
+        function recolorVideoSticker(sourceImg, color, w, h) {
+            const oc = document.createElement('canvas');
+            oc.width = Math.max(1, Math.round(w));
+            oc.height = Math.max(1, Math.round(h));
+            const ox = oc.getContext('2d');
+            ox.drawImage(sourceImg, 0, 0, oc.width, oc.height);
+            ox.globalCompositeOperation = 'source-in';
+            ox.fillStyle = color;
+            ox.fillRect(0, 0, oc.width, oc.height);
+            return oc;
+        }
     
     function getSpatialIndex(absX, absY) {
         const normX = Math.max(0, Math.min(1, absX / canvas.width));
@@ -1202,7 +1205,8 @@ function startVideoGeneration(mode, dir='down') {
     // 计算当前画布上一共有多少颗钻石，用于控制“逐个出现”的节奏
     let totalDots = allRecords.length;
     textLayers.forEach(l => totalDots += l.points.length);
-    const sequenceStep = Math.max(0.5, 60 / (totalDots || 1)); 
+    const sequenceStep = Math.max(0.5, 60 / (totalDots || 1));
+        const videoColorPalette = buildVideoColorPalette(); 
 
     function drawVideoFrame(fi){
         rx.clearRect(0,0,canvas.width,canvas.height);
@@ -1217,17 +1221,27 @@ function startVideoGeneration(mode, dir='down') {
             
             l.points.forEach(p=>{
                 const idx = (p.stickerIdx !== undefined) ? p.stickerIdx : (l.stickerIdx || curIdx);
-                // 确保随机颜色在视频中生效
-                const col = p.color || currentColor;
-                const key = idx + '_' + col;
-                const img = l.colorCacheMap[key] || l.defaultImg;
-                
-                if(!img) { globalIndex++; return; }
 
+                const originalCol = p.color || currentColor;
                 const sImg = stickers[idx] || stickers[0];
                 const ratio = (sImg && sImg.naturalWidth) ? sImg.naturalWidth / sImg.naturalHeight : 1;
                 const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
                 const dh = Math.max(1, linked / (ratio >= 1 ? ratio : 1));
+
+                const pointSeed = Math.abs(p.dx * 12.9898 + p.dy * 78.233 + globalIndex * 0.731);
+                const col = mode === 'randomColor'
+                    ? getRandomVideoColor(fi, pointSeed, originalCol, videoColorPalette)
+                    : originalCol;
+                const key = idx + '_' + col;
+                let img = l.colorCacheMap[key] || l.defaultImg;
+
+                if (mode === 'randomColor' && !l.colorCacheMap[key] &&
+                    sImg && sImg.complete && sImg.naturalWidth) {
+                    img = canvasToImg(makeColoredSticker(sImg, col, dw, dh));
+                    l.colorCacheMap[key] = img;
+                }
+
+                if(!img) { globalIndex++; return; }
 
                 const absX = l.x + p.dx * l.scale;
                 const absY = l.y + p.dy * l.scale;
@@ -1269,8 +1283,12 @@ function startVideoGeneration(mode, dir='down') {
                 if(isGlowing) {
                     rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=col||'#ffe0ee'; rx.shadowBlur=22;
                 }
+                const effectScale = mode === 'pulse'
+                    ? popScale * getPulseScale(fi, pointSeed)
+                    : popScale;
+
                 // 应用尺寸控制
-                rx.drawImage(img, p.dx*l.scale+pOffsetX-(dw*popScale)/2, p.dy*l.scale+pOffsetY-(dh*popScale)/2, dw*popScale, dh*popScale);
+                rx.drawImage(img, p.dx*l.scale+pOffsetX-(dw*effectScale)/2, p.dy*l.scale+pOffsetY-(dh*effectScale)/2, dw*effectScale, dh*effectScale);
                 rx.restore();
 
                 globalIndex++;
@@ -1281,6 +1299,7 @@ function startVideoGeneration(mode, dir='down') {
         allRecords.forEach((r)=>{
             const spatialIndex = getSpatialIndex(r.x, r.y);
             const randomJitter = Math.abs(Math.sin(r.x * 12.9898 + r.y * 78.233) * 43758.5453) % 1;
+            const recordSeed = Math.abs(r.x * 12.9898 + r.y * 78.233);
             
             let pDelay = 0;
             let popScale = 1;
@@ -1309,17 +1328,37 @@ function startVideoGeneration(mode, dir='down') {
                     offsetX = Math.cos(angle) * dist; offsetY = Math.sin(angle) * dist;
                 }
             }
+            const originalCol = r.glowColor || currentColor;
+            const recordCol = mode === 'randomColor'
+                ? getRandomVideoColor(fi, recordSeed, originalCol, videoColorPalette)
+                : originalCol;
+
+            let recordImg = r.img;
+            if (mode === 'randomColor') {
+                r.__videoColorCache = r.__videoColorCache || {};
+                if (!r.__videoColorCache[recordCol]) {
+                    r.__videoColorCache[recordCol] = canvasToImg(
+                        recolorVideoSticker(r.img, recordCol, r.sizeW, r.sizeH)
+                    );
+                }
+                recordImg = r.__videoColorCache[recordCol];
+            }
+
+            const effectScale = mode === 'pulse'
+                ? popScale * getPulseScale(fi, recordSeed)
+                : popScale;
+
             rx.save(); rx.translate(r.x + offsetX, r.y + offsetY); rx.rotate(r.angle||0);
-            
+
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
-                rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=recordCol||'#ffe0ee'; rx.shadowBlur=36;
+                rx.drawImage(recordImg,-(r.sizeW*effectScale)/2,-(r.sizeH*effectScale)/2,r.sizeW*effectScale,r.sizeH*effectScale);
                 rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(recordImg,-(r.sizeW*effectScale)/2,-(r.sizeH*effectScale)/2,r.sizeW*effectScale,r.sizeH*effectScale);
                 rx.shadowBlur=0;
             } else { 
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(recordImg,-(r.sizeW*effectScale)/2,-(r.sizeH*effectScale)/2,r.sizeW*effectScale,r.sizeH*effectScale);
             }
             rx.restore();
 
@@ -1395,7 +1434,8 @@ imgInput.onchange = (e) => {
                 if (w > h) { h = Math.round(h * MAX_SIZE / w); w = MAX_SIZE; }
                 else { w = Math.round(w * MAX_SIZE / h); h = MAX_SIZE; }
             }
-            const oc = document.createElement('canvas');
+            const oc =
+document.createElement('canvas');
             oc.width = w; oc.height = h;
             const ox = oc.getContext('2d');
             ox.drawImage(tempImg, 0, 0, w, h);
