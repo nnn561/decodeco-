@@ -44,19 +44,21 @@
 
         /* 贴纸展示区域 */
         .sticker-container-box { width: 100%; border: 1.5px dashed #ffcad4; border-radius: 12px; padding: 8px; background: #fffafb; position: relative; margin-bottom: 8px; }
-        .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; justify-items: center; max-height: 72px; overflow: hidden; transition: max-height 0.3s ease; }
-        .sticker-grid.expanded { max-height: 260px; }
-        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
+        /* 默认只显示第一行：1-4；展开后显示全部1-12 */
+        .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; justify-items: center; max-height: 66px; overflow: hidden; transition: max-height 0.3s ease; }
+        .sticker-grid.expanded { max-height: 230px; }
+        .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; transition: border-color 0.2s, background 0.2s; }
         .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-        .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
-        .sticker-slot .check-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: var(--pink-accent); color: white; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: bold; }
+        .sticker-slot.active { border-color: var(--pink-accent); background: #777; }
+        /* 已选择的贴纸用暗色显示 */
+        .sticker-slot.active .sticker-item.loaded { filter: brightness(0.48); }
+        .sticker-slot .check-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: var(--pink-accent); color: white; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: bold; z-index: 3; }
         .sticker-slot.active .check-badge { display: flex; }
-        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
+        .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s, filter 0.2s; }
         .sticker-item.loaded { opacity: 1; }
-        
-        /* 右下角➕展开按钮 */
-        .expand-toggle-btn { position: absolute; right: 6px; bottom: 4px; width: 26px; height: 26px; border-radius: 50%; background: #ffabbd; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); z-index: 5; transition: transform 0.2s; }
+        /* ➕ 单独放在贴纸第一行下面 */
+        .expand-toggle-btn { position: static; margin: 6px auto 0; width: 28px; height: 28px; border: none; border-radius: 50%; background: #ffabbd; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); z-index: 5; transition: transform 0.2s, background 0.2s; }
         .expand-toggle-btn.open { transform: rotate(45deg); background: #ff6b6b; }
         .sticker-tip-txt { font-size: 10px; color: #ff85a2; text-align: center; margin-top: 4px; }
 
@@ -133,7 +135,7 @@
         <div class="sticker-container-box" id="stickerBoxArea">
             <div class="sticker-grid" id="stickerGrid"></div>
             <div class="expand-toggle-btn" id="expandBtn" onclick="toggleStickerGrid()">+</div>
-            <div class="sticker-tip-txt">点击钻石可多选 | 满屏/随机将使用已选钻石</div>
+            <div class="sticker-tip-txt">点击钻石可多选 | 暗色表示已选择</div>
         </div>
         
         <div class="page-content" id="pageContent1">
@@ -227,8 +229,6 @@
             <canvas id="myCanvas"></canvas>
         </div>
         
-        <input type="file" id="imgInput" accept="image/*" style="display:none">
-
         <div class="frame-action-bar">
             <button onclick="generateFrame('heart')">心形外框</button>
             <button onclick="generateFrame('square')">方形外框</button>
@@ -236,36 +236,6 @@
             <button onclick="generateFrame('star')">星形外框</button>
             <button style="background:#ffabbd;" onclick="generateFullPattern()">铺满</button>
         </div>
-        <div class="bottom-action-bar">
-            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
-            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
-            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
-            <button onclick="download()">保存</button>
-        </div>
-        <input type="file" id="imgInput" accept="image/*" style="display:none">
-    </div>
-</div>
-
-<div class="modal-box" id="randomModal">
-    <div class="modal-title">选择颜色方式</div>
-    <button class="modal-btn" onclick="closeRandomModal('photo')">图片同色系随机</button>
-    <button class="modal-btn" onclick="closeRandomModal('history')">历史颜色随机</button>
-    <button class="modal-btn modal-btn-sub" onclick="closeRandomModal(null)">取消</button>
-</div>
-
-<div class="modal-box" id="videoModal">
-    <div class="modal-title">选择视频效果</div>
-    <button class="modal-btn" onclick="startVideoGeneration('sequence')">逐个贴上</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','down')">钻石下落 · 向下</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','up')">钻石下落 · 向上</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','left')">钻石下落 · 向左</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','right')">钻石下落 · 向右</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','outward')">钻石下落 · 向外</button>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪闪发光</button>
-    <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('pulse')">变大变小</button>
-    <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('randomColor')">随机颜色</button>
-    <button class="modal-btn modal-btn-sub" onclick="closeVideoModal()">取消</button>
-</div>
 
 <script>
 const canvas  = document.getElementById('myCanvas');
@@ -533,7 +503,7 @@ function flipPage(){
     document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
     document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
     document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
-    document.getElementById('stickerBoxArea').style.display = currentPage === 3 ? 'none' : 'block';
+    document.getElementById('stickerBoxArea').style.display = 'block';
     const mainSliderCol = document.getElementById('mainSliderCol');
     if (mainSliderCol) {
         mainSliderCol.style.display = currentPage === 3 ? 'none' : 'block';
@@ -1187,27 +1157,6 @@ function startVideoGeneration(mode, dir='down') {
         return normX + normY; 
     }
 
-    // 新增视频效果：轻微呼吸缩放，范围很小；随机颜色只在视频中生效。
-    function pulseScale(index, fi) {
-        const phase = index * 0.73;
-        return 1 + Math.sin(fi * 0.22 + phase) * 0.05; // 约95%~105%
-    }
-    function videoRandomColor(index, fi, originalColor) {
-        let palette = [];
-        const add = c => { if(c && !palette.includes(c)) palette.push(c); };
-        colorHistory.forEach(add);
-        macaronColors.forEach(add);
-        add(originalColor);
-        if(!palette.length) palette=['#FFB7B2','#FFDAC1','#B5EAD7','#C7CEEA'];
-        const step = Math.floor(fi / 6);
-        const seed = Math.abs(Math.sin((index + 1) * 12.9898 + step * 78.233) * 43758.5453);
-        return palette[Math.floor((seed % 1) * palette.length)];
-    }
-    function recolorVideoImage(sourceImg, color, w, h) {
-        if(!sourceImg) return null;
-        return canvasToImg(makeColoredSticker(sourceImg, color, Math.max(1,Math.round(w)), Math.max(1,Math.round(h))));
-    }
-
     // 计算当前画布上一共有多少颗钻石，用于控制“逐个出现”的节奏
     let totalDots = allRecords.length;
     textLayers.forEach(l => totalDots += l.points.length);
@@ -1229,17 +1178,8 @@ function startVideoGeneration(mode, dir='down') {
                 // 确保随机颜色在视频中生效
                 const col = p.color || currentColor;
                 const key = idx + '_' + col;
-                let img = l.colorCacheMap[key] || l.defaultImg;
-                let videoCol = col;
-                if(mode === 'randomColor') {
-                    videoCol = videoRandomColor(globalIndex, fi, col);
-                    const sImgForColor = stickers[idx] || stickers[0];
-                    if(sImgForColor) {
-                        img = recolorVideoImage(sImgForColor, videoCol,
-                            linked * ((sImgForColor.naturalWidth/sImgForColor.naturalHeight||1) >= 1 ? 1 : (sImgForColor.naturalWidth/sImgForColor.naturalHeight||1)),
-                            linked / ((sImgForColor.naturalWidth/sImgForColor.naturalHeight||1) >= 1 ? (sImgForColor.naturalWidth/sImgForColor.naturalHeight||1) : 1));
-                    }
-                }
+                const img = l.colorCacheMap[key] || l.defaultImg;
+                
                 if(!img) { globalIndex++; return; }
 
                 const sImg = stickers[idx] || stickers[0];
@@ -1258,12 +1198,10 @@ function startVideoGeneration(mode, dir='down') {
                 if (mode === 'sequence') {
                     // 【逐个贴上效果】根据生成的先后顺序赋予出场延迟
                     pDelay = globalIndex * sequenceStep;
-                    if (fi < pDelay) { globalIndex++; return; }
-                    popScale = Math.min(1, (fi - pDelay) / 3);
+                    if (fi < pDelay) { globalIndex++; return; } // 时间没到就不画这颗钻石
+                    popScale = Math.min(1, (fi - pDelay) / 3);  // 出现时加上从小到大“啵”的动效
                 } else if (mode === 'fall') {
                     pDelay = spatialIndex * 8 + randomJitter * 4;
-                } else if (mode === 'pulse') {
-                    popScale = pulseScale(globalIndex, fi);
                 }
 
                 let pOffsetX = 0, pOffsetY = 0;
@@ -1312,8 +1250,6 @@ function startVideoGeneration(mode, dir='down') {
                 popScale = Math.min(1, (fi - pDelay) / 3);
             } else if (mode === 'fall') {
                 pDelay = spatialIndex * 8 + randomJitter * 4;
-            } else if (mode === 'pulse') {
-                popScale = pulseScale(globalIndex, fi);
             }
             
             let offsetX = 0, offsetY = 0;
@@ -1336,12 +1272,12 @@ function startVideoGeneration(mode, dir='down') {
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(videoImg,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(videoImg,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=0;
             } else { 
-                rx.drawImage(videoImg,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
             }
             rx.restore();
 
