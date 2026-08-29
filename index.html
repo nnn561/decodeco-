@@ -191,12 +191,7 @@
                 </div>
             </div>
         </div>
-<div class="bottom-actions">
-    <button onclick="smartUndo()">撤销</button>
-    <button onclick="handleRandomClick()">随机</button>
-    <button onclick="clearAll()">清空</button>
-    <button onclick="download()">保存</button>
-</div>
+
         <div class="controls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
@@ -241,7 +236,15 @@
             <button onclick="generateFrame('star')">星形外框</button>
             <button style="background:#ffabbd;" onclick="generateFullPattern()">铺满</button>
         </div>
-
+        <div class="bottom-action-bar">
+            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
+            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
+            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
+            <button onclick="download()">保存</button>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
+    </div>
+</div>
 
 <div class="modal-box" id="randomModal">
     <div class="modal-title">选择颜色方式</div>
