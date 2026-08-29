@@ -236,7 +236,32 @@
             <button onclick="generateFrame('star')">星形外框</button>
             <button style="background:#ffabbd;" onclick="generateFullPattern()">铺满</button>
         </div>
-
+ <div class="bottom-action-bar">
+            <button style="background:#ffabbd" onclick="smartUndo()">撤销</button>
+            <button style="background:#ffccbb" onclick="handleRandomClick()">随机</button>
+            <button style="background:#ff6b6b" onclick="clearAll()">清空</button>
+            <button onclick="download()">保存</button>
+        </div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none">
+    </div>
+</div>
+<div id="pickerContainer">
+    <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
+    <div id="iroPicker" style="display:flex;justify-content:center;"></div>
+    <div class="swatch-title">正在使用</div>
+    <div style="height:34px;width:34px;border-radius:8px;border:2px solid var(--pink-accent);" id="currentSwatch"></div>
+    <div class="swatch-title">历史颜色</div>
+    <div class="color-swatches" id="historySwatches"></div>
+    <div class="swatch-title">初始颜色</div>
+    <div class="color-swatches" id="presetSwatches"></div>
+    <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
+</div>
+<div id="randomModal" class="modal-box">
+    <div class="modal-title">选择随机颜色来源</div>
+    <button class="modal-btn" onclick="closeRandomModal('photo')">图片同色系</button>
+    <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
+    <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
+</div>
 <script>
 const canvas  = document.getElementById('myCanvas');
 const mainCtx = canvas.getContext('2d');
