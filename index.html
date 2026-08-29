@@ -171,6 +171,85 @@
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
+   <!-- P3：纯电子画布（加调整控件/滑块） -->
+<div class="page-content" id="pageContent3" style="display:none">
+    <div class="sticker-gen-area">
+        
+        <div style="font-size:12px;color:var(--pink-accent);
+                    font-weight:bold;margin-bottom:6px;">
+            <span>手绘电子画布</span>
+        </div>
+
+        <!-- 电子画布：高度增加 -->
+        <canvas id="userDrawCanvas"
+                width="300"
+                height="320"
+                style="
+                    background:#fff;
+                    border:1.5px dashed #ffc4d4;
+                    border-radius:8px;
+                    touch-action:none;
+                    width:100%;
+                    cursor:crosshair;
+                ">
+        </canvas>
+
+        <!-- 操控按钮：整体下移 -->
+        <div class="gen-row" style="margin-top:20px;">
+            <button class="gen-btn"
+                    style="background:#ffcccc; flex:1;"
+                    onclick="clearDrawCanvas()">
+                清空
+            </button>
+
+            <button class="gen-btn"
+                    style="background:#ffdada; flex:1;"
+                    onclick="undoDrawCanvas()">
+                撤回
+            </button>
+
+            <button class="gen-btn"
+                    style="flex:2;"
+                    onclick="generateDrawStickers()">
+                生成钻石画
+            </button>
+        </div>
+
+        <!-- P3 专属画控钮与滑块 -->
+        <div style="
+            margin-top:20px;
+            border-top:1px dashed #ffc4d4;
+            padding-top:12px;
+            display:flex;
+            gap:12px;
+            align-items:center;
+        ">
+
+            <!-- 这里删除了原来的色环 -->
+
+            <div style="flex:1;">
+
+                <!-- 贴纸大小：已删除 -->
+
+                <!-- 钻石密度 -->
+                <div class="slider-row">
+                    <span>钻石密度</span>
+                    <span id="p3DensityVal">少</span>
+                </div>
+
+                <input type="range"
+                       id="p3DensitySlider"
+                       min="6"
+                       max="12"
+                       value="6"
+                       step="2"
+                       onclick="updateP3DensityLabel(this.value)">
+
+                <!-- 钻石大小 -->
+                <div class="slider-row">
+                    <span>钻石大小</span>
+                    <span id="p3SizeVal">80</span>
+                </div>
 
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
@@ -262,6 +341,20 @@
     <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
     <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
+<div id="videoModal" class="modal-box">
+    <div class="modal-title">选择视频效果模式</div>
+    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
+    <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','down')">向下</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','left')">向左</button>
+        <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','right')">向右</button>
+        <button class="modal-btn modal-btn-sub" style="grid-column: span 2;" onclick="startVideoGeneration('fall','outward')">四周发散</button>
+    </div>
+    <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
+</div>
+
 <script>
 const canvas  = document.getElementById('myCanvas');
 const mainCtx = canvas.getContext('2d');
@@ -287,6 +380,7 @@ const uCtx = uCanvas.getContext('2d', { willReadFrequently: true });
 let isUDraw = false;
 let uDrawPaths = [];
 let selectedLayer   = null;
+
 let isDraggingLayer = false;
 let isRotatingLayer = false;
 let isScalingLayer = false;
@@ -481,7 +575,6 @@ function renderStickersSkeleton(){
         grid.appendChild(slot);
     }
 }
-
 function initPresetSwatches(){
     const c=document.getElementById('presetSwatches');
     macaronColors.forEach(col=>{
@@ -867,7 +960,6 @@ function _stepFromDensity(sliderId){
     const v=parseInt(el ? el.value : 6);
     return v===6?5:v===8?4:v===10?3:2;
 }
-
 function _buildCache(l){
     const linked=l.dotSize/6;
     const newCache={};
@@ -921,7 +1013,7 @@ function draw(isExporting){
             if(img) mainCtx.drawImage(img, p.dx*l.scale - dw/2, p.dy*l.scale - dh/2, dw, dh);
         });
         if(l===selectedLayer&&!isExporting){
-            const bw=(l.origWidth/2)*l.scale*0.55;
+             const bw=(l.origWidth/2)*l.scale*0.55;
             const bh=(l.origHeight/2)*l.scale*0.55;
             mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
             mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
@@ -1025,7 +1117,6 @@ canvas.addEventListener('touchstart',(e)=>{
     records.push([rec]); draw();
     setTimeout(()=>{rec.glowing=false;draw();},600);
 },{passive:true});
-
 canvas.addEventListener('touchmove',(e)=>{
     const p=getCanvasPos(e);
     if(isRotatingLayer && selectedLayer){
@@ -1044,6 +1135,11 @@ canvas.addEventListener('touchmove',(e)=>{
     }
     e.preventDefault();
 },{passive:false});
+canvas.addEventListener('touchend',()=>{
+    isDraggingLayer=false;
+    isRotatingLayer=false;
+    isScalingLayer=false;
+});
 
 canvas.addEventListener('touchend',()=>{
     isDraggingLayer=false;
