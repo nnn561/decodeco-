@@ -49,7 +49,7 @@
         .sticker-slot { width: 58px; height: 58px; border-radius: 10px; border: 2px solid #f0f0f0; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
         .sticker-slot.loading { background: linear-gradient(110deg, #ffeef4 30%, #ffd6e4 50%, #ffeef4 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-        .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
+       .sticker-slot.active { border-color: var(--pink-accent); background: #fffafb; }
         .sticker-slot .check-badge { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: var(--pink-accent); color: white; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: bold; }
         .sticker-slot.active .check-badge { display: flex; }
         .sticker-item { max-width: 85%; max-height: 85%; object-fit: contain; display: block; margin: 0 auto; opacity: 0; transition: opacity 0.3s; }
@@ -234,20 +234,6 @@
             <button onclick="generateFrame('star')">星形外框</button>
             <button style="background:#ffabbd;" onclick="generateFullPattern()">铺满</button>
         </div>
-
-<div class="modal-box" id="videoModal">
-    <div class="modal-title">选择视频效果</div>
-    <button class="modal-btn" onclick="startVideoGeneration('sequence')">逐个贴上</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','down')">钻石下落 · 向下</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','up')">钻石下落 · 向上</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','left')">钻石下落 · 向左</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','right')">钻石下落 · 向右</button>
-    <button class="modal-btn" onclick="startVideoGeneration('fall','outward')">钻石下落 · 向外</button>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪闪发光</button>
-    <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('pulse')">变大变小</button>
-    <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('randomColor')">随机颜色</button>
-    <button class="modal-btn modal-btn-sub" onclick="closeVideoModal()">取消</button>
-</div>
 
 <script>
 const canvas  = document.getElementById('myCanvas');
@@ -1137,27 +1123,6 @@ function closeVideoModal() {
     document.getElementById('overlay').style.display = 'none';
 }
 
-function getVideoPalette(){
-    const pool=[...macaronColors, ...colorHistory, ...photoColorPalette];
-    return [...new Set(pool.filter(Boolean))];
-}
-function tintVideoImage(source,color){
-    if(!source) return null;
-    const w=Math.max(1,source.naturalWidth||source.width||1);
-    const h=Math.max(1,source.naturalHeight||source.height||1);
-    const key=source.__videoTintCacheKey || (source.__videoTintCacheKey='t'+Math.random());
-    if(!window.__videoTintCache) window.__videoTintCache=new Map();
-    const cacheKey=key+'_'+color+'_'+w+'x'+h;
-    if(window.__videoTintCache.has(cacheKey)) return window.__videoTintCache.get(cacheKey);
-    const c=document.createElement('canvas'); c.width=w; c.height=h;
-    const x=c.getContext('2d');
-    x.drawImage(source,0,0,w,h);
-    x.globalCompositeOperation='multiply'; x.fillStyle=color; x.fillRect(0,0,w,h);
-    x.globalCompositeOperation='destination-in'; x.drawImage(source,0,0,w,h);
-    window.__videoTintCache.set(cacheKey,c);
-    return c;
-}
-
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
     const allRecords = records.flat();
@@ -1255,20 +1220,13 @@ function startVideoGeneration(mode, dir='down') {
                     }
                 }
                 
-                const pulseScale = mode === 'pulse' ? (1 + 0.05 * Math.sin((fi * 0.32) + spatialIndex * 17.0 + randomJitter * 6.0)) : 1;
-                let videoImg = img;
-                if(mode === 'randomColor'){
-                    const palette=getVideoPalette();
-                    const colorIndex=Math.floor(fi / 8 + spatialIndex * 13 + randomJitter * 7) % Math.max(1,palette.length);
-                    videoImg=tintVideoImage(img,palette[colorIndex]||col);
-                }
                 rx.save();
                 const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
                 if(isGlowing) {
                     rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=col||'#ffe0ee'; rx.shadowBlur=22;
                 }
                 // 应用尺寸控制
-                rx.drawImage(videoImg, p.dx*l.scale+pOffsetX-(dw*popScale*pulseScale)/2, p.dy*l.scale+pOffsetY-(dh*popScale*pulseScale)/2, dw*popScale*pulseScale, dh*popScale*pulseScale);
+                rx.drawImage(img, p.dx*l.scale+pOffsetX-(dw*popScale)/2, p.dy*l.scale+pOffsetY-(dh*popScale)/2, dw*popScale, dh*popScale);
                 rx.restore();
 
                 globalIndex++;
@@ -1307,24 +1265,17 @@ function startVideoGeneration(mode, dir='down') {
                     offsetX = Math.cos(angle) * dist; offsetY = Math.sin(angle) * dist;
                 }
             }
-            const pulseScale = mode === 'pulse' ? (1 + 0.05 * Math.sin((fi * 0.32) + spatialIndex * 17.0 + randomJitter * 6.0)) : 1;
-            let videoImg = r.img;
-            if(mode === 'randomColor'){
-                const palette=getVideoPalette();
-                const colorIndex=Math.floor(fi / 8 + spatialIndex * 13 + randomJitter * 7) % Math.max(1,palette.length);
-                videoImg=tintVideoImage(r.img,palette[colorIndex]||r.glowColor||currentColor);
-            }
             rx.save(); rx.translate(r.x + offsetX, r.y + offsetY); rx.rotate(r.angle||0);
             
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(videoImg,-(r.sizeW*popScale*pulseScale)/2,-(r.sizeH*popScale*pulseScale)/2,r.sizeW*popScale*pulseScale,r.sizeH*popScale*pulseScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(videoImg,-(r.sizeW*popScale*pulseScale)/2,-(r.sizeH*popScale*pulseScale)/2,r.sizeW*popScale*pulseScale,r.sizeH*popScale*pulseScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
                 rx.shadowBlur=0;
             } else { 
-                rx.drawImage(videoImg,-(r.sizeW*popScale*pulseScale)/2,-(r.sizeH*popScale*pulseScale)/2,r.sizeW*popScale*pulseScale,r.sizeH*popScale*pulseScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
             }
             rx.restore();
 
