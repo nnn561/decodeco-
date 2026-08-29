@@ -134,10 +134,15 @@
         
         <!-- 贴纸选择框 (点击➕可展开12贴纸，点击多选) -->
         <div class="sticker-container-box" id="stickerBoxArea">
-            <div class="sticker-grid" id="stickerGrid"></div>
-            <div class="expand-toggle-btn" id="expandBtn" onclick="toggleStickerGrid()">+</div>
-            <div class="sticker-tip-txt">点击钻石可多选 | 满屏/随机将使用已选钻石</div>
-        </div>
+    <div class="sticker-grid" id="stickerGrid"></div>
+
+    <div class="expand-toggle-btn" id="expandBtn"
+         onclick="toggleStickerGrid()">+</div>
+
+    <div class="sticker-tip-txt">
+        点击钻石可多选 | 满屏/随机将使用已选钻石
+    </div>
+</div>
         
         <div class="page-content" id="pageContent1">
             <div class="sticker-gen-area">
@@ -444,24 +449,59 @@ function init(){
 }
 
 function renderStickersSkeleton(){
-    const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
-    for(let i=0;i<12;i++){
-        const slot=document.createElement('div');
-        const isActive=selectedStickerIndices.includes(i);
-        slot.className='sticker-slot loading'+(isActive?' active':'');
-        slot.setAttribute('data-sticker-idx',i);
-        const badge=document.createElement('div'); badge.className='check-badge'; badge.innerText='✓'; slot.appendChild(badge);
-        const imgEl=document.createElement('img'); imgEl.className='sticker-item';
-        const sImg=stickers[i];
-        if(sImg&&sImg.complete&&sImg.naturalWidth>0){imgEl.src=sImg.src;imgEl.classList.add('loaded');slot.classList.remove('loading');}
-        slot.onclick=()=>{
-            const pos=selectedStickerIndices.indexOf(i);
-            if(pos>-1){ if(selectedStickerIndices.length>1) selectedStickerIndices.splice(pos,1); }
-            else selectedStickerIndices.push(i);
-            curIdx=selectedStickerIndices[selectedStickerIndices.length-1];
-            renderStickersSkeleton(); updatePreRender();
+    const grid = document.getElementById('stickerGrid');
+    if(!grid) return;
+
+    grid.innerHTML = '';
+
+    for(let i = 0; i < 12; i++){
+        const slot = document.createElement('div');
+
+        const isActive = selectedStickerIndices.includes(i);
+
+        slot.className = 'sticker-slot' + (isActive ? ' active' : '');
+        slot.dataset.stickerIdx = i;
+
+        slot.innerHTML = `
+            <div class="sticker-thumb-wrap">
+                <img class="sticker-item"
+                     src=""
+                     alt="sticker${i+1}">
+                <div class="sticker-selected-mask"></div>
+                <div class="sticker-selected-mark">✓</div>
+            </div>
+        `;
+
+        slot.onclick = function(){
+            const idx = Number(this.dataset.stickerIdx);
+
+            if(selectedStickerIndices.includes(idx)){
+                // 至少保留一个贴纸
+                if(selectedStickerIndices.length > 1){
+                    selectedStickerIndices =
+                        selectedStickerIndices.filter(x => x !== idx);
+                }
+            }else{
+                selectedStickerIndices.push(idx);
+            }
+
+            // 当前贴纸设为最后点击的贴纸
+            curIdx = idx;
+
+            // 更新所有选中状态
+            document.querySelectorAll('.sticker-slot').forEach(s => {
+                const n = Number(s.dataset.stickerIdx);
+                s.classList.toggle(
+                    'active',
+                    selectedStickerIndices.includes(n)
+                );
+            });
+
+            updatePreRender();
+            draw();
         };
-        slot.appendChild(imgEl); grid.appendChild(slot);
+
+        grid.appendChild(slot);
     }
 }
 function initPresetSwatches(){
