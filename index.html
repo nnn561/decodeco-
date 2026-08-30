@@ -191,7 +191,7 @@
                 <div class="gen-tip" id="genTip1">生成中...</div>
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
                 <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
-            </div>
+                 </div>
         </div>
         
         <div class="page-content" id="pageContent2" style="display:none">
@@ -871,17 +871,21 @@ function initButtonControls(){
     document.getElementById('buttonSizeSlider').oninput=function(){
         document.getElementById('buttonSizeVal').innerText=this.value;
         const v=parseInt(this.value)||80;
-        buttonDesigns.forEach(d=>{ if(d.selected) d.size=v; });
-        buttonCanvasRecords.forEach(r=>{ r.size=(r.sizeScale||1)*v; });
-        if(selectedButtonPattern) selectedButtonPattern.sizeFactor=v/(selectedButtonPattern.baseButtonSize||v);
+        // 只控制“最后一次直接点在画布上的扣子”，不影响其它扣子，也不影响外框/铺满整体。
+        const last=buttonCanvasRecords.length ? buttonCanvasRecords[buttonCanvasRecords.length-1] : null;
+        if(last){
+            const base=last.baseSize||v;
+            last.sizeScale=v/base;
+            last.size=v;
+        }
         updateButtonPreview(); draw();
     };
     document.getElementById('buttonRotateSlider').oninput=function(){
         document.getElementById('buttonRotVal').innerText=this.value+'°';
         const a=(parseInt(this.value)||0)*Math.PI/180;
-        buttonDesigns.forEach(d=>{if(d.selected)d.angle=a;});
-        buttonCanvasRecords.forEach(r=>r.angle=a);
-        if(selectedButtonPattern) selectedButtonPattern.rotation=a;
+        // 角度同样只作用于最后一次直接点在画布上的扣子；外框/铺满继续由虚线框手柄控制旋转。
+        const last=buttonCanvasRecords.length ? buttonCanvasRecords[buttonCanvasRecords.length-1] : null;
+        if(last) last.angle=a;
         updateButtonPreview(); draw();
     };
     document.getElementById('buttonImgInput').onchange=function(e){
@@ -1063,7 +1067,7 @@ function _makeButtonPatternLayer(pts,design,shapeName){
         return {x:p.x-cx,y:p.y-cy,img:d.canvas,size:d.size,angle:d.angle||0,design:d};
     });
     selectedButtonPattern={records,x:cx,y:cy,scale:1,rotation:0,origWidth:canvas.width,origHeight:canvas.height,sizeFactor:1,baseButtonSize:pool[0].size,shapeType:shapeName};
-    buttonCanvasRecords=[];
+    // 外框/铺满与用户已经直接点在画布上的扣子共存，不再清空原有扣子。
     draw();
 }
 function generateButtonFrame(shape){
@@ -1072,9 +1076,18 @@ function generateButtonFrame(shape){
     const design=buttonDesigns;
     const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,baseSize=Math.max(...design.map(d=>d.size||0),80),step=Math.max(18,baseSize*.8);let pts=[];
     if(shape==='square'){
-        const pad=step,bw=w-2*pad,bh=h-2*pad,nx=Math.max(1,Math.floor(bw/step)),ny=Math.max(1,Math.floor(bh/step));
-        for(let i=0;i<nx;i++){const t=i/nx;pts.push({x:pad+t*bw,y:pad},{x:pad+t*bw,y:h-pad});}
-        for(let i=0;i<ny;i++){const t=i/ny;pts.push({x:pad,y:pad+t*bh},{x:w-pad,y:pad+t*bh});}
+        // 四边使用“包含终点”的等距采样，确保右下角不会少一颗扣子，同时避免漏掉四个角。
+        const pad=step,bw=w-2*pad,bh=h-2*pad;
+        const nx=Math.max(1,Math.floor(bw/step));
+        const ny=Math.max(1,Math.floor(bh/step));
+        for(let i=0;i<=nx;i++){
+            const t=i/nx, x=pad+t*bw;
+            pts.push({x,y:pad},{x,y:h-pad});
+        }
+        for(let i=1;i<ny;i++){
+            const t=i/ny, y=pad+t*bh;
+            pts.push({x:pad,y},{x:w-pad,y});
+        }
     }else if(shape==='circle'){
         const r=Math.min(w,h)/2-step,n=Math.max(8,Math.floor(2*Math.PI*r/step));
         for(let i=0;i<n;i++){const a=i/n*2*Math.PI;pts.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)});}
@@ -1158,7 +1171,7 @@ function generateFrame(shape) {
             let d = Math.hypot(rawPts[i].x - curr.x, rawPts[i].y - curr.y);
             if(d >= step) { tempPts.push(rawPts[i]); curr = rawPts[i]; }
         }
-    } else if(shape === 'star') {
+        } else if(shape === 'star') {
         let rOuter = Math.min(w, h)/2 - step*1.2;
         let rInner = rOuter * 0.42;
         let vertices = [];
@@ -1490,7 +1503,10 @@ canvas.addEventListener('touchstart',(e)=>{
             if(hitButtonPattern(p.x,p.y,l)){isDraggingLayer=true;return;}
         }
         const design=getButtonStampDesign();
-        if(design){selectedButtonPattern=null;addButtonRecord(p.x,p.y,design,1);draw();}
+        if(design){
+            // 允许普通扣子与外框/铺满同时存在；新点下的扣子成为“最后一个扣子”。
+            addButtonRecord(p.x,p.y,design,1);draw();
+        }
         return;
     }
     if(selectedLayer){
