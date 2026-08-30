@@ -200,7 +200,7 @@
                 <div class="gen-tip" id="genTip2">生成中...</div>
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
                 <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
-                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
+                                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
         <div class="page-content" id="pageContent3" style="display:none">
@@ -799,7 +799,7 @@ function renderButtonSkeleton(){
         if(buttonLibrary[i]&&buttonLibrary[i].src)im.src=buttonLibrary[i].src;
         slot.appendChild(im);
         const nm=document.createElement('div');nm.className='button-name';nm.textContent='button'+(i+1);slot.appendChild(nm);
-        slot.onclick=()=>{selectedButtonIndex=i;renderButtonSkeleton();updateButtonLibrarySelection();};
+        slot.onclick=()=>{selectedButtonIndex=i;renderButtonSkeleton();updateButtonLibrarySelection();updateButtonPreview();};
         g.appendChild(slot);
     }
 }
@@ -844,40 +844,70 @@ function updateButtonColorDot(target,val){
 function makeButtonCanvas(style,size,preview=false){
     size=Math.max(24,Math.round(size));
     const oc=document.createElement('canvas');oc.width=oc.height=size;
-    const c=oc.getContext('2d');const r=size*.46,cx=size/2,cy=size/2;
-    c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.closePath();c.clip();
+    const c=oc.getContext('2d');
+    const shapeImg=buttonLibrary[selectedButtonIndex]||buttonLibrary[0];
+
+    // 先生成完整纹理，再用用户选择的 button1-button7 原始透明轮廓做遮罩。
+    // 不再强制裁成圆形，因此每个扣子都会保留自己的原始外形。
+    const pattern=document.createElement('canvas');pattern.width=pattern.height=size;
+    const pc=pattern.getContext('2d');
+
     if(style==='solid'){
-        c.fillStyle=buttonColors.solid;c.fillRect(0,0,size,size);
+        pc.fillStyle=buttonColors.solid;
+        pc.fillRect(0,0,size,size);
     }else if(style==='stripe'){
-        c.fillStyle=buttonColors.stripeBg;c.fillRect(0,0,size,size);
-        const sw=parseInt(document.getElementById('buttonStripeSize').value)||10;
-        c.fillStyle=buttonColors.stripe;
-        for(let x=-size;x<size*2;x+=sw*2){c.save();c.translate(x,0);c.rotate(-Math.PI/6);c.fillRect(0,-size,size,size*3);c.restore();}
+        pc.fillStyle=buttonColors.stripeBg;
+        pc.fillRect(0,0,size,size);
+        const sw=Math.max(2,parseInt(document.getElementById('buttonStripeSize')?.value)||10);
+        pc.fillStyle=buttonColors.stripe;
+        for(let x=-size;x<size*2;x+=sw*2){
+            pc.save();pc.translate(x,0);pc.rotate(-Math.PI/6);
+            pc.fillRect(0,-size,size,size*3);pc.restore();
+        }
     }else if(style==='polka'){
-        c.fillStyle=buttonColors.polkaBg;c.fillRect(0,0,size,size);
-        const ds=parseInt(document.getElementById('buttonPolkaSize').value)||9;
-        const density=parseInt(document.getElementById('buttonPolkaDensity').value)||3;
+        pc.fillStyle=buttonColors.polkaBg;
+        pc.fillRect(0,0,size,size);
+        const ds=Math.max(2,parseInt(document.getElementById('buttonPolkaSize')?.value)||9);
+        const density=parseInt(document.getElementById('buttonPolkaDensity')?.value)||3;
         const gap=Math.max(ds*1.8,34-density*5);
-        const palette=document.getElementById('buttonRainbowPolka').checked?buttonRainbowColors:[buttonColors.polka];
+        const palette=document.getElementById('buttonRainbowPolka')?.checked
+            ? buttonRainbowColors : [buttonColors.polka];
         let k=0;
-        for(let y=ds;y<size+ds;y+=gap){
+        for(let y=ds/2;y<size+ds;y+=gap){
             const off=(Math.round(y/gap)%2)*gap/2;
-            for(let x=ds+off;x<size+ds;x+=gap){
-                c.fillStyle=palette[k++%palette.length];c.beginPath();c.arc(x,y,ds/2,0,Math.PI*2);c.fill();
+            for(let x=ds/2+off;x<size+ds;x+=gap){
+                pc.fillStyle=palette[k++%palette.length];
+                pc.beginPath();pc.arc(x,y,ds/2,0,Math.PI*2);pc.fill();
             }
         }
     }else if(style==='image'){
-        c.fillStyle=buttonColors.solid;c.fillRect(0,0,size,size);
+        pc.fillStyle=buttonColors.solid;
+        pc.fillRect(0,0,size,size);
         if(buttonImg){
-            const pad=size*.05,mw=size-pad*2,mh=size-pad*2;
-            const sc=Math.min(mw/buttonImg.naturalWidth,mh/buttonImg.naturalHeight);
-            const iw=buttonImg.naturalWidth*sc,ih=buttonImg.naturalHeight*sc;
-            c.drawImage(buttonImg,(size-iw)/2,(size-ih)/2,iw,ih);
+            const pad=size*.03,mw=size-pad*2,mh=size-pad*2;
+            const iw=buttonImg.naturalWidth||buttonImg.width||1;
+            const ih=buttonImg.naturalHeight||buttonImg.height||1;
+            const sc=Math.min(mw/iw,mh/ih);
+            const dw=iw*sc,dh=ih*sc;
+            pc.drawImage(buttonImg,(size-dw)/2,(size-dh)/2,dw,dh);
         }
     }
-    c.restore;
-    c.save();c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.strokeStyle='rgba(255,255,255,.96)';c.lineWidth=Math.max(2,size*.035);c.stroke();
-    c.beginPath();c.arc(cx-r*.28,cy-r*.28,r*.56,0,Math.PI*2);c.fillStyle='rgba(255,255,255,.10)';c.fill();c.restore();
+
+    if(shapeImg && (shapeImg.complete || shapeImg.naturalWidth)){
+        c.clearRect(0,0,size,size);
+        c.drawImage(pattern,0,0,size,size);
+        c.globalCompositeOperation='destination-in';
+        c.drawImage(shapeImg,0,0,size,size);
+        c.globalCompositeOperation='source-over';
+
+        // 保留原扣子的轮廓细节/高光，不改变外形。
+        c.globalAlpha=.18;
+        c.drawImage(shapeImg,0,0,size,size);
+        c.globalAlpha=1;
+    }else{
+        // 资源尚未加载时不让生成结果变成空白。
+        c.drawImage(pattern,0,0,size,size);
+    }
     return oc;
 }
 function updateButtonPreview(){
@@ -1535,6 +1565,7 @@ function closeVideoModal() {
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
     const allRecords=records.flat();
+    videoColorCache={};
     if(allRecords.length===0&&textLayers.length===0){alert('请先在画布上放置钻石或文字贴纸');return;}
     const btn=document.getElementById('liveBtn'),progressWrap=document.getElementById('recordProgress'),progressBar=document.getElementById('recordProgressBar');
     const mimeType=(()=>{const types=['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return null;return types.find(m=>MediaRecorder.isTypeSupported(m))||null;})();
@@ -1545,7 +1576,7 @@ function startVideoGeneration(mode, dir='down') {
     const randomVideoPalette=Array.from(new Set([...(colorHistory.length?colorHistory:[]),...macaronColors]));
     const stableRandom=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);};
     function pulseScale(baseSize,seed,fi){const amp=Math.min(.12,Math.max(.045,baseSize/1400));return 1+amp*Math.sin(fi*(.11+stableRandom(seed)*.035)+stableRandom(seed+91)*Math.PI*2);}
-    function randomColorFor(seed,fi){const idx=Math.floor(Math.abs(Math.sin(seed*7.13+fi*.22))*randomVideoPalette.length)%randomVideoPalette.length;return randomVideoPalette[idx]||currentColor;}
+    function randomColorFor(seed){const idx=Math.floor(Math.abs(Math.sin(seed*7.13)*43758.5453)%1*randomVideoPalette.length)%randomVideoPalette.length;return randomVideoPalette[idx]||currentColor;}
     function getSpatialIndex(absX,absY){const nx=Math.max(0,Math.min(1,absX/canvas.width)),ny=Math.max(0,Math.min(1,(canvas.height-absY)/canvas.height));return nx+ny;}
     let totalDots=allRecords.length;textLayers.forEach(l=>totalDots+=l.points.length);const sequenceStep=Math.max(.5,60/(totalDots||1));
     function drawVideoFrame(fi){
@@ -1555,13 +1586,13 @@ function startVideoGeneration(mode, dir='down') {
             const linked=l.dotSize/6;rx.save();rx.translate(l.x,l.y);rx.rotate(l.rotation||0);
             l.points.forEach((p,pIndex)=>{
                 const idx=p.stickerIdx!==undefined?p.stickerIdx:(l.stickerIdx||curIdx),baseCol=p.color||currentColor;
-                let col=baseCol;if(mode==='randomColor')col=randomColorFor((idx+1)*101+pIndex,fi);
+                let col=baseCol;if(mode==='randomColor')col=randomColorFor((idx+1)*101+pIndex);
                 const sImg=stickers[idx]||stickers[0],ratio=sImg&&sImg.naturalWidth?sImg.naturalWidth/sImg.naturalHeight:1;
                 const baseDw=Math.max(1,linked*(ratio>=1?1:ratio)),baseDh=Math.max(1,linked/(ratio>=1?ratio:1));
                 let img=l.colorCacheMap[idx+'_'+col]||l.defaultImg;
                 if(mode==='randomColor'&&sImg){
                     const ck=`${idx}_${col}_${Math.round(baseDw)}_${Math.round(baseDh)}`;
-                    if(!videoColorCache[ck]) videoColorCache[ck]=canvasToImg(makeColoredSticker(sImg,col,Math.max(1,Math.round(baseDw)),Math.max(1,Math.round(baseDh))));
+                    if(!videoColorCache[ck]) videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(baseDw)),Math.max(1,Math.round(baseDh)));
                     img=videoColorCache[ck];
                 }
                 if(!img){globalIndex++;return;}
@@ -1580,7 +1611,7 @@ function startVideoGeneration(mode, dir='down') {
             let pDelay=0,popScale=1;if(mode==='sequence'){pDelay=globalIndex*sequenceStep;if(fi<pDelay){globalIndex++;return;}popScale=Math.min(1,(fi-pDelay)/3);}else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;
             let ox=0,oy=0;if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(r.y-cy,r.x-cx);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}
             let img=r.img,col=r.glowColor||currentColor;
-            if(mode==='randomColor'&&r.stickerIdx!==undefined){const sImg=stickers[r.stickerIdx]||stickers[0];col=randomColorFor((r.stickerIdx+1)*503+rIndex,fi);if(sImg){const ck=`r_${r.stickerIdx}_${col}_${Math.round(r.sizeW)}_${Math.round(r.sizeH)}`;if(!videoColorCache[ck])videoColorCache[ck]=canvasToImg(makeColoredSticker(sImg,col,Math.max(1,Math.round(r.sizeW)),Math.max(1,Math.round(r.sizeH))));img=videoColorCache[ck];}}
+            if(mode==='randomColor'&&r.stickerIdx!==undefined){const sImg=stickers[r.stickerIdx]||stickers[0];col=randomColorFor((r.stickerIdx+1)*503+rIndex);if(sImg){const ck=`r_${r.stickerIdx}_${col}_${Math.round(r.sizeW)}_${Math.round(r.sizeH)}`;if(!videoColorCache[ck])videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(r.sizeW)),Math.max(1,Math.round(r.sizeH)));img=videoColorCache[ck];}}
             const ms=mode==='pulse'?pulseScale(Math.max(r.sizeW,r.sizeH),rIndex+303,fi):1,fs=popScale*ms;
             rx.save();rx.translate(r.x+ox,r.y+oy);rx.rotate(r.angle||0);const glow=mode==='glow'&&(Math.floor(spatialIndex*5+randomJitter*3+fi*.8)%6===0);
             if(glow){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffe0ee';rx.shadowBlur=36;rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);rx.shadowBlur=16;rx.shadowColor='#fff';rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);rx.shadowBlur=0;}
