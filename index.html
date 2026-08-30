@@ -145,17 +145,13 @@
         .p3-color-dot { width:48px; height:48px; border-radius:50%; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,.1); cursor:pointer; }
         .button-style-preview { width:100%; height:90px; display:flex; align-items:center; justify-content:center; margin-top:7px; }
         .button-style-preview img { max-width:88px; max-height:88px; object-fit:contain; }
-        @media (min-width:600px){
-            .button-grid { grid-template-columns:repeat(7,1fr); gap:12px; }
-            .button-design-list { grid-template-columns:repeat(7,1fr); }
-        }
-        
-        @media (min-width: 600px) {
-            .book-container { max-width: 768px; padding: 20px; }
-            .sticker-grid { grid-template-columns: repeat(6, 1fr); gap: 12px; }
-            .bottom-page { min-height: 500px; }
-            .frame-action-bar button, .bottom-action-bar button { font-size: 12px; padding: 10px 4px; }
-        }
+        /* 横版只由顶部“横版”按钮控制，手机端不再按 viewport 宽度误切换。 */
+        body.tablet-mode .button-grid { grid-template-columns:repeat(7,1fr); gap:12px; }
+        body.tablet-mode .button-design-list { grid-template-columns:repeat(7,1fr); }
+        body.tablet-mode .sticker-grid { grid-template-columns:repeat(6,1fr); gap:12px; }
+        body.tablet-mode .bottom-page { min-height:500px; }
+        body.tablet-mode .frame-action-bar button,
+        body.tablet-mode .bottom-action-bar button { font-size:12px; padding:10px 4px; }
     </style>
 </head>
 <body>
@@ -194,7 +190,42 @@
                 </div>
                 <div class="gen-tip" id="genTip1">生成中...</div>
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
-                <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
+                <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
+            </div>
+        </div>
+        
+        <div class="page-content" id="pageContent2" style="display:none">
+            <div class="sticker-gen-area">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成贴纸</div>
+                <div class="gen-row">
+                    <div class="img-upload-box" onclick="stickerImgInput.click()">
+                        <img id="imgUploadPreview" class="img-upload-preview">
+                        <span id="imgUploadLabel">点击上传图片</span>
+                    </div>
+                    <button class="gen-btn" onclick="generateImgStickers()">生成</button>
+                </div>
+                <div class="gen-tip" id="genTip2">生成中...</div>
+                <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
+                <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
+                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
+            </div>
+        </div>
+        <div class="page-content" id="pageContent3" style="display:none">
+            <div class="sticker-gen-area">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
+                    <span>手绘电子画布</span>
+                </div>
+                <canvas id="userDrawCanvas" width="300" height="320" style="background:#fff;border:1.5px dashed #ffc4d4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
+                <div class="gen-row" style="margin-top:20px;">
+                    <button class="gen-btn" style="background:#ffcccc; flex:1;" onclick="clearDrawCanvas()">清空</button>
+                    <button class="gen-btn" style="background:#ffdada; flex:1;" onclick="undoDrawCanvas()">撤回</button>
+                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
+                </div>
+                <div class="p3-controls-inline">
+                    <div><div class="p3-color-dot" id="p3ColorBtn" style="background:#FFB7B2;"></div></div>
+                    <div>
+                        <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
+                        <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
                     </div>
                     <div>
                         <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
@@ -431,7 +462,25 @@ let scaleStart      = { dist: 0, scale: 1 };
 let layerCenter     = { x: 0, y: 0 };
 let lastRandomType  = null;
 let photoColorPalette = [];
-const baseUrl = "https://cdn.jsdelivr.net/gh/nnn561/decodeco-@main/";
+// GitHub 仓库中图片与 index.html 位于同一目录，统一使用相对路径。
+const baseUrls = ["./"];
+let baseUrl = baseUrls[0];
+function loadAsset(img, filename, onSuccess, onFail){
+    let idx = 0;
+    const tryNext = () => {
+        if(idx >= baseUrls.length){
+            console.error("资源加载失败:", filename);
+            if(onFail) onFail();
+            return;
+        }
+        const url = new URL(baseUrls[idx++] + filename, document.baseURI).href;
+        img.crossOrigin = "";
+        img.onload = () => { baseUrl = url.slice(0, url.lastIndexOf("/")+1); if(onSuccess) onSuccess(); };
+        img.onerror = tryNext;
+        img.src = url;
+    };
+    tryNext();
+}
 const macaronColors = ["#FFB7B2","#FFDAC1","#E2F0CB","#B5EAD7","#C7CEEA","#F3B0C3","#000000","#FFFFFF"];
 const harmonyPalettes = [
     ["#FFB7B2","#FFDAC1","#FFD3A5","#FFC4CE"],
@@ -551,7 +600,17 @@ function init(){
             const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
             if(slot) slot.classList.remove('loading');
         };
-        setTimeout(()=>{ img.src=`${baseUrl}sticker${i}.png`; }, (i-1)*50);
+        setTimeout(()=>{
+            loadAsset(img, `sticker${i}.png`, ()=>{
+                const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
+                if(slot){
+                    slot.classList.remove('loading');
+                    const imgEl=slot.querySelector('.sticker-item');
+                    if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
+                }
+                if(i-1===curIdx) updatePreRender();
+            });
+        }, (i-1)*50);
     }
     initPresetSwatches();
     document.getElementById('p3ColorBtn').style.background=currentColor;
@@ -564,7 +623,16 @@ function init(){
         buttonLibrary[i-1]=img;
         img.onload=()=>{ renderButtonSkeleton(); updateButtonLibrarySelection(); };
         img.onerror=()=>{};
-        setTimeout(()=>{ img.src=`${baseUrl}button${i}.png`; }, (i-1)*60);
+        setTimeout(()=>{
+            loadAsset(img, `button${i}.png`, ()=>{
+                const slot=document.querySelector(`[data-button-idx="${i-1}"]`);
+                if(slot){
+                    slot.classList.remove('loading');
+                    const imgEl=slot.querySelector('.button-item');
+                    if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
+                }
+            });
+        }, (i-1)*60);
     }
     initButtonControls();
     document.getElementById('p3ColorBtn').addEventListener('click',()=>openColorPickerFor('diamond'));
