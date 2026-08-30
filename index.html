@@ -213,13 +213,13 @@
         <div class="page-content" id="pageContent3" style="display:none">
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
-                    <span>手绘电子画布</span>
+                    <span>手绘画布</span>
                 </div>
                 <canvas id="userDrawCanvas" width="300" height="320" style="background:#fff;border:1.5px dashed #ffc4d4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
                 <div class="gen-row" style="margin-top:20px;">
                     <button class="gen-btn" style="background:#ffcccc; flex:1;" onclick="clearDrawCanvas()">清空</button>
                     <button class="gen-btn" style="background:#ffdada; flex:1;" onclick="undoDrawCanvas()">撤回</button>
-                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
+                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成贴纸</button>
                 </div>
                 <div class="p3-controls-inline">
                     <div><div class="p3-color-dot" id="p3ColorBtn" style="background:#FFB7B2;"></div></div>
@@ -235,12 +235,12 @@
             </div>
         </div>
 
-        <!-- 第四页：扣子页 -->
+        <!-- 第四页：纽扣页 -->
         <div class="page-content page-four-content" id="pageContent4" style="display:none">
             <div class="button-sticker-box">
                 <div class="button-grid" id="buttonGrid"></div>
                 <div class="expand-toggle-btn" id="buttonExpandBtn" onclick="toggleButtonGrid()">+</div>
-                <div class="sticker-tip-txt">点击扣子选择 | button1-button7</div>
+                <div class="sticker-tip-txt">点击纽扣选择 | button1-button7</div>
             </div>
 
             <div class="button-style-panel">
@@ -253,10 +253,10 @@
 
                 <div class="button-sub-panel" id="buttonPanelSolid">
                     <div class="button-color-row">
-                        <div class="button-color-item"><span>扣子颜色</span><div class="button-color-dot" id="buttonSolidColor" style="background:#FFB7B2;"></div></div>
+                        <div class="button-color-item"><span>纽扣颜色</span><div class="button-color-dot" id="buttonSolidColor" style="background:#FFB7B2;"></div></div>
                     </div>
                     <div class="button-style-preview"><img id="buttonPreviewSolid"></div>
-                    <button class="button-generate-btn" onclick="generateButtonDesign('solid')">生成扣子</button>
+                    <button class="button-generate-btn" onclick="generateButtonDesign('solid')">生成纽扣</button>
                 </div>
 
                 <div class="button-sub-panel" id="buttonPanelStripe">
@@ -273,7 +273,7 @@
                     <div class="slider-row"><span>条纹密度</span><span id="buttonStripeDensityVal">中</span></div>
                     <input type="range" id="buttonStripeDensity" min="1" max="5" value="3" step="1">
                     <div class="button-style-preview"><img id="buttonPreviewStripe"></div>
-                    <button class="button-generate-btn" onclick="generateButtonDesign('stripe')">生成扣子</button>
+                    <button class="button-generate-btn" onclick="generateButtonDesign('stripe')">生成纽扣</button>
                 </div>
 
                 <div class="button-sub-panel" id="buttonPanelPolka">
@@ -282,14 +282,14 @@
                         <div class="button-color-item"><span>波点</span><div class="button-color-dot" id="buttonPolkaColor" style="background:#FF85A2;"></div></div>
                     </div>
                     <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--pink-accent);font-weight:bold;margin-top:7px;">
-                        <input type="checkbox" id="buttonRainbowPolka"> 五彩波点
+                        <input type="checkbox" id="buttonRainbowPolka"> 彩色波点
                     </label>
                     <div class="slider-row"><span>波点大小</span><span id="buttonPolkaSizeVal">9</span></div>
                     <input type="range" id="buttonPolkaSize" min="3" max="24" value="9">
                     <div class="slider-row"><span>波点密度</span><span id="buttonPolkaDensityVal">中</span></div>
                     <input type="range" id="buttonPolkaDensity" min="1" max="5" value="3" step="1">
                     <div class="button-style-preview"><img id="buttonPreviewPolka"></div>
-                    <button class="button-generate-btn" onclick="generateButtonDesign('polka')">生成扣子</button>
+                    <button class="button-generate-btn" onclick="generateButtonDesign('polka')">生成纽扣</button>
                 </div>
 
                 <div class="button-sub-panel" id="buttonPanelImage">
@@ -301,22 +301,22 @@
                         <input type="file" id="buttonImgInput" accept="image/*" style="display:none">
                     </div>
                     <div class="button-style-preview"><img id="buttonPreviewImage"></div>
-                    <button class="button-generate-btn" onclick="generateButtonDesign('image')">生成扣子</button>
+                    <button class="button-generate-btn" onclick="generateButtonDesign('image')">生成纽扣</button>
                 </div>
             </div>
 
             <div class="button-controls">
                 <div class="button-slider-col">
-                    <div class="slider-row"><span>扣子大小</span><span id="buttonSizeVal">80</span></div>
+                    <div class="slider-row"><span>纽扣大小</span><span id="buttonSizeVal">80</span></div>
                     <input type="range" id="buttonSizeSlider" min="35" max="220" value="80">
                 </div>
                 <div class="button-slider-col">
-                    <div class="slider-row"><span>扣子角度</span><span id="buttonRotVal">0°</span></div>
+                    <div class="slider-row"><span>纽扣角度</span><span id="buttonRotVal">0°</span></div>
                     <input type="range" id="buttonRotateSlider" min="0" max="360" value="0">
                 </div>
             </div>
 
-            <div style="width:100%;font-size:10px;color:var(--pink-accent);font-weight:bold;margin-top:7px;">我的扣子（长按删除）</div>
+            <div style="width:100%;font-size:10px;color:var(--pink-accent);font-weight:bold;margin-top:7px;">纽扣展示架</div>
             <div class="button-design-list" id="buttonDesignList"></div>
         </div>
 
@@ -325,7 +325,7 @@
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
             </div>
             <div class="slider-col" id="mainSliderCol">
-                <div class="slider-row"><span>钻石大小 (联动)</span><span id="sizeVal">80</span></div>
+                <div class="slider-row"><span>钻石大小</span><span id="sizeVal">80</span></div>
                 <input type="range" id="sizeSlider" min="30" max="500" value="80">
                 <div class="slider-row"><span>钻石角度</span><span id="rotVal">0°</span></div>
                 <input type="range" id="rotateSlider" min="0" max="360" value="0">
@@ -393,8 +393,8 @@
 
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
-    <button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上模式</button>
-    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
+    <button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上</button>
+    <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光</button>
     <button class="modal-btn" onclick="startVideoGeneration('pulse')">伸缩</button>
     <button class="modal-btn" id="videoRandomColorBtn" onclick="startVideoGeneration('randomColor')">随机颜色</button>
     <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
