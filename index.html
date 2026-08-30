@@ -105,6 +105,17 @@
         .modal-btn { width:100%; padding:10px; margin-bottom:8px; background:var(--pink-accent); color:white; border:none; border-radius:10px; font-weight:bold; font-size:13px; cursor:pointer; }
         .modal-btn-sub { background:#fff0f4; color:var(--pink-accent); border:1.5px solid #ffcad4; }
 
+
+        .stripe-direction-row{display:flex;gap:6px;margin-top:7px;}
+        .stripe-dir-btn{flex:1;border:1px solid #ffcad4;background:#fff;color:#ff85a2;border-radius:8px;padding:6px;font-size:10px;font-weight:bold;}
+        .stripe-dir-btn.active{background:#ff85a2;color:#fff;}
+        .button-frame-select{width:100%;margin-top:8px;padding:8px;background:#fffafb;border:1px dashed #ffcad4;border-radius:12px;}
+        .button-frame-title{font-size:10px;color:#ff85a2;font-weight:bold;margin-bottom:6px;}
+        .button-frame-options{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+        .button-frame-btn,.button-frame-actions button{border:0;border-radius:8px;padding:7px 3px;background:#fff;color:#ff85a2;border:1px solid #ffcad4;font-size:10px;font-weight:bold;}
+        .button-frame-btn.active{background:#ff85a2;color:#fff;}
+        .button-frame-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;}
+        .button-frame-actions button{background:#ffabbd;color:#fff;border:none;box-shadow:0 2px 0 #e66a85;}
         /* ===== 第四页扣子页 + 第三页布局增强 ===== */
         .button-sticker-box { width:100%; border:1.5px dashed #ffcad4; border-radius:12px; padding:8px; background:#fffafb; position:relative; margin-bottom:8px; }
         .button-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; width:100%; justify-items:center; max-height:72px; overflow:hidden; transition:max-height .3s ease; }
@@ -183,42 +194,7 @@
                 </div>
                 <div class="gen-tip" id="genTip1">生成中...</div>
                 <div class="slider-row"><span>钻石密度</span><span id="densityVal">少</span></div>
-                <input type="range" id="densitySlider" min="6" max="12" value="6" step="2" oninput="updateDensityLabel(this.value)">
-            </div>
-        </div>
-        
-        <div class="page-content" id="pageContent2" style="display:none">
-            <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">上传图片生成贴纸</div>
-                <div class="gen-row">
-                    <div class="img-upload-box" onclick="stickerImgInput.click()">
-                        <img id="imgUploadPreview" class="img-upload-preview">
-                        <span id="imgUploadLabel">点击上传图片</span>
-                    </div>
-                    <button class="gen-btn" onclick="generateImgStickers()">生成</button>
-                </div>
-                <div class="gen-tip" id="genTip2">生成中...</div>
-                <div class="slider-row"><span>钻石密度</span><span id="densityVal2">少</span></div>
-                <input type="range" id="densitySlider2" min="6" max="12" value="6" step="2" oninput="updateDensityLabel2(this.value)">
-                                <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
-            </div>
-        </div>
-        <div class="page-content" id="pageContent3" style="display:none">
-            <div class="sticker-gen-area">
-                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
-                    <span>手绘电子画布</span>
-                </div>
-                <canvas id="userDrawCanvas" width="300" height="320" style="background:#fff;border:1.5px dashed #ffc4d4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
-                <div class="gen-row" style="margin-top:20px;">
-                    <button class="gen-btn" style="background:#ffcccc; flex:1;" onclick="clearDrawCanvas()">清空</button>
-                    <button class="gen-btn" style="background:#ffdada; flex:1;" onclick="undoDrawCanvas()">撤回</button>
-                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
-                </div>
-                <div class="p3-controls-inline">
-                    <div><div class="p3-color-dot" id="p3ColorBtn" style="background:#FFB7B2;"></div></div>
-                    <div>
-                        <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
-                        <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
+                <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
                     </div>
                     <div>
                         <div class="slider-row"><span>钻石大小</span><span id="p3SizeVal">80</span></div>
@@ -257,8 +233,14 @@
                         <div class="button-color-item"><span>背景</span><div class="button-color-dot" id="buttonStripeBg" style="background:#FFF4F7;"></div></div>
                         <div class="button-color-item"><span>条纹</span><div class="button-color-dot" id="buttonStripeColor" style="background:#FF85A2;"></div></div>
                     </div>
+                    <div class="stripe-direction-row">
+                        <button type="button" class="stripe-dir-btn active" id="stripeDirVertical" onclick="setStripeDirection('vertical')">竖条纹</button>
+                        <button type="button" class="stripe-dir-btn" id="stripeDirHorizontal" onclick="setStripeDirection('horizontal')">横条纹</button>
+                    </div>
                     <div class="slider-row"><span>条纹大小</span><span id="buttonStripeSizeVal">10</span></div>
                     <input type="range" id="buttonStripeSize" min="4" max="28" value="10">
+                    <div class="slider-row"><span>条纹密度</span><span id="buttonStripeDensityVal">中</span></div>
+                    <input type="range" id="buttonStripeDensity" min="1" max="5" value="3" step="1">
                     <div class="button-style-preview"><img id="buttonPreviewStripe"></div>
                     <button class="button-generate-btn" onclick="generateButtonDesign('stripe')">生成扣子</button>
                 </div>
@@ -383,7 +365,7 @@
     <button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上模式</button>
     <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
     <button class="modal-btn" onclick="startVideoGeneration('pulse')">伸缩</button>
-    <button class="modal-btn" onclick="startVideoGeneration('randomColor')">随机颜色</button>
+    <button class="modal-btn" id="videoRandomColorBtn" onclick="startVideoGeneration('randomColor')">随机颜色</button>
     <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
         <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
@@ -424,6 +406,9 @@ let buttonGridExpanded = false;
 let activeButtonStyle = 'solid';
 let buttonImg = null;
 let buttonPickerTarget = null;
+let buttonColorHistory = [];
+let buttonFrameChoice = 'heart';
+let selectedButtonPattern = null;
 let buttonColors = {
     solid:'#FFB7B2',
     stripeBg:'#FFF4F7',
@@ -811,11 +796,26 @@ function initButtonControls(){
     const map={buttonSolidColor:'solid',buttonStripeBg:'stripeBg',buttonStripeColor:'stripe',buttonPolkaBg:'polkaBg',buttonPolkaColor:'polka'};
     ids.forEach(id=>{const el=document.getElementById(id);if(el)el.onclick=()=>openColorPickerFor(map[id]);});
     document.getElementById('buttonStripeSize').oninput=function(){document.getElementById('buttonStripeSizeVal').innerText=this.value;updateButtonPreview();};
+    document.getElementById('buttonStripeDensity').oninput=function(){document.getElementById('buttonStripeDensityVal').innerText={'1':'少','2':'偏少','3':'中','4':'多','5':'极多'}[this.value];updateButtonPreview();};
     document.getElementById('buttonPolkaSize').oninput=function(){document.getElementById('buttonPolkaSizeVal').innerText=this.value;updateButtonPreview();};
     document.getElementById('buttonPolkaDensity').oninput=function(){document.getElementById('buttonPolkaDensityVal').innerText={'1':'少','2':'偏少','3':'中','4':'多','5':'极多'}[this.value];updateButtonPreview();};
     document.getElementById('buttonRainbowPolka').onchange=updateButtonPreview;
-    document.getElementById('buttonSizeSlider').oninput=function(){document.getElementById('buttonSizeVal').innerText=this.value;updateButtonPreview();};
-    document.getElementById('buttonRotateSlider').oninput=function(){document.getElementById('buttonRotVal').innerText=this.value+'°';updateButtonPreview();};
+    document.getElementById('buttonSizeSlider').oninput=function(){
+        document.getElementById('buttonSizeVal').innerText=this.value;
+        const v=parseInt(this.value)||80;
+        buttonDesigns.forEach(d=>{ if(d.selected) d.size=v; });
+        buttonCanvasRecords.forEach(r=>{ r.size=(r.sizeScale||1)*v; });
+        if(selectedButtonPattern) selectedButtonPattern.sizeFactor=v/(selectedButtonPattern.baseButtonSize||v);
+        updateButtonPreview(); draw();
+    };
+    document.getElementById('buttonRotateSlider').oninput=function(){
+        document.getElementById('buttonRotVal').innerText=this.value+'°';
+        const a=(parseInt(this.value)||0)*Math.PI/180;
+        buttonDesigns.forEach(d=>{if(d.selected)d.angle=a;});
+        buttonCanvasRecords.forEach(r=>r.angle=a);
+        if(selectedButtonPattern) selectedButtonPattern.rotation=a;
+        updateButtonPreview(); draw();
+    };
     document.getElementById('buttonImgInput').onchange=function(e){
         const file=e.target.files[0];if(!file)return;
         const rd=new FileReader();
@@ -841,73 +841,68 @@ function updateButtonColorDot(target,val){
     const map={solid:'buttonSolidColor',stripeBg:'buttonStripeBg',stripe:'buttonStripeColor',polkaBg:'buttonPolkaBg',polka:'buttonPolkaColor'};
     const el=document.getElementById(map[target]);if(el)el.style.background=val;
 }
+function setStripeDirection(dir){
+    buttonStripeDirection=dir;
+    document.getElementById('stripeDirVertical')?.classList.toggle('active',dir==='vertical');
+    document.getElementById('stripeDirHorizontal')?.classList.toggle('active',dir==='horizontal');
+    updateButtonPreview();
+}
+let buttonStripeDirection='vertical';
 function makeButtonCanvas(style,size,preview=false){
     size=Math.max(24,Math.round(size));
     const oc=document.createElement('canvas');oc.width=oc.height=size;
     const c=oc.getContext('2d');
     const shapeImg=buttonLibrary[selectedButtonIndex]||buttonLibrary[0];
-
-    // 先生成完整纹理，再用用户选择的 button1-button7 原始透明轮廓做遮罩。
-    // 不再强制裁成圆形，因此每个扣子都会保留自己的原始外形。
     const pattern=document.createElement('canvas');pattern.width=pattern.height=size;
     const pc=pattern.getContext('2d');
 
     if(style==='solid'){
-        pc.fillStyle=buttonColors.solid;
-        pc.fillRect(0,0,size,size);
+        pc.fillStyle=buttonColors.solid; pc.fillRect(0,0,size,size);
     }else if(style==='stripe'){
-        pc.fillStyle=buttonColors.stripeBg;
-        pc.fillRect(0,0,size,size);
+        // 先铺背景，再铺条纹；密度只控制条纹之间的间距，不会覆盖背景色。
+        pc.fillStyle=buttonColors.stripeBg; pc.fillRect(0,0,size,size);
         const sw=Math.max(2,parseInt(document.getElementById('buttonStripeSize')?.value)||10);
+        const density=parseInt(document.getElementById('buttonStripeDensity')?.value)||3;
+        const gap=sw*(1.15 + (5-density)*0.42);
         pc.fillStyle=buttonColors.stripe;
-        for(let x=-size;x<size*2;x+=sw*2){
-            pc.save();pc.translate(x,0);pc.rotate(-Math.PI/6);
-            pc.fillRect(0,-size,size,size*3);pc.restore();
+        if(buttonStripeDirection==='horizontal'){
+            for(let y=-size;y<size*2;y+=sw+gap) pc.fillRect(0,y,size,sw);
+        }else{
+            for(let x=-size;x<size*2;x+=sw+gap) pc.fillRect(x,0,sw,size);
         }
     }else if(style==='polka'){
-        pc.fillStyle=buttonColors.polkaBg;
-        pc.fillRect(0,0,size,size);
+        pc.fillStyle=buttonColors.polkaBg; pc.fillRect(0,0,size,size);
         const ds=Math.max(2,parseInt(document.getElementById('buttonPolkaSize')?.value)||9);
         const density=parseInt(document.getElementById('buttonPolkaDensity')?.value)||3;
         const gap=Math.max(ds*1.8,34-density*5);
-        const palette=document.getElementById('buttonRainbowPolka')?.checked
-            ? buttonRainbowColors : [buttonColors.polka];
+        const palette=document.getElementById('buttonRainbowPolka')?.checked ? buttonRainbowColors : [buttonColors.polka];
         let k=0;
         for(let y=ds/2;y<size+ds;y+=gap){
             const off=(Math.round(y/gap)%2)*gap/2;
             for(let x=ds/2+off;x<size+ds;x+=gap){
-                pc.fillStyle=palette[k++%palette.length];
-                pc.beginPath();pc.arc(x,y,ds/2,0,Math.PI*2);pc.fill();
+                pc.fillStyle=palette[k++%palette.length];pc.beginPath();pc.arc(x,y,ds/2,0,Math.PI*2);pc.fill();
             }
         }
     }else if(style==='image'){
-        pc.fillStyle=buttonColors.solid;
-        pc.fillRect(0,0,size,size);
+        pc.fillStyle=buttonColors.solid;pc.fillRect(0,0,size,size);
         if(buttonImg){
             const pad=size*.03,mw=size-pad*2,mh=size-pad*2;
-            const iw=buttonImg.naturalWidth||buttonImg.width||1;
-            const ih=buttonImg.naturalHeight||buttonImg.height||1;
-            const sc=Math.min(mw/iw,mh/ih);
-            const dw=iw*sc,dh=ih*sc;
+            const iw=buttonImg.naturalWidth||buttonImg.width||1,ih=buttonImg.naturalHeight||buttonImg.height||1;
+            const sc=Math.min(mw/iw,mh/ih),dw=iw*sc,dh=ih*sc;
             pc.drawImage(buttonImg,(size-dw)/2,(size-dh)/2,dw,dh);
         }
     }
 
     if(shapeImg && (shapeImg.complete || shapeImg.naturalWidth)){
+        // 使用扣子原图的透明通道作为轮廓；不再使用圆形 clip。
         c.clearRect(0,0,size,size);
         c.drawImage(pattern,0,0,size,size);
         c.globalCompositeOperation='destination-in';
         c.drawImage(shapeImg,0,0,size,size);
         c.globalCompositeOperation='source-over';
-
-        // 保留原扣子的轮廓细节/高光，不改变外形。
-        c.globalAlpha=.18;
-        c.drawImage(shapeImg,0,0,size,size);
-        c.globalAlpha=1;
-    }else{
-        // 资源尚未加载时不让生成结果变成空白。
-        c.drawImage(pattern,0,0,size,size);
-    }
+        // 原扣子的光泽/纹理轻轻叠加，但不覆盖用户选择的背景颜色。
+        c.globalAlpha=.10;c.drawImage(shapeImg,0,0,size,size);c.globalAlpha=1;
+    }else c.drawImage(pattern,0,0,size,size);
     return oc;
 }
 function updateButtonPreview(){
@@ -947,24 +942,67 @@ function renderButtonDesignList(){
 function getSelectedButtonDesigns(){return buttonDesigns.filter(d=>d.selected);}
 function getButtonStampDesign(){
     const selected=getSelectedButtonDesigns();
-    if(selected.length)return selected[Math.floor(Math.random()*selected.length)];
+    if(selected.length)return selected[0];
     return buttonDesigns.length?buttonDesigns[buttonDesigns.length-1]:null;
+}
+function getCurrentButtonPatternDesign(){
+    const size=parseInt(document.getElementById('buttonSizeSlider')?.value||80);
+    const angle=parseInt(document.getElementById('buttonRotateSlider')?.value||0)*Math.PI/180;
+    if(activeButtonStyle==='image' && !buttonImg)return null;
+    const oc=makeButtonCanvas(activeButtonStyle,size);
+    return {canvas:oc,size,angle,style:activeButtonStyle};
 }
 function addButtonRecord(x,y,design,scale=1){
     if(!design)return;
-    buttonCanvasRecords.push({x,y,img:design.canvas,size:design.size*scale,angle:design.angle||0});
+    buttonCanvasRecords.push({x,y,img:design.canvas,baseSize:design.size,size:design.size*scale,sizeScale:scale,angle:design.angle||0,design});
+}
+function drawButtonPatternSelection(){
+    const l=selectedButtonPattern;if(!l)return;
+    const bw=l.origWidth*l.scale/2,bh=l.origHeight*l.scale/2,rot=l.rotation||0;
+    mainCtx.save();mainCtx.translate(l.x,l.y);mainCtx.rotate(rot);
+    mainCtx.strokeStyle='#ff85a2';mainCtx.lineWidth=3;mainCtx.setLineDash([5,4]);mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);mainCtx.setLineDash([]);
+    const handles=[{x:bw,y:bh,txt:'↻'},{x:-bw,y:bh,txt:'↗'}];
+    handles.forEach(h=>{mainCtx.beginPath();mainCtx.arc(h.x,h.y,20,0,Math.PI*2);mainCtx.fillStyle='rgba(255,255,255,.97)';mainCtx.fill();mainCtx.strokeStyle='#ff85a2';mainCtx.lineWidth=2.5;mainCtx.stroke();mainCtx.fillStyle='#ff85a2';mainCtx.font='bold 20px Arial';mainCtx.textAlign='center';mainCtx.textBaseline='middle';mainCtx.fillText(h.txt,h.x,h.y+2);});
+    mainCtx.restore();
 }
 function drawButtons(){
+    if(selectedButtonPattern){
+        const l=selectedButtonPattern;
+        mainCtx.save();mainCtx.translate(l.x,l.y);mainCtx.rotate(l.rotation||0);mainCtx.globalAlpha=1;
+        const sizeFactor=l.sizeFactor||1;
+        l.records.forEach(r=>{if(!r.img)return;const sz=r.size*sizeFactor;mainCtx.save();mainCtx.translate(r.x,r.y);mainCtx.rotate(r.angle||0);mainCtx.drawImage(r.img,-sz/2,-sz/2,sz,sz);mainCtx.restore();});
+        mainCtx.restore();
+        drawButtonPatternSelection();
+    }
     buttonCanvasRecords.forEach(r=>{
         if(!r.img)return;
         mainCtx.save();mainCtx.translate(r.x,r.y);mainCtx.rotate(r.angle||0);
         mainCtx.drawImage(r.img,-r.size/2,-r.size/2,r.size,r.size);mainCtx.restore();
     });
 }
+
+function selectButtonFrame(shape){buttonFrameChoice=shape;}
+function _makeButtonPatternLayer(pts,design,shapeName){
+    const cx=canvas.width/2,cy=canvas.height/2;
+    // 外框/铺满：从“我的扣子”中所有已生成的扣子样式里逐颗随机选择。
+    // 每颗扣子保留自己原本的形状、样式、角度和大小，最后整体作为一个图层。
+    const pool=(Array.isArray(design)?design:(buttonDesigns.length?buttonDesigns:[design])).filter(Boolean);
+    if(!pool.length)return;
+    // 使用“我的扣子”中的全部扣子：先随机打乱顺序，再循环使用，确保所有已生成扣子都会参与外框/铺满。
+    const shuffled=pool.slice().sort(()=>Math.random()-0.5);
+    const records=pts.map((p,i)=>{
+        const d=shuffled[i % shuffled.length];
+        return {x:p.x-cx,y:p.y-cy,img:d.canvas,size:d.size,angle:d.angle||0,design:d};
+    });
+    selectedButtonPattern={records,x:cx,y:cy,scale:1,rotation:0,origWidth:canvas.width,origHeight:canvas.height,sizeFactor:1,baseButtonSize:pool[0].size,shapeType:shapeName};
+    buttonCanvasRecords=[];
+    draw();
+}
 function generateButtonFrame(shape){
     if(!mainImg.src){alert('请先上传图片');return imgInput.click();}
-    const design=getButtonStampDesign();if(!design){alert('请先生成至少一个扣子设计');return;}
-    const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,step=Math.max(18,design.size*.8);let pts=[];
+    if(!buttonDesigns.length){alert('请先生成至少一个扣子设计');return;}
+    const design=buttonDesigns;
+    const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,baseSize=Math.max(...design.map(d=>d.size||0),80),step=Math.max(18,baseSize*.8);let pts=[];
     if(shape==='square'){
         const pad=step,bw=w-2*pad,bh=h-2*pad,nx=Math.max(1,Math.floor(bw/step)),ny=Math.max(1,Math.floor(bh/step));
         for(let i=0;i<nx;i++){const t=i/nx;pts.push({x:pad+t*bw,y:pad},{x:pad+t*bw,y:h-pad});}
@@ -974,20 +1012,22 @@ function generateButtonFrame(shape){
         for(let i=0;i<n;i++){const a=i/n*2*Math.PI;pts.push({x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)});}
     }else if(shape==='heart'){
         const sc=Math.min(w,h)/42;
-        for(let i=0;i<150;i++){const t=i/150*2*Math.PI,hx=16*Math.pow(Math.sin(t),3),hy=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));const p={x:cx+hx*sc,y:cy+hy*sc-10*sc};if(!pts.length||Math.hypot(p.x-pts[pts.length-1].x,p.y-pts[pts.length-1].y)>step*.7)pts.push(p);}
+        for(let i=0;i<150;i++){const t=i/150*2*Math.PI,hx=16*Math.pow(Math.sin(t),3),hy=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));const q={x:cx+hx*sc,y:cy+hy*sc-10*sc};if(!pts.length||Math.hypot(q.x-pts[pts.length-1].x,q.y-pts[pts.length-1].y)>step*.7)pts.push(q);}
     }else{
         const ro=Math.min(w,h)/2-step*1.2,ri=ro*.42,v=[];
         for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rr=i%2===0?ro:ri;v.push({x:cx+rr*Math.cos(a),y:cy+rr*Math.sin(a)});}
-        for(let i=0;i<10;i++){const p1=v[i],p2=v[(i+1)%10],d=Math.hypot(p2.x-p1.x,p2.y-p1.y),n=Math.max(1,Math.floor(d/step));for(let s=0;s<n;s++){const t=s/n;pts.push({x:p1.x+t*(p2.x-p1.x),y:p1.y+t*(p2.y-p1.y)});}}
+        for(let i=0;i<10;i++){const p1=v[i],p2=v[(i+1)%10],d=Math.hypot(p2.x-p1.x,p2.y-p1.y),n=Math.max(1,Math.floor(d/step));for(let j=0;j<n;j++){const t=j/n;pts.push({x:p1.x+t*(p2.x-p1.x),y:p1.y+t*(p2.y-p1.y)});}}
     }
-    pts.forEach(p=>addButtonRecord(p.x,p.y,getButtonStampDesign(),1));draw();
+    _makeButtonPatternLayer(pts,design,shape);
 }
 function generateButtonFullPattern(){
     if(!mainImg.src){alert('请先上传图片');return imgInput.click();}
     if(!buttonDesigns.length){alert('请先生成至少一个扣子设计');return;}
-    const step=Math.max(20,getButtonStampDesign().size*.9);let row=0;
-    for(let y=step/2;y<canvas.height;y+=step*.86){const xo=row%2?step/2:0;for(let x=step/2+xo;x<canvas.width;x+=step)addButtonRecord(x,y,getButtonStampDesign(),1);row++;}
-    draw();
+    const design=buttonDesigns;
+    const baseSize=Math.max(...design.map(d=>d.size||0),80);
+    const step=Math.max(20,baseSize*.9),pts=[];let row=0;
+    for(let y=step/2;y<canvas.height;y+=step*.86){const xo=row%2?step/2:0;for(let x=step/2+xo;x<canvas.width;x+=step)pts.push({x,y});row++;}
+    _makeButtonPatternLayer(pts,design,'full');
 }
 function generateButtonRandomPattern(){
     if(!mainImg.src){alert('请先上传图片');return imgInput.click();}
@@ -1367,12 +1407,22 @@ function hitScaleDot(px,py,l){
     return Math.hypot(px-dotX, py-dotY) < 30;
 }
 
+function hitButtonPattern(px,py,l){const dx=px-l.x,dy=py-l.y,rot=-(l.rotation||0),lx=dx*Math.cos(rot)-dy*Math.sin(rot),ly=dx*Math.sin(rot)+dy*Math.cos(rot);return Math.abs(lx)<=l.origWidth*l.scale/2&&Math.abs(ly)<=l.origHeight*l.scale/2;}
+function hitButtonPatternRotateDot(px,py,l){const bw=l.origWidth*l.scale/2,bh=l.origHeight*l.scale/2,r=l.rotation||0;const x=l.x+bw*Math.cos(r)-bh*Math.sin(r),y=l.y+bw*Math.sin(r)+bh*Math.cos(r);return Math.hypot(px-x,py-y)<30;}
+function hitButtonPatternScaleDot(px,py,l){const bw=l.origWidth*l.scale/2,bh=l.origHeight*l.scale/2,r=l.rotation||0;const x=l.x-bw*Math.cos(r)-bh*Math.sin(r),y=l.y-bw*Math.sin(r)+bh*Math.cos(r);return Math.hypot(px-x,py-y)<30;}
+
 canvas.addEventListener('touchstart',(e)=>{
     if(!mainImg.src)return;
     const p=getCanvasPos(e);
     if(currentPage===4){
+        if(selectedButtonPattern){
+            const l=selectedButtonPattern;
+            if(hitButtonPatternRotateDot(p.x,p.y,l)){isRotatingLayer=true;layerCenter={x:l.x,y:l.y};rotStart.touchAngle=Math.atan2(p.y-l.y,p.x-l.x);rotStart.layerAngle=l.rotation||0;return;}
+            if(hitButtonPatternScaleDot(p.x,p.y,l)){isScalingLayer=true;layerCenter={x:l.x,y:l.y};scaleStart.dist=Math.hypot(p.x-l.x,p.y-l.y);scaleStart.scale=l.scale;return;}
+            if(hitButtonPattern(p.x,p.y,l)){isDraggingLayer=true;return;}
+        }
         const design=getButtonStampDesign();
-        if(design){addButtonRecord(p.x,p.y,design,1);draw();}
+        if(design){selectedButtonPattern=null;addButtonRecord(p.x,p.y,design,1);draw();}
         return;
     }
     if(selectedLayer){
@@ -1421,7 +1471,12 @@ canvas.addEventListener('touchstart',(e)=>{
 
 canvas.addEventListener('touchmove',(e)=>{
     const p=getCanvasPos(e);
-    if(isRotatingLayer && selectedLayer){
+    if(currentPage===4 && selectedButtonPattern && isRotatingLayer){
+        const curA=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);selectedButtonPattern.rotation=rotStart.layerAngle+(curA-rotStart.touchAngle);draw();
+    }else if(currentPage===4 && selectedButtonPattern && isScalingLayer){
+        const curDist=Math.hypot(p.x-layerCenter.x,p.y-layerCenter.y);if(scaleStart.dist>5)selectedButtonPattern.scale=Math.max(.1,Math.min(scaleStart.scale*(curDist/scaleStart.dist),5));draw();
+    }else if(currentPage===4 && selectedButtonPattern && isDraggingLayer){selectedButtonPattern.x=p.x;selectedButtonPattern.y=p.y;draw();
+    }else if(isRotatingLayer && selectedLayer){
         const curA = Math.atan2(p.y - layerCenter.y, p.x - layerCenter.x);
         selectedLayer.rotation = rotStart.layerAngle + (curA - rotStart.touchAngle);
         draw();
@@ -1459,6 +1514,9 @@ colorPicker.on('color:change',(c)=>{
     if(buttonPickerTarget){
         buttonColors[buttonPickerTarget]=picked;
         updateButtonColorDot(buttonPickerTarget,picked);
+        document.getElementById('currentSwatch').style.backgroundColor=picked;
+        document.getElementById('colorPreview').innerText=picked;
+        document.getElementById('colorPreview').style.backgroundColor=picked;
         updateButtonPreview();
         return;
     }
@@ -1475,11 +1533,16 @@ document.getElementById('colorBtn').addEventListener('click',(e)=>{
     openColorPickerFor('diamond');
 });
 function closePicker(){
-    if(!buttonPickerTarget && !colorHistory.includes(currentColor)){
+    if(buttonPickerTarget){
+        const v=buttonColors[buttonPickerTarget];
+        if(v && !buttonColorHistory.includes(v)){buttonColorHistory.push(v);if(buttonColorHistory.length>12)buttonColorHistory.shift();}
+        // 立即刷新历史颜色面板，下一次打开时也会显示最新颜色
+        buttonPickerTarget=null;
+    }else if(!colorHistory.includes(currentColor)){
         colorHistory.push(currentColor);
         if(colorHistory.length>12)colorHistory.shift();
+        updateHistorySwatches();
     }
-    buttonPickerTarget=null;
     document.getElementById('pickerContainer').style.display='none';
     document.getElementById('overlay').style.display='none';
 }
@@ -1492,7 +1555,11 @@ function openColorPickerFor(target){
     document.getElementById('currentSwatch').style.backgroundColor=val;
     document.getElementById('colorPreview').innerText=val;
     document.getElementById('colorPreview').style.backgroundColor=val;
-    updateHistorySwatches();
+    const c=document.getElementById('historySwatches');c.innerHTML='';
+    const history=buttonPickerTarget?buttonColorHistory:colorHistory;
+    history.slice().reverse().forEach(col=>{
+        const sw=document.createElement('div');sw.className='swatch';sw.style.backgroundColor=col;sw.onclick=()=>colorPicker.color.set(col);c.appendChild(sw);
+    });
 }
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
 
@@ -1554,6 +1621,8 @@ function _doRandom(type){
 
 function openVideoModal() {
     if(!mainImg.src){alert('请先上传图片');return;}
+    const randomBtn=document.getElementById('videoRandomColorBtn');
+    if(randomBtn)randomBtn.style.display=currentPage===4?'none':'';
     document.getElementById('videoModal').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
 }
@@ -1564,65 +1633,110 @@ function closeVideoModal() {
 
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
+    const isButtonVideo=currentPage===4;
     const allRecords=records.flat();
     videoColorCache={};
-    if(allRecords.length===0&&textLayers.length===0){alert('请先在画布上放置钻石或文字贴纸');return;}
+    if(isButtonVideo && !buttonCanvasRecords.length && !selectedButtonPattern){alert('请先在画布上放置扣子');return;}
+    if(!isButtonVideo && allRecords.length===0&&textLayers.length===0){alert('请先在画布上放置钻石或文字贴纸');return;}
     const btn=document.getElementById('liveBtn'),progressWrap=document.getElementById('recordProgress'),progressBar=document.getElementById('recordProgressBar');
     const mimeType=(()=>{const types=['video/mp4;codecs=avc1','video/mp4;codecs=h264','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];if(typeof MediaRecorder==='undefined'||!MediaRecorder.isTypeSupported)return null;return types.find(m=>MediaRecorder.isTypeSupported(m))||null;})();
     if(!mimeType){alert('您的浏览器暂不支持生成动态视频');return;}
     btn.disabled=true;btn.textContent='录制中...';progressWrap.style.display='block';progressBar.style.width='0%';
     const SCALE=2,rc=document.createElement('canvas');rc.width=canvas.width*SCALE;rc.height=canvas.height*SCALE;const rx=rc.getContext('2d');rx.scale(SCALE,SCALE);
-    const totalFrames=mode==='sequence'?90:60,FRAME_INTERVAL=50;
-    const randomVideoPalette=Array.from(new Set([...(colorHistory.length?colorHistory:[]),...macaronColors]));
+    const totalFrames=mode==='sequence'?90:60,FRAME_INTERVAL=50,randomVideoPalette=Array.from(new Set([...(colorHistory.length?colorHistory:[]),...macaronColors].filter(c=>String(c).toUpperCase()!=='#000000')));
+    // 随机颜色只从非黑色颜色池中切换，避免原图没有黑色却随机出黑色。
+    if(!randomVideoPalette.length) randomVideoPalette=[String(currentColor).toUpperCase()==='#000000'?'#FFB7B2':currentColor];
     const stableRandom=n=>{const x=Math.sin(n*12.9898)*43758.5453;return x-Math.floor(x);};
     function pulseScale(baseSize,seed,fi){const amp=Math.min(.12,Math.max(.045,baseSize/1400));return 1+amp*Math.sin(fi*(.11+stableRandom(seed)*.035)+stableRandom(seed+91)*Math.PI*2);}
-    function randomColorFor(seed){const idx=Math.floor(Math.abs(Math.sin(seed*7.13)*43758.5453)%1*randomVideoPalette.length)%randomVideoPalette.length;return randomVideoPalette[idx]||currentColor;}
+    function randomColorFor(seed,phase){
+        const pool=randomVideoPalette.length?randomVideoPalette:[currentColor];
+        if(pool.length===1)return pool[0]||currentColor;
+        const raw=Math.floor(Math.abs(Math.sin((seed+phase*97)*7.13)*43758.5453)%1*pool.length)%pool.length;
+        return pool[(raw+phase)%pool.length]||currentColor;
+    }
     function getSpatialIndex(absX,absY){const nx=Math.max(0,Math.min(1,absX/canvas.width)),ny=Math.max(0,Math.min(1,(canvas.height-absY)/canvas.height));return nx+ny;}
-    let totalDots=allRecords.length;textLayers.forEach(l=>totalDots+=l.points.length);const sequenceStep=Math.max(.5,60/(totalDots||1));
+    let totalDots=allRecords.length;textLayers.forEach(l=>totalDots+=l.points.length);
+    if(isButtonVideo && selectedButtonPattern) totalDots+=selectedButtonPattern.records.length;
+    totalDots+=buttonCanvasRecords.length;
+    const sequenceStep=Math.max(.5,60/(totalDots||1));
+    function glowAmount(order,fi,total){
+        if(mode!=='glow'||!total)return 0;
+        const cursor=Math.floor(fi/2)%total;
+        let d=Math.abs(order-cursor);d=Math.min(d,total-d);
+        return d===0?1:(d===1?.28:0);
+    }
+    function drawButtonVideoRecord(r,rIndex,fi){
+        const spatialIndex=getSpatialIndex(r.x,r.y),randomJitter=stableRandom(rIndex+11);let pDelay=0,popScale=1;
+        if(mode==='sequence'){pDelay=rIndex*sequenceStep;if(fi<pDelay)return false;popScale=Math.min(1,(fi-pDelay)/3);}
+        else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;
+        let ox=0,oy=0;
+        if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(r.y-canvas.height/2,r.x-canvas.width/2);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}
+        let img=r.img,baseSize=r.size;
+        if(mode==='randomColor'){
+            const phase=Math.floor(fi/15); // 0.5秒变一次颜色
+            const col=randomColorFor(rIndex+401,phase),ck=`button_${rIndex}_${phase}_${col}_${Math.round(baseSize)}`;
+            if(!videoColorCache[ck]){const tint=document.createElement('canvas');tint.width=tint.height=Math.max(1,Math.round(baseSize));const tc=tint.getContext('2d');tc.drawImage(r.img,0,0,tint.width,tint.height);tc.globalCompositeOperation='multiply';tc.fillStyle=col;tc.fillRect(0,0,tint.width,tint.height);tc.globalCompositeOperation='destination-in';tc.drawImage(r.img,0,0,tint.width,tint.height);videoColorCache[ck]=tint;}img=videoColorCache[ck];
+        }
+        const ms=mode==='pulse'?pulseScale(baseSize,rIndex+700,fi):1,fs=popScale*ms;
+        rx.save();rx.translate(r.x+ox,r.y+oy);rx.rotate(r.angle||0);
+        const ga=glowAmount(rIndex,fi,totalDots);
+        if(ga){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor='#ffd6e5';rx.shadowBlur=18+22*ga;}
+        rx.drawImage(img,-baseSize*fs/2,-baseSize*fs/2,baseSize*fs,baseSize*fs);rx.restore();return true;
+    }
     function drawVideoFrame(fi){
         rx.clearRect(0,0,canvas.width,canvas.height);if(mainImg.src)rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
+        if(isButtonVideo){
+            let buttonGlobal=0;
+            if(selectedButtonPattern){
+                const l=selectedButtonPattern,sizeFactor=l.sizeFactor||1;
+                l.records.forEach((r,i)=>{
+                    const spatialIndex=getSpatialIndex(l.x+r.x,l.y+r.y),jitter=stableRandom(i+901);let pDelay=0,popScale=1;
+                    if(mode==='sequence'){pDelay=buttonGlobal*sequenceStep;if(fi<pDelay){buttonGlobal++;return;}popScale=Math.min(1,(fi-pDelay)/3);}
+                    else if(mode==='fall')pDelay=spatialIndex*8+jitter*4;
+                    let ox=0,oy=0;if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(r.y,r.x);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}
+                    let img=r.img,baseSize=r.size*sizeFactor,col=currentColor;
+                    if(mode==='randomColor'){
+                        const phase=Math.floor(fi/15);col=randomColorFor(i+1201,phase);const ck=`bp_${i}_${phase}_${col}_${Math.round(baseSize)}`;
+                        if(!videoColorCache[ck]){const tint=document.createElement('canvas');tint.width=tint.height=Math.max(1,Math.round(baseSize));const tc=tint.getContext('2d');tc.drawImage(r.img,0,0,tint.width,tint.height);tc.globalCompositeOperation='multiply';tc.fillStyle=col;tc.fillRect(0,0,tint.width,tint.height);tc.globalCompositeOperation='destination-in';tc.drawImage(r.img,0,0,tint.width,tint.height);videoColorCache[ck]=tint;}img=videoColorCache[ck];
+                    }
+                    const ms=mode==='pulse'?pulseScale(baseSize,i+1301,fi):1,fs=popScale*ms;rx.save();rx.translate(l.x+r.x+ox,l.y+r.y+oy);rx.rotate((l.rotation||0)+(r.angle||0));const ga=glowAmount(buttonGlobal,fi,totalDots);if(ga){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffd6e5';rx.shadowBlur=18+22*ga;}rx.drawImage(img,-baseSize*fs/2,-baseSize*fs/2,baseSize*fs,baseSize*fs);rx.restore();buttonGlobal++;
+                });
+            }
+            buttonCanvasRecords.forEach((r,i)=>{drawButtonVideoRecord(r,i+buttonGlobal,fi);});return;
+        }
         const cx=canvas.width/2,cy=canvas.height/2;let globalIndex=0;
-        textLayers.forEach(l=>{
-            const linked=l.dotSize/6;rx.save();rx.translate(l.x,l.y);rx.rotate(l.rotation||0);
-            l.points.forEach((p,pIndex)=>{
-                const idx=p.stickerIdx!==undefined?p.stickerIdx:(l.stickerIdx||curIdx),baseCol=p.color||currentColor;
-                let col=baseCol;if(mode==='randomColor')col=randomColorFor((idx+1)*101+pIndex);
-                const sImg=stickers[idx]||stickers[0],ratio=sImg&&sImg.naturalWidth?sImg.naturalWidth/sImg.naturalHeight:1;
-                const baseDw=Math.max(1,linked*(ratio>=1?1:ratio)),baseDh=Math.max(1,linked/(ratio>=1?ratio:1));
-                let img=l.colorCacheMap[idx+'_'+col]||l.defaultImg;
-                if(mode==='randomColor'&&sImg){
-                    const ck=`${idx}_${col}_${Math.round(baseDw)}_${Math.round(baseDh)}`;
-                    if(!videoColorCache[ck]) videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(baseDw)),Math.max(1,Math.round(baseDh)));
-                    img=videoColorCache[ck];
-                }
-                if(!img){globalIndex++;return;}
-                const absX=l.x+p.dx*l.scale,absY=l.y+p.dy*l.scale,spatialIndex=getSpatialIndex(absX,absY),randomJitter=Math.abs(Math.sin(absX*12.9898+absY*78.233)*43758.5453)%1;
-                let pDelay=0,popScale=1;
-                if(mode==='sequence'){pDelay=globalIndex*sequenceStep;if(fi<pDelay){globalIndex++;return;}popScale=Math.min(1,(fi-pDelay)/3);}
-                else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;
-                let ox=0,oy=0;if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(p.dy,p.dx);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}
-                let ms=mode==='pulse'?pulseScale(Math.max(baseDw,baseDh),idx*10000+pIndex,fi):1,fs=popScale*ms;
-                rx.save();const glow=mode==='glow'&&(Math.floor(spatialIndex*5+randomJitter*3+fi*.8)%6===0);if(glow){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffe0ee';rx.shadowBlur=22;}
-                rx.drawImage(img,p.dx*l.scale+ox-baseDw*fs/2,p.dy*l.scale+oy-baseDh*fs/2,baseDw*fs,baseDh*fs);rx.restore();globalIndex++;
-            });rx.restore();
-        });
+        textLayers.forEach(l=>{const linked=l.dotSize/6;rx.save();rx.translate(l.x,l.y);rx.rotate(l.rotation||0);l.points.forEach((p,pIndex)=>{
+            const idx=p.stickerIdx!==undefined?p.stickerIdx:(l.stickerIdx||curIdx),baseCol=p.color||currentColor,phase=Math.floor(fi/15);let col=baseCol;if(mode==='randomColor')col=randomColorFor((idx+1)*101+pIndex,phase);
+            const sImg=stickers[idx]||stickers[0],ratio=sImg&&sImg.naturalWidth?sImg.naturalWidth/sImg.naturalHeight:1,baseDw=Math.max(1,linked*(ratio>=1?1:ratio)),baseDh=Math.max(1,linked/(ratio>=1?ratio:1));let img=l.colorCacheMap[idx+'_'+col]||l.defaultImg;
+            if(mode==='randomColor'&&sImg){const ck=`${idx}_${col}_${Math.round(baseDw)}_${Math.round(baseDh)}`;if(!videoColorCache[ck])videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(baseDw)),Math.max(1,Math.round(baseDh)));img=videoColorCache[ck];}
+            if(!img){globalIndex++;return;}const absX=l.x+p.dx*l.scale,absY=l.y+p.dy*l.scale,spatialIndex=getSpatialIndex(absX,absY),randomJitter=stableRandom(pIndex+idx*31);let pDelay=0,popScale=1;if(mode==='sequence'){pDelay=globalIndex*sequenceStep;if(fi<pDelay){globalIndex++;return;}popScale=Math.min(1,(fi-pDelay)/3);}else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;let ox=0,oy=0;if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(p.dy,p.dx);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}const ms=mode==='pulse'?pulseScale(Math.max(baseDw,baseDh),idx*10000+pIndex,fi):1,fs=popScale*ms;rx.save();const ga=glowAmount(globalIndex,fi,totalDots);if(ga){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffe0ee';rx.shadowBlur=16+24*ga;}rx.drawImage(img,p.dx*l.scale+ox-baseDw*fs/2,p.dy*l.scale+oy-baseDh*fs/2,baseDw*fs,baseDh*fs);rx.restore();globalIndex++;});rx.restore();});
         allRecords.forEach((r,rIndex)=>{
-            const spatialIndex=getSpatialIndex(r.x,r.y),randomJitter=Math.abs(Math.sin(r.x*12.9898+r.y*78.233)*43758.5453)%1;
-            let pDelay=0,popScale=1;if(mode==='sequence'){pDelay=globalIndex*sequenceStep;if(fi<pDelay){globalIndex++;return;}popScale=Math.min(1,(fi-pDelay)/3);}else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;
-            let ox=0,oy=0;if(mode==='fall'){const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;else if(dir==='outward'){const a=Math.atan2(r.y-cy,r.x-cx);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}}
+            const spatialIndex=getSpatialIndex(r.x,r.y),randomJitter=stableRandom(rIndex+31);
+            let pDelay=0,popScale=1;
+            if(mode==='sequence'){pDelay=globalIndex*sequenceStep;if(fi<pDelay){globalIndex++;return;}popScale=Math.min(1,(fi-pDelay)/3);}
+            else if(mode==='fall')pDelay=spatialIndex*8+randomJitter*4;
+            let ox=0,oy=0;
+            if(mode==='fall'){
+                const eff=Math.max(0,fi-pDelay),pr=Math.min(1,eff/18),dist=pr*pr*pr*Math.max(canvas.width,canvas.height)*1.2;
+                if(dir==='down')oy=dist;else if(dir==='up')oy=-dist;else if(dir==='left')ox=-dist;else if(dir==='right')ox=dist;
+                else if(dir==='outward'){const a=Math.atan2(r.y-cy,r.x-cx);ox=Math.cos(a)*dist;oy=Math.sin(a)*dist;}
+            }
             let img=r.img,col=r.glowColor||currentColor;
-            if(mode==='randomColor'&&r.stickerIdx!==undefined){const sImg=stickers[r.stickerIdx]||stickers[0];col=randomColorFor((r.stickerIdx+1)*503+rIndex);if(sImg){const ck=`r_${r.stickerIdx}_${col}_${Math.round(r.sizeW)}_${Math.round(r.sizeH)}`;if(!videoColorCache[ck])videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(r.sizeW)),Math.max(1,Math.round(r.sizeH)));img=videoColorCache[ck];}}
+            if(mode==='randomColor'&&r.stickerIdx!==undefined){
+                const sImg=stickers[r.stickerIdx]||stickers[0],phase=Math.floor(fi/15);col=randomColorFor((r.stickerIdx+1)*503+rIndex,phase);
+                if(sImg){const ck=`r_${r.stickerIdx}_${col}_${Math.round(r.sizeW)}_${Math.round(r.sizeH)}`;if(!videoColorCache[ck])videoColorCache[ck]=makeColoredSticker(sImg,col,Math.max(1,Math.round(r.sizeW)),Math.max(1,Math.round(r.sizeH)));img=videoColorCache[ck];}
+            }
             const ms=mode==='pulse'?pulseScale(Math.max(r.sizeW,r.sizeH),rIndex+303,fi):1,fs=popScale*ms;
-            rx.save();rx.translate(r.x+ox,r.y+oy);rx.rotate(r.angle||0);const glow=mode==='glow'&&(Math.floor(spatialIndex*5+randomJitter*3+fi*.8)%6===0);
-            if(glow){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffe0ee';rx.shadowBlur=36;rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);rx.shadowBlur=16;rx.shadowColor='#fff';rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);rx.shadowBlur=0;}
+            rx.save();rx.translate(r.x+ox,r.y+oy);rx.rotate(r.angle||0);
+            const ga=glowAmount(globalIndex,fi,totalDots);
+            if(ga){rx.shadowOffsetX=0;rx.shadowOffsetY=0;rx.shadowColor=col||'#ffe0ee';rx.shadowBlur=18+26*ga;rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);rx.shadowBlur=8+8*ga;rx.shadowColor='#fff';rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);}
             else rx.drawImage(img,-r.sizeW*fs/2,-r.sizeH*fs/2,r.sizeW*fs,r.sizeH*fs);
             rx.restore();globalIndex++;
         });
     }
     drawVideoFrame(0);const stream=rc.captureStream(30),chunks=[],recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:20000000});
     recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
-    recorder.onstop=()=>{if(!chunks.length){alert('视频下载失败，该浏览器可能不支持视频编码导出，请尝试保存图片功能。');btn.disabled=false;btn.textContent='生成';progressWrap.style.display='none';return;}
-        const ext=mimeType.includes('mp4')?'mp4':'webm',blob=new Blob(chunks,{type:mimeType}),url=URL.createObjectURL(blob),a=document.createElement('a'),now=new Date(),ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;a.download=`pancakesticker_video_${mode}_${ts}.${ext}`;a.href=url;a.click();URL.revokeObjectURL(url);btn.disabled=false;btn.textContent='生成';progressWrap.style.display='none';};
+    recorder.onstop=()=>{if(!chunks.length){alert('视频下载失败，该浏览器可能不支持视频编码导出，请尝试保存图片功能。');btn.disabled=false;btn.textContent='生成';progressWrap.style.display='none';return;}const ext=mimeType.includes('mp4')?'mp4':'webm',blob=new Blob(chunks,{type:mimeType}),url=URL.createObjectURL(blob),a=document.createElement('a'),now=new Date(),ts=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;a.download=`pancakesticker_video_${isButtonVideo?'button_':''}${mode}_${ts}.${ext}`;a.href=url;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);btn.disabled=false;btn.textContent='生成';progressWrap.style.display='none';};
     try{recorder.start();}catch(err){alert('启动视频录制失败，请检查浏览器权限。');btn.disabled=false;btn.textContent='生成';progressWrap.style.display='none';return;}
     let fi=0;const timer=setInterval(()=>{drawVideoFrame(fi);fi++;progressBar.style.width=(fi/totalFrames*100)+'%';if(fi>=totalFrames){clearInterval(timer);setTimeout(()=>recorder.stop(),300);}},FRAME_INTERVAL);
 }
@@ -1632,12 +1746,12 @@ function updateDensityLabel(v){document.getElementById('densityVal').innerText={
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateP3DensityLabel(v){document.getElementById('p3DensityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function smartUndo(){
-    if(currentPage===4){if(buttonCanvasRecords.length)buttonCanvasRecords.pop();draw();return;}
+    if(currentPage===4){if(selectedButtonPattern){selectedButtonPattern=null;draw();return;}if(buttonCanvasRecords.length)buttonCanvasRecords.pop();draw();return;}
     if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;} else records.pop(); draw();
 }
 function clearAll(){
     if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){
-        if(currentPage===4)buttonCanvasRecords=[];
+        if(currentPage===4){buttonCanvasRecords=[];selectedButtonPattern=null;}
         else{textLayers=[];records=[];selectedLayer=null;}
         draw();
     }
