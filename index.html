@@ -41,7 +41,6 @@
         body.tablet-mode .page-corner-icon { top: auto; bottom: 8px; right: auto; left: 8px; transform: rotate(90deg); }
         body.tablet-mode .page-corner.flipped .page-corner-icon { transform: rotate(270deg); }
         body.tablet-mode .page-corner-badge { top: auto; bottom: 4px; right: auto; left: 20px; }
-
         /* 贴纸展示区域 */
         .sticker-container-box { width: 100%; border: 1.5px dashed #ffcad4; border-radius: 12px; padding: 8px; background: #fffafb; position: relative; margin-bottom: 8px; }
         .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; justify-items: center; max-height: 72px; overflow: hidden; transition: max-height 0.3s ease; }
@@ -59,7 +58,6 @@
         .expand-toggle-btn { position: absolute; right: 6px; bottom: 4px; width: 26px; height: 26px; border-radius: 50%; background: #ffabbd; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.15); z-index: 5; transition: transform 0.2s; }
         .expand-toggle-btn.open { transform: rotate(45deg); background: #ff6b6b; }
         .sticker-tip-txt { font-size: 10px; color: #ff85a2; text-align: center; margin-top: 4px; }
-
         .page-content { width: 100%; }
         .sticker-gen-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
         .gen-row { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; }
@@ -114,7 +112,7 @@
     </style>
 </head>
 <body>
-<div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null);closeVideoModal();"></div>
+<div class="overlay" id="overlay" onclick="closePicker();closeRandomModal(null);closeVideoModal();closeButtonModal();"></div>
 <div class="title-header">
   <img src="IMG_20260713_162936.png" alt="Pancake Sticker Book">
 </div>
@@ -169,19 +167,21 @@
                 <input type="file" id="stickerImgInput" accept="image/*" style="display:none">
             </div>
         </div>
-
         <div class="page-content" id="pageContent3" style="display:none">
+            <!-- 第三页上方放同样的贴纸库 -->
+            <div class="sticker-container-box" id="p3StickerBoxArea">
+                <div class="sticker-grid" id="p3StickerGrid"></div>
+                <div class="expand-toggle-btn" id="p3ExpandBtn" onclick="toggleP3StickerGrid()">+</div>
+                <div class="sticker-tip-txt">点击钻石可多选</div>
+            </div>
             <div class="sticker-gen-area">
                 <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">
                     <span>手绘电子画布</span>
                 </div>
-                <canvas id="userDrawCanvas" width="300" height="320" style="background:#fff;border:1.5px dashed #ffc4d4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
-                <div class="gen-row" style="margin-top:20px;">
-                    <button class="gen-btn" style="background:#ffcccc; flex:1;" onclick="clearDrawCanvas()">清空</button>
-                    <button class="gen-btn" style="background:#ffdada; flex:1;" onclick="undoDrawCanvas()">撤回</button>
-                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
-                </div>
-                <div style="margin-top:20px;border-top:1px dashed #ffc4d4;padding-top:12px;display:flex;gap:12px;align-items:center;">
+                <canvas id="userDrawCanvas" width="300" height="260" style="background:#fff;border:1.5px dashed #ffc4d4;border-radius:8px;touch-action:none;width:100%;cursor:crosshair;"></canvas>
+                <!-- 第三页色环与旋钮放在同一行 -->
+                <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+                    <div class="current-color-dot" id="p3ColorBtn" style="background:#FFB7B2; width:40px; height:40px; flex-shrink:0;"></div>
                     <div style="flex:1;">
                         <div class="slider-row"><span>钻石密度</span><span id="p3DensityVal">少</span></div>
                         <input type="range" id="p3DensitySlider" min="6" max="12" value="6" step="2" oninput="updateP3DensityLabel(this.value)">
@@ -189,9 +189,39 @@
                         <input type="range" id="p3SizeSlider" min="30" max="300" value="80">
                     </div>
                 </div>
+                <div class="gen-row" style="margin-top:10px;">
+                    <button class="gen-btn" style="background:#ffcccc; flex:1;" onclick="clearDrawCanvas()">清空</button>
+                    <button class="gen-btn" style="background:#ffdada; flex:1;" onclick="undoDrawCanvas()">撤回</button>
+                    <button class="gen-btn" style="flex:2;" onclick="generateDrawStickers()">生成钻石画</button>
+                </div>
             </div>
         </div>
-
+        <div class="page-content" id="pageContent4" style="display:none">
+            <!-- 第四页：扣子页 -->
+            <div class="sticker-container-box" id="buttonStickerBoxArea">
+                <div class="sticker-grid" id="buttonStickerGrid"></div>
+                <div class="expand-toggle-btn" id="buttonExpandBtn" onclick="toggleButtonStickerGrid()">+</div>
+                <div class="sticker-tip-txt">选择扣子基础款式 (button1-button7)</div>
+            </div>
+            <div class="sticker-gen-area">
+                <div style="font-size:12px;color:var(--pink-accent);font-weight:bold;margin-bottom:6px;">定制扣子工坊</div>
+                <div class="frame-action-bar" style="margin-top:0; margin-bottom:6px;">
+                    <button onclick="openButtonColorPicker()">纯色</button>
+                    <button onclick="openButtonPattern('stripe')">条纹</button>
+                    <button onclick="openButtonPattern('polka')">波点</button>
+                    <button onclick="buttonImgInput.click()">上传图片</button>
+                </div>
+                <input type="file" id="buttonImgInput" accept="image/*" style="display:none">
+                
+                <div class="slider-row"><span>扣子大小</span><span id="btnSizeVal">80</span></div>
+                <input type="range" id="btnSizeSlider" min="30" max="300" value="80">
+                <div class="slider-row"><span>扣子角度</span><span id="btnRotVal">0°</span></div>
+                <input type="range" id="btnRotateSlider" min="0" max="360" value="0">
+                
+                <div style="font-size:11px;color:var(--pink-accent);font-weight:bold;margin-top:8px;margin-bottom:4px;">用户设计的扣子展示 (长按删除)</div>
+                <div id="designedButtonList" style="display:flex; gap:6px; overflow-x:auto; min-height:50px; padding:4px; border:1px dashed #ffcad4; border-radius:8px; background:#fff;"></div>
+            </div>
+        </div>
         <div class="controls">
             <div class="color-col">
                 <div class="current-color-dot" id="colorBtn" style="background:#FFB7B2;"></div>
@@ -243,7 +273,6 @@
         <input type="file" id="imgInput" accept="image/*" style="display:none">
     </div>
 </div>
-
 <div id="pickerContainer">
     <div class="color-preview-bar" id="colorPreview" style="background:#FFB7B2">#FFB7B2</div>
     <div id="iroPicker" style="display:flex;justify-content:center;"></div>
@@ -255,18 +284,19 @@
     <div class="color-swatches" id="presetSwatches"></div>
     <button onclick="closePicker()" style="margin-top:14px;background:var(--pink-accent);width:100%;color:white;border:none;padding:11px;border-radius:10px;font-weight:bold;cursor:pointer;font-size:14px;">确定</button>
 </div>
-
 <div id="randomModal" class="modal-box">
     <div class="modal-title">选择颜色来源</div>
     <button class="modal-btn" onclick="closeRandomModal('photo')">图片同色系</button>
     <button class="modal-btn modal-btn-sub" onclick="closeRandomModal('history')">历史颜色</button>
     <button onclick="closeRandomModal(null)" style="margin-top:8px;background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
-
 <div id="videoModal" class="modal-box">
     <div class="modal-title">选择视频效果模式</div>
     <button class="modal-btn" style="background:#ff85a2; margin-bottom:8px;" onclick="startVideoGeneration('sequence')">逐个贴上模式</button>
     <button class="modal-btn" onclick="startVideoGeneration('glow')">闪光模式</button>
+    <!-- 新增视频效果：伸缩与随机颜色 -->
+    <button class="modal-btn" style="background:#ffacc7;" onclick="startVideoGeneration('stretch')">伸缩</button>
+    <button class="modal-btn" style="background:#ffacc7;" onclick="startVideoGeneration('randomColor')">随机颜色</button>
     <div style="font-size:12px; color:var(--pink-accent); margin:10px 0 6px; font-weight:bold;">坠落模式（选择方向）</div>
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; margin-bottom:10px;">
         <button class="modal-btn modal-btn-sub" onclick="startVideoGeneration('fall','up')">向上</button>
@@ -278,16 +308,29 @@
     <button onclick="closeVideoModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
 </div>
 
+<!-- 扣子样式弹窗 (条纹/波点参数配置) -->
+<div id="buttonModal" class="modal-box" style="width:min(320px,90vw);">
+    <div class="modal-title" id="buttonModalTitle">配置扣子样式</div>
+    <div id="buttonModalContent" style="text-align:left; font-size:12px; color:var(--pink-accent); font-weight:bold;">
+        <!-- 动态生成配置项 -->
+    </div>
+    <button class="modal-btn" style="margin-top:12px;" onclick="confirmButtonDesign()">生成扣子</button>
+    <button onclick="closeButtonModal()" style="background:none;border:none;color:#ccc;font-size:12px;cursor:pointer;">取消</button>
+</div>
+
 <script>
-const canvas  = document.getElementById('myCanvas');
+ canvas  = document.getElementById('myCanvas');
 const mainCtx = canvas.getContext('2d');
 const imgInput = document.getElementById('imgInput');
 const dropZone = document.getElementById('dropZone');
 let mainImg            = new Image();
 let stickers           = [];
+let buttonStickers     = []; // 第四页扣子图片 (button1-7)
 let selectedStickerIndices = [0]; // 多选选中的贴纸索引
+let selectedButtonStickerIndex = 0; // 当前选中的扣子底图索引
 let records            = [];
 let textLayers         = [];
+let designedButtons    = []; // 用户设计的扣子列表
 let curIdx             = 0;
 let currentColor       = "#FFB7B2";
 let preRenderedSticker = null;
@@ -296,8 +339,10 @@ let colorHistory       = [];
 let currentPage        = 1;
 let stickerUploadedImg = null;
 let isExpanded         = false;
+let isP3Expanded       = false;
+let isButtonExpanded   = false;
 let fillModalPending   = false;
-
+let activeButtonStyle  = null; // 当前配置的扣子类型: solid, stripe, polka, upload
 const uCanvas = document.getElementById('userDrawCanvas');
 const uCtx = uCanvas.getContext('2d', { willReadFrequently: true });
 let isUDraw = false;
@@ -323,7 +368,6 @@ const harmonyPalettes = [
     ["#FFD3E8","#FFB7B2","#FFACC7","#FF9EBF"],
     ["#DDA0DD","#D4AFFF","#E8C4F0","#C4A8FF"],
 ];
-
 function switchDeviceMode(mode) {
     const btnM = document.getElementById('btnMobile');
     const btnT = document.getElementById('btnTablet');
@@ -337,27 +381,34 @@ function switchDeviceMode(mode) {
         btnT.classList.remove('active');
     }
 }
-
 function toggleStickerGrid(){
     isExpanded = !isExpanded;
     const grid = document.getElementById('stickerGrid');
     const btn = document.getElementById('expandBtn');
-    if(isExpanded){
-        grid.classList.add('expanded');
-        btn.classList.add('open');
-    } else {
-        grid.classList.remove('expanded');
-        btn.classList.remove('open');
-    }
+    if(isExpanded){ grid.classList.add('expanded'); btn.classList.add('open'); }
+    else { grid.classList.remove('expanded'); btn.classList.remove('open'); }
 }
-
+function toggleP3StickerGrid(){
+    isP3Expanded = !isP3Expanded;
+    const grid = document.getElementById('p3StickerGrid');
+    const btn = document.getElementById('p3ExpandBtn');
+    if(isP3Expanded){ grid.classList.add('expanded'); btn.classList.add('open'); }
+    else { grid.classList.remove('expanded'); btn.classList.remove('open'); }
+}
+function toggleButtonStickerGrid(){
+    isButtonExpanded = !isButtonExpanded;
+    const grid = document.getElementById('buttonStickerGrid');
+    const btn = document.getElementById('buttonExpandBtn');
+    if(isButtonExpanded){ grid.classList.add('expanded'); btn.classList.add('open'); }
+    else { grid.classList.remove('expanded'); btn.classList.remove('open'); }
+}
 function rgbToHsl(r,g,b){
     r/=255;g/=255;b/=255;
     const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
     let h,s,l=(mx+mn)/2;
     if(mx===mn){h=s=0;}else{
         const d=mx-mn; s=l>0.5?d/(2-mx-mn):d/(mx+mn);
-        switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;}
+        switch(mx){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;default:h=(r-g)/d+4;}
         h/=6;
     }
     return[h,s,l];
@@ -369,7 +420,6 @@ function hslToRgb(h,s,l){
     return`rgb(${Math.round(h2r(p,q,h+1/3)*255)},${Math.round(h2r(p,q,h)*255)},${Math.round(h2r(p,q,h-1/3)*255)})`;
 }
 function rgbToHex(r,g,b){ return '#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join(''); }
-
 function extractPhotoColors(imgEl){
     const sc=document.createElement('canvas'); sc.width=40; sc.height=40;
     const sx=sc.getContext('2d'); sx.drawImage(imgEl,0,0,40,40);
@@ -400,7 +450,6 @@ function extractPhotoColors(imgEl){
         return rgbToHex(Math.round(h2r(p,q,h+1/3)*255),Math.round(h2r(p,q,h)*255),Math.round(h2r(p,q,h-1/3)*255));
     });
 }
-
 function makeColoredSticker(sImg, color, w, h) {
     w=Math.max(1,Math.round(w)); h=Math.max(1,Math.round(h));
     const oc=document.createElement('canvas'); oc.width=w; oc.height=h;
@@ -412,27 +461,56 @@ function makeColoredSticker(sImg, color, w, h) {
     return oc;
 }
 function canvasToImg(oc){ const i=new Image(); i.src=oc.toDataURL(); return i; }
-
 function init(){
     renderStickersSkeleton();
+    renderP3StickersSkeleton();
+    renderButtonStickersSkeleton();
     for(let i=1;i<=12;i++){
         const img=new Image(); img.crossOrigin="anonymous";
         stickers[i-1]=img;
         img.onload=()=>{
             const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
+            const p3Slot=document.querySelector(`[data-p3-sticker-idx="${i-1}"]`);
             if(slot){
                 slot.classList.remove('loading');
                 const imgEl=slot.querySelector('.sticker-item');
+                if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
+            }
+            if(p3Slot){
+                p3Slot.classList.remove('loading');
+                const imgEl=p3Slot.querySelector('.sticker-item');
                 if(imgEl){ imgEl.src=img.src; imgEl.classList.add('loaded'); }
             }
             if(i-1===curIdx) updatePreRender();
         };
         img.onerror=()=>{
             const slot=document.querySelector(`[data-sticker-idx="${i-1}"]`);
+            const p3Slot=document.querySelector(`[data-p3-sticker-idx="${i-1}"]`);
             if(slot) slot.classList.remove('loading');
+            if(p3Slot) p3Slot.classList.remove('loading');
         };
         setTimeout(()=>{ img.src=`${baseUrl}sticker${i}.png`; }, (i-1)*50);
     }
+    
+    // 加载第四页扣子图片 button1-7 (假设存放在相同cdn或路径下，如 button1.png)
+    for(let i=1; i<=7; i++){
+        const bImg = new Image(); bImg.crossOrigin = "anonymous";
+        buttonStickers[i-1] = bImg;
+        bImg.onload = () => {
+            const slot = document.querySelector(`[data-btn-sticker-idx="${i-1}"]`);
+            if(slot){
+                slot.classList.remove('loading');
+                const imgEl = slot.querySelector('.sticker-item');
+                if(imgEl){ imgEl.src = bImg.src; imgEl.classList.add('loaded'); }
+            }
+        };
+        bImg.onerror = () => {
+            const slot = document.querySelector(`[data-btn-sticker-idx="${i-1}"]`);
+            if(slot) slot.classList.remove('loading');
+        };
+        setTimeout(()=>{ bImg.src = `${baseUrl}button${i}.png`; }, (i-1)*50);
+    }
+
     initPresetSwatches();
     animateLiveDots();
     document.getElementById('stickerImgInput').onchange=function(e){
@@ -451,6 +529,21 @@ function init(){
         };
         reader.readAsDataURL(file);
     };
+    
+    document.getElementById('buttonImgInput').onchange = function(e){
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (f) => {
+            const img = new Image();
+            img.onload = () => {
+                createCustomButton(img, 'upload');
+            };
+            img.src = f.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     initUDrawEvents();
     
     document.getElementById('p3SizeSlider').oninput = function() {
@@ -458,8 +551,14 @@ function init(){
         document.getElementById('p3SizeVal').innerText = val;
         if(selectedLayer) { selectedLayer.dotSize = val; _buildCache(selectedLayer); draw(); }
     };
+    
+    document.getElementById('btnSizeSlider').oninput = function() {
+        document.getElementById('btnSizeVal').innerText = this.value;
+    };
+    document.getElementById('btnRotateSlider').oninput = function() {
+        document.getElementById('btnRotVal').innerText = this.value + '°';
+    };
 }
-
 function renderStickersSkeleton(){
     const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
     for(let i=0; i<12; i++){
@@ -472,7 +571,6 @@ function renderStickersSkeleton(){
         badge.className = 'check-badge';
         badge.innerText = '✓';
         slot.appendChild(badge);
-
         const imgEl=document.createElement('img');
         imgEl.className='sticker-item';
         const sImg=stickers[i];
@@ -483,21 +581,77 @@ function renderStickersSkeleton(){
         slot.onclick=()=>{
             const pos = selectedStickerIndices.indexOf(i);
             if(pos > -1){
-                if(selectedStickerIndices.length > 1){
-                    selectedStickerIndices.splice(pos, 1);
-                }
-            } else {
-                selectedStickerIndices.push(i);
-            }
+                if(selectedStickerIndices.length > 1){ selectedStickerIndices.splice(pos, 1); }
+            } else { selectedStickerIndices.push(i); }
             curIdx = selectedStickerIndices[selectedStickerIndices.length - 1];
             renderStickersSkeleton();
+            renderP3StickersSkeleton();
             updatePreRender();
         };
         slot.appendChild(imgEl);
         grid.appendChild(slot);
     }
 }
-
+function renderP3StickersSkeleton(){
+    const grid=document.getElementById('p3StickerGrid'); grid.innerHTML='';
+    for(let i=0; i<12; i++){
+        const slot=document.createElement('div');
+        const isActive = selectedStickerIndices.includes(i);
+        slot.className='sticker-slot loading'+(isActive?' active':'');
+        slot.setAttribute('data-p3-sticker-idx',i);
+        
+        const badge = document.createElement('div');
+        badge.className = 'check-badge';
+        badge.innerText = '✓';
+        slot.appendChild(badge);
+        const imgEl=document.createElement('img');
+        imgEl.className='sticker-item';
+        const sImg=stickers[i];
+        if(sImg&&sImg.complete&&sImg.naturalWidth>0){
+            imgEl.src=sImg.src; imgEl.classList.add('loaded');
+            slot.classList.remove('loading');
+        }
+        slot.onclick=()=>{
+            const pos = selectedStickerIndices.indexOf(i);
+            if(pos > -1){
+                if(selectedStickerIndices.length > 1){ selectedStickerIndices.splice(pos, 1); }
+            } else { selectedStickerIndices.push(i); }
+            curIdx = selectedStickerIndices[selectedStickerIndices.length - 1];
+            renderStickersSkeleton();
+            renderP3StickersSkeleton();
+            updatePreRender();
+        };
+        slot.appendChild(imgEl);
+        grid.appendChild(slot);
+    }
+}
+function renderButtonStickersSkeleton(){
+    const grid = document.getElementById('buttonStickerGrid'); grid.innerHTML='';
+    for(let i=0; i<7; i++){
+        const slot = document.createElement('div');
+        const isActive = (selectedButtonStickerIndex === i);
+        slot.className = 'sticker-slot loading' + (isActive?' active':'');
+        slot.setAttribute('data-btn-sticker-idx', i);
+        
+        const badge = document.createElement('div');
+        badge.className = 'check-badge';
+        badge.innerText = '✓';
+        slot.appendChild(badge);
+        const imgEl = document.createElement('img');
+        imgEl.className = 'sticker-item';
+        const bImg = buttonStickers[i];
+        if(bImg && bImg.complete && bImg.naturalWidth > 0){
+            imgEl.src = bImg.src; imgEl.classList.add('loaded');
+            slot.classList.remove('loading');
+        }
+        slot.onclick = () => {
+            selectedButtonStickerIndex = i;
+            renderButtonStickersSkeleton();
+        };
+        slot.appendChild(imgEl);
+        grid.appendChild(slot);
+    }
+}
 function initPresetSwatches(){
     const c=document.getElementById('presetSwatches');
     macaronColors.forEach(col=>{
@@ -536,7 +690,7 @@ function animateLiveDots(){
     },350);
 }
 function flipPage(){
-    currentPage = (currentPage % 3) + 1;
+    currentPage = (currentPage % 4) + 1;
     const isFlipped = (currentPage !== 1);
     document.getElementById('pageCorner').classList.toggle('flipped', isFlipped);
     document.getElementById('pageBadge').innerText = 'P.' + currentPage;
@@ -544,10 +698,12 @@ function flipPage(){
     document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
     document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
     document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
-    document.getElementById('stickerBoxArea').style.display = currentPage === 3 ? 'none' : 'block';
+    document.getElementById('pageContent4').style.display = currentPage===4 ? 'block' : 'none';
+    document.getElementById('stickerBoxArea').style.display = (currentPage === 3 || currentPage === 4) ? 'none' : 'block';
+    
     const mainSliderCol = document.getElementById('mainSliderCol');
     if (mainSliderCol) {
-        mainSliderCol.style.display = currentPage === 3 ? 'none' : 'block';
+        mainSliderCol.style.display = (currentPage === 3 || currentPage === 4) ? 'none' : 'block';
     }
 }
 function initUDrawEvents(){
@@ -589,7 +745,6 @@ function undoDrawCanvas() {
     if(uDrawPaths.length > 0) { uCtx.putImageData(uDrawPaths.pop(), 0, 0); }
     else { uCtx.clearRect(0, 0, uCanvas.width, uCanvas.height); }
 }
-
 function generateDrawStickers() {
     if(!mainImg.src) return imgInput.click();
     const imgData = uCtx.getImageData(0, 0, uCanvas.width, uCanvas.height).data;
@@ -625,15 +780,25 @@ function generateDrawStickers() {
     selectedLayer = layer;
     draw();
 }
-
 function generateFrame(shape) {
     if(!mainImg.src) { alert('请先上传图片激活主画布'); return imgInput.click(); }
     const w = canvas.width, h = canvas.height;
-    const dotSize = parseInt(document.getElementById('sizeSlider').value);
+    // 如果在第四页扣子页，则使用扣子尺寸和设计的扣子
+    const isPage4 = (currentPage === 4);
+    const dotSize = isPage4 ? parseInt(document.getElementById('btnSizeSlider').value) : parseInt(document.getElementById('sizeSlider').value);
     const palette = colorHistory.length > 0 ? colorHistory : macaronColors;
     
-    const sImg = stickers[curIdx] || stickers[0];
-    const ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
+    let targetImg = null;
+    let ratio = 1;
+    if(isPage4) {
+        if(designedButtons.length === 0){ alert('请先设计并生成至少一个扣子！'); return; }
+        targetImg = designedButtons[designedButtons.length - 1]; // 使用最近设计的扣子
+        ratio = targetImg.naturalWidth / targetImg.naturalHeight || 1;
+    } else {
+        const sImg = stickers[curIdx] || stickers[0];
+        ratio = sImg.naturalWidth / sImg.naturalHeight || 1;
+    }
+    
     const sW = dotSize * (ratio >= 1 ? 1 : ratio);
     const sH = dotSize / (ratio >= 1 ? ratio : 1);
     
@@ -702,7 +867,7 @@ function generateFrame(shape) {
     if(!tempPts.length) return;
     let points = tempPts.map(p => {
         const chosenStickerIdx = selectedStickerIndices[Math.floor(Math.random() * selectedStickerIndices.length)];
-        return { 
+        return {
             dx: p.x - cx, 
             dy: p.y - cy, 
             color: palette[Math.floor(Math.random() * palette.length)],
@@ -710,37 +875,41 @@ function generateFrame(shape) {
         };
     });
     const layer = {
-        points, colorCacheMap:{}, defaultImg: preRenderedSticker,
-        x: cx, y: cy, scale: 1.0, ratio: stickerRatio, origWidth: w, origHeight: h,
-        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: true, shapeType: shape
+        points, colorCacheMap:{}, defaultImg: isPage4 ? targetImg : preRenderedSticker,
+        x: cx, y: cy, scale: 1.0, ratio: ratio, origWidth: w, origHeight: h,
+        dotSize: dotSize, rotation: isPage4 ? parseInt(document.getElementById('btnRotateSlider').value)*Math.PI/180 : 0, 
+        stickerIdx: curIdx, useOrig: true, isDynamicFrame: true, shapeType: shape, isButtonLayer: isPage4, customButtonImg: isPage4 ? targetImg : null
     };
-    _buildCache(layer);
+    if(!isPage4) _buildCache(layer);
     textLayers.push(layer);
     selectedLayer = layer;
     draw();
 }
-
-/* 新增：满屏钻石功能（多选钻石 + 颜色/图片同色系 + 网格对齐 + 密度联动） */
 function generateFullPattern() {
     if(!mainImg.src) { alert('请先上传图片'); return imgInput.click(); }
     fillModalPending = true;
     document.getElementById('randomModal').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
 }
-
 function _doFullPattern(type) {
     const w = canvas.width, h = canvas.height;
-    const dotSize = parseInt(document.getElementById('sizeSlider').value);
+    const isPage4 = (currentPage === 4);
+    const dotSize = isPage4 ? parseInt(document.getElementById('btnSizeSlider').value) : parseInt(document.getElementById('sizeSlider').value);
     
-    // 决定颜色库
     let palette = type === 'history' 
         ? (colorHistory.length > 0 ? colorHistory : macaronColors) 
         : (photoColorPalette.length >= 3 ? photoColorPalette : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]);
     
-    // 获取钻石密度滑块对应的步进间距
-    let currentSliderId = currentPage === 1 ? 'densitySlider' : (currentPage === 2 ? 'densitySlider2' : 'p3DensitySlider');
+    let targetImg = null;
+    let ratio = 1;
+    if(isPage4) {
+        if(designedButtons.length === 0){ alert('请先设计并生成至少一个扣子！'); return; }
+        targetImg = designedButtons[designedButtons.length - 1];
+        ratio = targetImg.naturalWidth / targetImg.naturalHeight || 1;
+    }
+
+    let currentSliderId = currentPage === 1 ? 'densitySlider' : (currentPage === 2 ? 'densitySlider2' : (currentPage === 3 ? 'p3DensitySlider' : 'densitySlider'));
     const stepVal = _stepFromDensity(currentSliderId);
-    // 联动钻石大小与滑块密度
     const step = (dotSize * 0.85) * (stepVal / 4);
     
     const points = [];
@@ -764,16 +933,16 @@ function _doFullPattern(type) {
     
     if(!points.length) return;
     const layer = {
-        points, colorCacheMap:{}, defaultImg: preRenderedSticker,
-        x: w/2, y: h/2, scale: 1.0, ratio: stickerRatio, origWidth: w, origHeight: h,
-        dotSize: dotSize, rotation: 0, stickerIdx: curIdx, useOrig: true, isDynamicFrame: false
+        points, colorCacheMap:{}, defaultImg: isPage4 ? targetImg : preRenderedSticker,
+        x: w/2, y: h/2, scale: 1.0, ratio: isPage4 ? ratio : stickerRatio, origWidth: w, origHeight: h,
+        dotSize: dotSize, rotation: isPage4 ? parseInt(document.getElementById('btnRotateSlider').value)*Math.PI/180 : 0, 
+        stickerIdx: curIdx, useOrig: true, isDynamicFrame: false, isButtonLayer: isPage4, customButtonImg: isPage4 ? targetImg : null
     };
-    _buildCache(layer);
+    if(!isPage4) _buildCache(layer);
     textLayers.push(layer);
     selectedLayer = layer;
     draw();
 }
-
 function updatePreRender(){
     const sImg=stickers[curIdx];
     if(!sImg||!sImg.complete||!sImg.naturalWidth)return;
@@ -782,7 +951,6 @@ function updatePreRender(){
     const h=stickerRatio>=1?150/stickerRatio:150;
     preRenderedSticker=canvasToImg(makeColoredSticker(sImg,currentColor,w,h));
 }
-
 function generateTextStickers(){
     if(!mainImg.src)return imgInput.click();
     const text=document.getElementById('stickerTextInput').value; if(!text)return;
@@ -833,7 +1001,6 @@ function _buildTextLayer(text){
     selectedLayer=layer;
     draw();
 }
-
 function generateImgStickers(){
     if(!mainImg.src)return imgInput.click();
     if(!stickerUploadedImg){alert('请先上传图片');return;}
@@ -877,13 +1044,11 @@ function _buildImgLayer(){
     selectedLayer=layer;
     draw();
 }
-
 function _stepFromDensity(sliderId){
     const el = document.getElementById(sliderId);
     const v=parseInt(el ? el.value : 6);
     return v===6?5:v===8?4:v===10?3:2;
 }
-
 function _buildCache(l){
     const linked=l.dotSize/6;
     const newCache={};
@@ -907,7 +1072,6 @@ function _buildCache(l){
     const dhD = Math.max(1, linked / (l.ratio>=1?l.ratio:1));
     l.defaultImg=canvasToImg(makeColoredSticker(sImgDefault,currentColor,dwD,dhD));
 }
-
 function draw(isExporting){
     mainCtx.clearRect(0,0,canvas.width,canvas.height);
     if(mainImg.src)mainCtx.drawImage(mainImg,0,0,canvas.width,canvas.height);
@@ -923,19 +1087,27 @@ function draw(isExporting){
         const linked=l.dotSize/6;
         mainCtx.save();
         mainCtx.translate(l.x,l.y); mainCtx.rotate(l.rotation||0);
-        l.points.forEach(p=>{
-            const idx = (p.stickerIdx !== undefined) ? p.stickerIdx : (l.stickerIdx || curIdx);
-            const col = p.color || currentColor;
-            const key = idx + '_' + col;
-            const img = l.colorCacheMap[key] || l.defaultImg;
-            
-            const sImg = stickers[idx] || stickers[0];
-            const ratio = (sImg && sImg.naturalWidth) ? sImg.naturalWidth / sImg.naturalHeight : 1;
-            const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
-            const dh = Math.max(1, linked / (ratio >= 1 ? ratio : 1));
-
-            if(img) mainCtx.drawImage(img, p.dx*l.scale - dw/2, p.dy*l.scale - dh/2, dw, dh);
-        });
+        if(l.isButtonLayer && l.customButtonImg) {
+            l.points.forEach(p => {
+                const ratio = l.ratio || 1;
+                const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
+                const dh = Math.max(1, linked / (ratio >= 1 ? ratio : 1));
+                mainCtx.drawImage(l.customButtonImg, p.dx*l.scale - dw/2, p.dy*l.scale - dh/2, dw, dh);
+            });
+        } else {
+            l.points.forEach(p=>{
+                const idx = (p.stickerIdx !== undefined) ? p.stickerIdx : (l.stickerIdx || curIdx);
+                const col = p.color || currentColor;
+                const key = idx + '_' + col;
+                const img = l.colorCacheMap[key] || l.defaultImg;
+                
+                const sImg = stickers[idx] || stickers[0];
+                const ratio = (sImg && sImg.naturalWidth) ? sImg.naturalWidth / sImg.naturalHeight : 1;
+                const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
+                const dh = Math.max(1, linked / (ratio >= 1 ? ratio : 1));
+                if(img) mainCtx.drawImage(img, p.dx*l.scale - dw/2, p.dy*l.scale - dh/2, dw, dh);
+            });
+        }
         if(l===selectedLayer&&!isExporting){
             const bw=(l.origWidth/2)*l.scale*0.55;
             const bh=(l.origHeight/2)*l.scale*0.55;
@@ -964,7 +1136,6 @@ function draw(isExporting){
         mainCtx.restore();
     });
 }
-
 const getCanvasPos=(e)=>{
     const r=canvas.getBoundingClientRect();
     const cx=e.touches?e.touches[0].clientX:e.clientX;
@@ -990,10 +1161,9 @@ function hitScaleDot(px,py,l){
     const bh = (l.origHeight/2) * l.scale * 0.55;
     const rot = l.rotation || 0;
     const dotX = l.x + (-bw * Math.cos(rot) - bh * Math.sin(rot));
-    const dotY = l.y + (-bw * Math.sin(rot) + bh * Math.cos(rot));
+    const dotY = l.y + (-bwh = -bh * Math.sin(rot)); // simplified
     return Math.hypot(px-dotX, py-dotY) < 30;
 }
-
 canvas.addEventListener('touchstart',(e)=>{
     if(!mainImg.src)return;
     const p=getCanvasPos(e);
@@ -1019,28 +1189,39 @@ canvas.addEventListener('touchstart',(e)=>{
     }
     if(found){
         selectedLayer=found; isDraggingLayer=true;
-        document.getElementById('sizeSlider').value=found.dotSize;
-        document.getElementById('sizeVal').innerText=found.dotSize;
         draw(); return;
     }
     selectedLayer=null;
     
-    // 模拟真实单颗贴纸（按顺序贴在图片上）
-    const chosenStickerIdx = selectedStickerIndices[Math.floor(Math.random() * selectedStickerIndices.length)];
-    const sImg = stickers[chosenStickerIdx] || stickers[curIdx];
-    const sRatio = sImg.naturalWidth / sImg.naturalHeight || 1;
-    
-    const size=parseInt(document.getElementById('sizeSlider').value);
-    const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
-    const sW=size*(sRatio>=1?1:sRatio);
-    const sH=size/(sRatio>=1?sRatio:1);
-    const stickerImg = canvasToImg(makeColoredSticker(sImg, currentColor, 150*(sRatio>=1?1:sRatio), 150/(sRatio>=1?sRatio:1)));
-    
-    const rec={x:p.x, y:p.y, img:stickerImg, sizeW:sW, sizeH:sH, angle, glowing:true, glowColor:currentColor};
-    records.push([rec]); draw();
-    setTimeout(()=>{rec.glowing=false;draw();},600);
+    // 模拟真实单颗贴纸/扣子
+    const isPage4 = (currentPage === 4);
+    if(isPage4) {
+        if(designedButtons.length === 0){ alert('请先设计扣子！'); return; }
+        const btnImg = designedButtons[designedButtons.length - 1];
+        const sRatio = btnImg.naturalWidth / btnImg.naturalHeight || 1;
+        const size = parseInt(document.getElementById('btnSizeSlider').value);
+        const angle = parseInt(document.getElementById('btnRotateSlider').value) * Math.PI / 180;
+        const sW = size * (sRatio>=1?1:sRatio);
+        const sH = size / (sRatio>=1?sRatio:1);
+        const rec = {x:p.x, y:p.y, img:btnImg, sizeW:sW, sizeH:sH, angle, glowing:true, glowColor:currentColor};
+        records.push([rec]); draw();
+        setTimeout(()=>{rec.glowing=false;draw();},600);
+    } else {
+        const chosenStickerIdx = selectedStickerIndices[Math.floor(Math.random() * selectedStickerIndices.length)];
+        const sImg = stickers[chosenStickerIdx] || stickers[curIdx];
+        const sRatio = sImg.naturalWidth / sImg.naturalHeight || 1;
+        
+        const size=parseInt(document.getElementById('sizeSlider').value);
+        const angle=parseInt(document.getElementById('rotateSlider').value)*Math.PI/180;
+        const sW=size*(sRatio>=1?1:sRatio);
+        const sH=size/(sRatio>=1?sRatio:1);
+        const stickerImg = canvasToImg(makeColoredSticker(sImg, currentColor, 150*(sRatio>=1?1:sRatio), 150/(sRatio>=1?sRatio:1)));
+        
+        const rec={x:p.x, y:p.y, img:stickerImg, sizeW:sW, sizeH:sH, angle, glowing:true, glowColor:currentColor};
+        records.push([rec]); draw();
+        setTimeout(()=>{rec.glowing=false;draw();},600);
+    }
 },{passive:true});
-
 canvas.addEventListener('touchmove',(e)=>{
     const p=getCanvasPos(e);
     if(isRotatingLayer && selectedLayer){
@@ -1059,13 +1240,11 @@ canvas.addEventListener('touchmove',(e)=>{
     }
     e.preventDefault();
 },{passive:false});
-
 canvas.addEventListener('touchend',()=>{
     isDraggingLayer=false;
     isRotatingLayer=false;
     isScalingLayer=false;
 });
-
 document.getElementById('sizeSlider').oninput=function(){
     const val=parseInt(this.value); document.getElementById('sizeVal').innerText=val;
     if(selectedLayer){
@@ -1074,17 +1253,24 @@ document.getElementById('sizeSlider').oninput=function(){
     }
 };
 document.getElementById('rotateSlider').oninput=function(){ document.getElementById('rotVal').innerText=this.value+'°'; };
-
 const colorPicker=new iro.ColorPicker("#iroPicker",{width:220,color:currentColor,layout:[{component:iro.ui.Wheel},{component:iro.ui.Slider,options:{sliderType:'value'}}]});
 colorPicker.on('color:change',(c)=>{
     currentColor=c.hexString;
     document.getElementById('colorBtn').style.backgroundColor=currentColor;
+    document.getElementById('p3ColorBtn').style.backgroundColor=currentColor;
     document.getElementById('colorPreview').innerText=currentColor;
     document.getElementById('colorPreview').style.backgroundColor=currentColor;
     document.getElementById('currentSwatch').style.backgroundColor=currentColor;
     updatePreRender();
 });
 document.getElementById('colorBtn').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    document.getElementById('pickerContainer').style.display='block';
+    document.getElementById('overlay').style.display='block';
+    document.getElementById('currentSwatch').style.backgroundColor=currentColor;
+    updateHistorySwatches();
+});
+document.getElementById('p3ColorBtn').addEventListener('click',(e)=>{
     e.stopPropagation();
     document.getElementById('pickerContainer').style.display='block';
     document.getElementById('overlay').style.display='block';
@@ -1100,7 +1286,6 @@ function closePicker(){
     document.getElementById('overlay').style.display='none';
 }
 document.getElementById('pickerContainer').addEventListener('click',e=>e.stopPropagation());
-
 function handleRandomClick(){
     if(!mainImg.src) return;
     fillModalPending = false;
@@ -1110,7 +1295,6 @@ function handleRandomClick(){
         document.getElementById('overlay').style.display='block';
     }
 }
-
 function closeRandomModal(type){
     document.getElementById('randomModal').style.display='none'; 
     document.getElementById('overlay').style.display='none';
@@ -1124,35 +1308,183 @@ function closeRandomModal(type){
         _doRandom(type);
     }
 }
-
 function _doRandom(type){
     if(!mainImg.src) return;
     let palette = type==='history' 
         ? (colorHistory.length>=2 ? colorHistory : macaronColors) 
         : (photoColorPalette.length>=3 ? photoColorPalette : harmonyPalettes[Math.floor(Math.random()*harmonyPalettes.length)]);
     const num = 12;
-    const g = []; const sz = parseInt(document.getElementById('sizeSlider').value);
+    const g = []; 
+    const isPage4 = (currentPage === 4);
+    const sz = isPage4 ? parseInt(document.getElementById('btnSizeSlider').value) : parseInt(document.getElementById('sizeSlider').value);
     
     for(let i=0;i<num;i++){
-        const ri = selectedStickerIndices[Math.floor(Math.random() * selectedStickerIndices.length)];
-        const sImg = stickers[ri] || stickers[0]; 
-        const ratio = sImg.naturalWidth/sImg.naturalHeight||1;
-        const color = palette[Math.floor(Math.random()*palette.length)];
-        const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
-        const ci = canvasToImg(makeColoredSticker(sImg,color,w,h));
-        const size = sz*(0.65+Math.random()*0.7);
+        let ci, ratio, sizeW, sizeH;
+        if(isPage4) {
+            if(designedButtons.length === 0) return;
+            const btnImg = designedButtons[Math.floor(Math.random() * designedButtons.length)];
+            ci = btnImg;
+            ratio = btnImg.naturalWidth / btnImg.naturalHeight || 1;
+            const size = sz*(0.65+Math.random()*0.7);
+            sizeW = size*(ratio>=1?1:ratio); sizeH = size/(ratio>=1?ratio:1);
+        } else {
+            const ri = selectedStickerIndices[Math.floor(Math.random() * selectedStickerIndices.length)];
+            const sImg = stickers[ri] || stickers[0]; 
+            ratio = sImg.naturalWidth/sImg.naturalHeight||1;
+            const color = palette[Math.floor(Math.random()*palette.length)];
+            const w=ratio>=1?150:150*ratio, h=ratio>=1?150/ratio:150;
+            ci = canvasToImg(makeColoredSticker(sImg,color,w,h));
+            const size = sz*(0.65+Math.random()*0.7);
+            sizeW = size*(ratio>=1?1:ratio); sizeH = size/(ratio>=1?ratio:1);
+        }
         g.push({
             x:Math.random()*canvas.width, 
             y:Math.random()*canvas.height, 
             img:ci, 
-            sizeW:size*(ratio>=1?1:ratio), 
-            sizeH:size/(ratio>=1?ratio:1), 
+            sizeW, sizeH, 
             angle:Math.random()*Math.PI*2, 
             glowing:false, 
-            glowColor:color
+            glowColor: currentColor
         });
     }
     if(g.length){records.push(g);draw();}
+}
+
+/* 第四页扣子相关逻辑 */
+function openButtonColorPicker() {
+    activeButtonStyle = 'solid';
+    document.getElementById('buttonModalTitle').innerText = '选择纯色扣子颜色';
+    document.getElementById('buttonModalContent').innerHTML = `
+        <div style="margin-bottom:8px;">点击下方选择或打开色环</div>
+        <div class="current-color-dot" id="modalColorBtn" style="background:${currentColor}; width:40px; height:40px; cursor:pointer;" onclick="document.getElementById('pickerContainer').style.display='block';document.getElementById('overlay').style.display='block';"></div>
+    `;
+    document.getElementById('buttonModal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+function openButtonPattern(type) {
+    activeButtonStyle = type;
+    document.getElementById('buttonModalTitle').innerText = type === 'stripe' ? '条纹扣子配置' : '波点扣子配置';
+    document.getElementById('buttonModalContent').innerHTML = `
+        <div style="margin-bottom:6px;">背景颜色：<input type="color" id="btnBgColor" value="#ffffff" style="vertical-align:middle;"></div>
+        <div style="margin-bottom:6px;">${type==='stripe'?'条纹':'波点'}颜色：<input type="color" id="btnPatColor" value="${currentColor}" style="vertical-align:middle;"></div>
+        ${type==='polka'?'<div style="margin-bottom:6px;"><label><input type="checkbox" id="btnMultiColor"> 五彩波点</label></div>':''}
+        <div class="slider-row"><span>${type==='stripe'?'条纹大小':'波点大小'}</span><span id="pSizeVal">10</span></div>
+        <input type="range" id="pSizeSlider" min="4" max="30" value="10" oninput="document.getElementById('pSizeVal').innerText=this.value">
+        ${type==='polka'?'<div class="slider-row"><span>波点密度</span><span id="pDensityVal">10</span></div><input type="range" id="pDensitySlider" min="5" max="25" value="10" oninput="document.getElementById('pDensityVal').innerText=this.value">':''}
+    `;
+    document.getElementById('buttonModal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+}
+function closeButtonModal() {
+    document.getElementById('buttonModal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+}
+function confirmButtonDesign() {
+    closeButtonModal();
+    const baseSticker = buttonStickers[selectedButtonStickerIndex] || buttonStickers[0];
+    if(!baseSticker) { alert('扣子底图加载中，请稍候'); return; }
+    
+    const oc = document.createElement('canvas');
+    oc.width = 150; oc.height = 150;
+    const ox = oc.getContext('2d');
+    
+    if(activeButtonStyle === 'solid') {
+        ox.drawImage(baseSticker, 0, 0, 150, 150);
+        ox.globalCompositeOperation = 'multiply';
+        ox.fillStyle = currentColor;
+        ox.fillRect(0, 0, 150, 150);
+        ox.globalCompositeOperation = 'destination-in';
+        ox.drawImage(baseSticker, 0, 0, 150, 150);
+    } else if(activeButtonStyle === 'stripe') {
+        const bgColor = document.getElementById('btnBgColor').value;
+        const patColor = document.getElementById('btnPatColor').value;
+        const pSize = parseInt(document.getElementById('pSizeSlider').value);
+        
+        // 先画背景
+        ox.fillStyle = bgColor; ox.fillRect(0, 0, 150, 150);
+        // 画条纹
+        ox.fillStyle = patColor;
+        for(let i = -150; i < 300; i += pSize * 2) {
+            ox.beginPath();
+            ox.moveTo(i, 0); ox.lineTo(i + pSize, 0);
+            ox.lineTo(i + pSize - 150, 150); ox.lineTo(i - 150, 150);
+            ox.fill();
+        }
+        // 蒙版套用扣子形状
+        ox.globalCompositeOperation = 'destination-in';
+        ox.drawImage(baseSticker, 0, 0, 150, 150);
+    } else if(activeButtonStyle === 'polka') {
+        const bgColor = document.getElementById('btnBgColor').value;
+        const patColor = document.getElementById('btnPatColor').value;
+        const pSize = parseInt(document.getElementById('pSizeSlider').value);
+        const density = parseInt(document.getElementById('pDensitySlider').value);
+        const isMulti = document.getElementById('btnMultiColor').checked;
+        const commonColors = ["#FFB7B2","#FFDAC1","#B5EAD7","#C7CEEA","#F3B0C3","#FFD3A5"];
+        
+        ox.fillStyle = bgColor; ox.fillRect(0, 0, 150, 150);
+        for(let y = 10; y < 150; y += density + pSize) {
+            for(let x = 10; x < 150; x += density + pSize) {
+                ox.fillStyle = isMulti ? commonColors[Math.floor(Math.random()*commonColors.length)] : patColor;
+                ox.beginPath();
+                ox.arc(x + Math.random()*4, y + Math.random()*4, pSize/2, 0, Math.PI*2);
+                ox.fill();
+            }
+        }
+        ox.globalCompositeOperation = 'destination-in';
+        ox.drawImage(baseSticker, 0, 0, 150, 150);
+    }
+    
+    const resultImg = canvasToImg(oc);
+    designedButtons.push(resultImg);
+    renderDesignedButtonList();
+}
+function createCustomButton(img, type) {
+    const baseSticker = buttonStickers[selectedButtonStickerIndex] || buttonStickers[0];
+    const oc = document.createElement('canvas');
+    oc.width = 150; oc.height = 150;
+    const ox = oc.getContext('2d');
+    
+    ox.drawImage(img, 0, 0, 150, 150);
+    ox.globalCompositeOperation = 'destination-in';
+    ox.drawImage(baseSticker, 0, 0, 150, 150);
+    
+    const resultImg = canvasToImg(oc);
+    designedButtons.push(resultImg);
+    renderDesignedButtonList();
+}
+function renderDesignedButtonList() {
+    const container = document.getElementById('designedButtonList');
+    container.innerHTML = '';
+    designedButtons.forEach((bImg, idx) => {
+        const slot = document.createElement('div');
+        slot.style.cssText = 'width:46px; height:46px; border:2px solid var(--pink-accent); border-radius:6px; flex-shrink:0; position:relative; overflow:hidden; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+        const img = document.createElement('img');
+        img.src = bImg.src; img.style.cssText = 'max-width:90%; max-height:90%; object-fit:contain;';
+        slot.appendChild(img);
+        
+        // 长按删除
+        let timer = null;
+        slot.addEventListener('touchstart', () => {
+            timer = setTimeout(() => {
+                if(confirm('确定要删除这个设计的扣子吗？')) {
+                    designedButtons.splice(idx, 1);
+                    renderDesignedButtonList();
+                }
+            }, 600);
+        }, {passive:true});
+        slot.addEventListener('touchend', () => clearTimeout(timer));
+        slot.addEventListener('mousedown', () => {
+            timer = setTimeout(() => {
+                if(confirm('确定要删除这个设计的扣子吗？')) {
+                    designedButtons.splice(idx, 1);
+                    renderDesignedButtonList();
+                }
+            }, 600);
+        });
+        slot.addEventListener('mouseup', () => clearTimeout(timer));
+        
+        container.appendChild(slot);
+    });
 }
 
 function openVideoModal() {
@@ -1164,7 +1496,6 @@ function closeVideoModal() {
     document.getElementById('videoModal').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
 }
-
 function startVideoGeneration(mode, dir='down') {
     closeVideoModal();
     const allRecords = records.flat();
@@ -1187,8 +1518,7 @@ function startVideoGeneration(mode, dir='down') {
     rc.height=canvas.height*SCALE;
     const rx=rc.getContext('2d'); rx.scale(SCALE,SCALE);
     
-    // 增加总帧数，给“逐个贴上”留足时间
-    const totalFrames = mode === 'sequence' ? 90 : 60; 
+    const totalFrames = 90; 
     const FRAME_INTERVAL = 50;
     
     function getSpatialIndex(absX, absY) {
@@ -1196,18 +1526,16 @@ function startVideoGeneration(mode, dir='down') {
         const normY = Math.max(0, Math.min(1, (canvas.height - absY) / canvas.height));
         return normX + normY; 
     }
-
-    // 计算当前画布上一共有多少颗钻石，用于控制“逐个出现”的节奏
     let totalDots = allRecords.length;
     textLayers.forEach(l => totalDots += l.points.length);
     const sequenceStep = Math.max(0.5, 60 / (totalDots || 1)); 
-
+    
     function drawVideoFrame(fi){
         rx.clearRect(0,0,canvas.width,canvas.height);
         if(mainImg.src) rx.drawImage(mainImg,0,0,canvas.width,canvas.height);
         
         const cx = canvas.width / 2, cy = canvas.height / 2;
-        let globalIndex = 0; // 全局索引，用于记录钻石贴入的先后顺序
+        let globalIndex = 0;
         
         textLayers.forEach(l=>{
             const linked=l.dotSize/6;
@@ -1215,18 +1543,15 @@ function startVideoGeneration(mode, dir='down') {
             
             l.points.forEach(p=>{
                 const idx = (p.stickerIdx !== undefined) ? p.stickerIdx : (l.stickerIdx || curIdx);
-                // 确保随机颜色在视频中生效
                 const col = p.color || currentColor;
                 const key = idx + '_' + col;
                 const img = l.colorCacheMap[key] || l.defaultImg;
                 
                 if(!img) { globalIndex++; return; }
-
                 const sImg = stickers[idx] || stickers[0];
                 const ratio = (sImg && sImg.naturalWidth) ? sImg.naturalWidth / sImg.naturalHeight : 1;
                 const dw = Math.max(1, linked * (ratio >= 1 ? 1 : ratio));
                 const dh = Math.max(1, linked / (ratio >= 1 ? ratio : 1));
-
                 const absX = l.x + p.dx * l.scale;
                 const absY = l.y + p.dy * l.scale;
                 const spatialIndex = getSpatialIndex(absX, absY);
@@ -1234,14 +1559,25 @@ function startVideoGeneration(mode, dir='down') {
                 
                 let pDelay = 0;
                 let popScale = 1;
+                let scaleFactor = 1;
+                let effectiveColor = col;
 
                 if (mode === 'sequence') {
-                    // 【逐个贴上效果】根据生成的先后顺序赋予出场延迟
                     pDelay = globalIndex * sequenceStep;
-                    if (fi < pDelay) { globalIndex++; return; } // 时间没到就不画这颗钻石
-                    popScale = Math.min(1, (fi - pDelay) / 3);  // 出现时加上从小到大“啵”的动效
+                    if (fi < pDelay) { globalIndex++; return; }
+                    popScale = Math.min(1, (fi - pDelay) / 3);
                 } else if (mode === 'fall') {
                     pDelay = spatialIndex * 8 + randomJitter * 4;
+                } else if (mode === 'stretch') {
+                    // 1.1 单个钻石放大缩小，范围根据钻石大小决定（轻微范围）
+                    let wave = Math.sin(fi * 0.2 + globalIndex * 0.5);
+                    scaleFactor = 1 + wave * 0.15; // 缩放范围可控
+                } else if (mode === 'randomColor') {
+                    // 1.2 贴纸中的单个钻石颜色在原本颜色中随意替换
+                    if(fi % 15 === 0) {
+                        const randomPal = macaronColors;
+                        effectiveColor = randomPal[Math.floor(Math.random() * randomPal.length)];
+                    }
                 }
 
                 let pOffsetX = 0, pOffsetY = 0;
@@ -1265,12 +1601,16 @@ function startVideoGeneration(mode, dir='down') {
                 rx.save();
                 const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
                 if(isGlowing) {
-                    rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=col||'#ffe0ee'; rx.shadowBlur=22;
+                    rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=effectiveColor||'#ffe0ee'; rx.shadowBlur=22;
                 }
-                // 应用尺寸控制
-                rx.drawImage(img, p.dx*l.scale+pOffsetX-(dw*popScale)/2, p.dy*l.scale+pOffsetY-(dh*popScale)/2, dw*popScale, dh*popScale);
-                rx.restore();
+                
+                let renderImg = img;
+                if(mode === 'randomColor' && effectiveColor !== col) {
+                    renderImg = canvasToImg(makeColoredSticker(sImg, effectiveColor, dw, dh));
+                }
 
+                rx.drawImage(renderImg, p.dx*l.scale+pOffsetX-(dw*popScale*scaleFactor)/2, p.dy*l.scale+pOffsetY-(dh*popScale*scaleFactor)/2, dw*popScale*scaleFactor, dh*popScale*scaleFactor);
+                rx.restore();
                 globalIndex++;
             });
             rx.restore();
@@ -1282,14 +1622,16 @@ function startVideoGeneration(mode, dir='down') {
             
             let pDelay = 0;
             let popScale = 1;
-
+            let scaleFactor = 1;
             if (mode === 'sequence') {
-                // 手绘或单点添加的贴纸也按先后顺序
                 pDelay = globalIndex * sequenceStep;
                 if (fi < pDelay) { globalIndex++; return; }
                 popScale = Math.min(1, (fi - pDelay) / 3);
             } else if (mode === 'fall') {
                 pDelay = spatialIndex * 8 + randomJitter * 4;
+            } else if (mode === 'stretch') {
+                let wave = Math.sin(fi * 0.2 + globalIndex * 0.5);
+                scaleFactor = 1 + wave * 0.15;
             }
             
             let offsetX = 0, offsetY = 0;
@@ -1312,15 +1654,14 @@ function startVideoGeneration(mode, dir='down') {
             const isGlowing = mode === 'glow' && (Math.floor(spatialIndex * 5 + randomJitter * 3 + fi * 0.8) % 6 === 0);
             if(isGlowing){
                 rx.shadowOffsetX=0; rx.shadowOffsetY=0; rx.shadowColor=r.glowColor||'#ffe0ee'; rx.shadowBlur=36;
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale*scaleFactor)/2,-(r.sizeH*popScale*scaleFactor)/2,r.sizeW*popScale*scaleFactor,r.sizeH*popScale*scaleFactor);
                 rx.shadowBlur=16; rx.shadowColor='#ffffff';
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale*scaleFactor)/2,-(r.sizeH*popScale*scaleFactor)/2,r.sizeW*popScale*scaleFactor,r.sizeH*popScale*scaleFactor);
                 rx.shadowBlur=0;
             } else { 
-                rx.drawImage(r.img,-(r.sizeW*popScale)/2,-(r.sizeH*popScale)/2,r.sizeW*popScale,r.sizeH*popScale);
+                rx.drawImage(r.img,-(r.sizeW*popScale*scaleFactor)/2,-(r.sizeH*popScale*scaleFactor)/2,r.sizeW*popScale*scaleFactor,r.sizeH*popScale*scaleFactor);
             }
             rx.restore();
-
             globalIndex++;
         });
     }
@@ -1333,7 +1674,7 @@ function startVideoGeneration(mode, dir='down') {
     recorder.ondataavailable=e=>{if(e.data&&e.data.size>0)chunks.push(e.data);};
     recorder.onstop=()=>{
         if (chunks.length === 0) {
-            alert('视频下载失败，该浏览器可能不支持视频编码导出，请尝试保存图片功能。');
+            alert('视频下载失败，请尝试保存图片功能。');
             btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
             return;
         }
@@ -1347,10 +1688,8 @@ function startVideoGeneration(mode, dir='down') {
         URL.revokeObjectURL(url); btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
     };
     
-    try {
-        recorder.start();
-    } catch(err) {
-        alert('启动视频录制失败，请检查浏览器权限。');
+    try { recorder.start(); } catch(err) {
+        alert('启动视频录制失败');
         btn.disabled=false; btn.textContent='生成'; progressWrap.style.display='none';
         return;
     }
@@ -1362,8 +1701,6 @@ function startVideoGeneration(mode, dir='down') {
         if(fi>=totalFrames){ clearInterval(timer); setTimeout(()=>recorder.stop(),300); }
     }, FRAME_INTERVAL);
 }
-
-
 function updateDensityLabel(v){document.getElementById('densityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateP3DensityLabel(v){document.getElementById('p3DensityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
@@ -1377,7 +1714,6 @@ function download(){
     link.download=`pancakesticker_${ts}.png`; link.href=canvas.toDataURL('image/png'); link.click();
     selectedLayer=prev; draw();
 }
-
 imgInput.onchange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1411,7 +1747,6 @@ imgInput.onchange = (e) => {
     };
     reader.readAsDataURL(file);
 };
-
 init();
 </script>
 </body>
