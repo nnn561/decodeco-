@@ -55,6 +55,15 @@ body.tablet-mode .page-corner-badge { top: auto; bottom: 4px; right: auto; left:
 .expand-toggle-btn.open { transform: rotate(45deg); background: #ff6b6b; }
 .multiselect-toggle-btn { position: absolute; left: 6px; bottom: 4px; padding: 4px 10px; border-radius: 12px; background: #fff; color: var(--pink-accent); border: 1.5px solid var(--pink-accent); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 5; transition: all 0.2s; }
 .multiselect-toggle-btn.active { background: var(--pink-accent); color: white; box-shadow: 0 2px 8px rgba(255,133,162,0.4); }
+.page-switcher { width: 100%; margin-top: 8px; }
+.page-switcher-head { display: flex; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 1.5px solid var(--pink-accent); border-radius: 16px; padding: 6px 14px; font-size: 11px; font-weight: bold; color: var(--pink-accent); cursor: pointer; }
+.page-switcher-count { opacity: .7; font-weight: normal; }
+.page-switcher-arrow { transition: transform 0.2s; font-size: 10px; }
+.page-switcher.open .page-switcher-arrow { transform: rotate(180deg); }
+.page-switcher-list { display: none; flex-direction: column; gap: 4px; margin-top: 6px; background: #fffafb; border: 1px dashed #ffcad4; border-radius: 10px; padding: 6px; }
+.page-switcher.open .page-switcher-list { display: flex; }
+.page-switcher-item { padding: 7px 8px; border-radius: 8px; font-size: 11px; color: #777; cursor: pointer; text-align: center; }
+.page-switcher-item.active { background: var(--pink-accent); color: #fff; font-weight: bold; }
 .sticker-tip-txt { font-size: 10px; color: #ff85a2; text-align: center; margin-top: 4px; }
 .page-content { width: 100%; }
 .sticker-gen-area { width: 100%; padding: 10px; background: #fffafb; border-radius: 12px; border: 1px dashed #ffcad4; margin-bottom: 10px; }
@@ -158,10 +167,6 @@ body.tablet-mode .bottom-action-bar button { font-size:12px; padding:10px 4px; }
 </div>
 <div class="book-container" id="bookContainer">
 <div class="top-page" id="topPage">
-<div class="page-corner" id="pageCorner" onclick="flipPage()">
-<div class="page-corner-badge" id="pageBadge">钻石-文字/emoji/颜文字</div>
-<div class="page-corner-icon">▷</div>
-</div>
 <!-- 贴纸选择框 (点击➕可展开12贴纸，点击多选) -->
 <div class="sticker-container-box" id="stickerBoxArea">
 <div class="sticker-grid" id="stickerGrid"></div>
@@ -314,6 +319,14 @@ class="slider-row"><span>纽扣大小</span><span id="buttonSizeVal">80</span></
 <input type="range" id="rotateSlider" min="0" max="360" value="0">
 </div>
 </div>
+<div class="page-switcher" id="pageSwitcher">
+<div class="page-switcher-head" onclick="togglePageSwitcher()">
+<span id="pageSwitcherLabel">钻石-文字/emoji/颜文字</span>
+<span class="page-switcher-count" id="pageSwitcherCount">1/4</span>
+<span class="page-switcher-arrow" id="pageSwitcherArrow">▾</span>
+</div>
+<div class="page-switcher-list" id="pageSwitcherList"></div>
+</div>
 </div>
 <div class="spine-area">
 <script>for(let i=0;i<6;i++)document.write('<div class="ring"></div>');</script>
@@ -419,6 +432,8 @@ let buttonPickerTarget = null;
 let buttonColorHistory = [];
 let buttonFrameChoice = 'heart';
 let selectedButtonPattern = null;
+let selectedButtonRecord = null;
+let isDraggingButtonRecord = false;
 let buttonColors = {
 solid:'#FFB7B2',
 stripeBg:'#FFF4F7',
@@ -589,6 +604,7 @@ if(i-1===curIdx) updatePreRender();
 }, (i-1)*50);
 }
 initPresetSwatches();
+updatePageSwitcherLabel();
 document.getElementById('p3ColorBtn').style.background=currentColor;
 animateLiveDots();
 // 扣子库 button1-button7
@@ -720,11 +736,8 @@ if(d) d.className='live-dot'+(i===idx?' lit':'');
 idx=(idx+1)%5;
 },350);
 }
-function flipPage(){
-currentPage = (currentPage % 4) + 1;
-const isFlipped = (currentPage !== 1);
-document.getElementById('pageCorner').classList.toggle('flipped', isFlipped);
-document.getElementById('pageBadge').innerText = PAGE_LABELS[currentPage-1];
+function goToPage(n){
+currentPage = n;
 document.getElementById('pageContent1').style.display = currentPage===1 ? 'block' : 'none';
 document.getElementById('pageContent2').style.display = currentPage===2 ? 'block' : 'none';
 document.getElementById('pageContent3').style.display = currentPage===3 ? 'block' : 'none';
@@ -737,6 +750,34 @@ if (diamondColorCol) diamondColorCol.style.display = (currentPage===1 || current
 const globalControls = document.querySelector('.controls');
 if (globalControls) globalControls.style.display = (currentPage===1 || currentPage===2) ? 'flex' : 'none';
 if(currentPage===4) renderButtonDesignList();
+updatePageSwitcherLabel();
+}
+function flipPage(){ goToPage((currentPage % 4) + 1); }
+function updatePageSwitcherLabel(){
+const lbl=document.getElementById('pageSwitcherLabel');
+const cnt=document.getElementById('pageSwitcherCount');
+if(lbl) lbl.innerText=PAGE_LABELS[currentPage-1];
+if(cnt) cnt.innerText=currentPage+'/4';
+const list=document.getElementById('pageSwitcherList');
+if(list && list.children.length) renderPageSwitcherList();
+}
+function renderPageSwitcherList(){
+const list=document.getElementById('pageSwitcherList');
+if(!list) return;
+list.innerHTML='';
+PAGE_LABELS.forEach((label,i)=>{
+const item=document.createElement('div');
+item.className='page-switcher-item'+(currentPage===i+1?' active':'');
+item.innerText=(i+1)+'. '+label;
+item.onclick=(e)=>{e.stopPropagation();goToPage(i+1);const sw=document.getElementById('pageSwitcher');if(sw)sw.classList.remove('open');};
+list.appendChild(item);
+});
+}
+function togglePageSwitcher(){
+const sw=document.getElementById('pageSwitcher');
+if(!sw)return;
+const open=sw.classList.toggle('open');
+if(open) renderPageSwitcherList();
 }
 function initUDrawEvents(){
 const saveState = () => {
@@ -848,21 +889,19 @@ document.getElementById('buttonRainbowPolka').onchange=updateButtonPreview;
 document.getElementById('buttonSizeSlider').oninput=function(){
 document.getElementById('buttonSizeVal').innerText=this.value;
 const v=parseInt(this.value)||80;
-// 只控制“最后一次直接点在画布上的扣子”，不影响其它扣子，也不影响外框/铺满整体。
-const last=buttonCanvasRecords.length ? buttonCanvasRecords[buttonCanvasRecords.length-1] : null;
-if(last){
-const base=last.baseSize||v;
-last.sizeScale=v/base;
-last.size=v;
+// 只控制当前选中（虚线框）的扣子，不影响其它扣子，也不影响外框/铺满整体。
+if(selectedButtonRecord){
+const base=selectedButtonRecord.baseSize||v;
+selectedButtonRecord.sizeScale=v/base;
+selectedButtonRecord.size=v;
 }
 updateButtonPreview(); draw();
 };
 document.getElementById('buttonRotateSlider').oninput=function(){
 document.getElementById('buttonRotVal').innerText=this.value+'°';
 const a=(parseInt(this.value)||0)*Math.PI/180;
-// 角度同样只作用于最后一次直接点在画布上的扣子；外框/铺满继续由虚线框手柄控制旋转。
-const last=buttonCanvasRecords.length ? buttonCanvasRecords[buttonCanvasRecords.length-1] : null;
-if(last) last.angle=a;
+// 角度同样只作用于当前选中的扣子；外框/铺满继续由虚线框手柄控制旋转。
+if(selectedButtonRecord) selectedButtonRecord.angle=a;
 updateButtonPreview(); draw();
 };
 document.getElementById('buttonImgInput').onchange=function(e){
@@ -1019,7 +1058,7 @@ function drawButtons(){
 if(selectedButtonPattern){
 const l=selectedButtonPattern;
 mainCtx.save();mainCtx.translate(l.x,l.y);mainCtx.rotate(l.rotation||0);mainCtx.globalAlpha=1;
-const sizeFactor=l.sizeFactor||1;
+const sizeFactor=l.scale||1;
 l.records.forEach(r=>{if(!r.img)return;const sz=r.size*sizeFactor;mainCtx.save();mainCtx.translate(r.x,r.y);mainCtx.rotate(r.angle||0);mainCtx.drawImage(r.img,-sz/2,-sz/2,sz,sz);mainCtx.restore();});
 mainCtx.restore();
 drawButtonPatternSelection();
@@ -1027,8 +1066,21 @@ drawButtonPatternSelection();
 buttonCanvasRecords.forEach(r=>{
 if(!r.img)return;
 mainCtx.save();mainCtx.translate(r.x,r.y);mainCtx.rotate(r.angle||0);
-mainCtx.drawImage(r.img,-r.size/2,-r.size/2,r.size,r.size);mainCtx.restore();
+mainCtx.drawImage(r.img,-r.size/2,-r.size/2,r.size,r.size);
+if(r===selectedButtonRecord){
+const bw=r.size/2*1.15, bh=r.size/2*1.15;
+mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.setLineDash([5,4]);
+mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
+mainCtx.setLineDash([]);
+}
+mainCtx.restore();
 });
+}
+function hitButtonRecord(px,py,r){
+const dx=px-r.x, dy=py-r.y; const rot=-(r.angle||0);
+const lx=dx*Math.cos(rot)-dy*Math.sin(rot);
+const ly=dx*Math.sin(rot)+dy*Math.cos(rot);
+return Math.abs(lx)<=r.size/2*1.15 && Math.abs(ly)<=r.size/2*1.15;
 }
 function selectButtonFrame(shape){buttonFrameChoice=shape;}
 function _makeButtonPatternLayer(pts,design,shapeName){
@@ -1071,6 +1123,13 @@ for(let i=0;i<n;i++){const a=i/n*2*Math.PI;pts.push({x:cx+r*Math.cos(a),y:cy+r*M
 }else if(shape==='heart'){
 const sc=Math.min(w,h)/42;
 for(let i=0;i<150;i++){const t=i/150*2*Math.PI,hx=16*Math.pow(Math.sin(t),3),hy=-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));const q={x:cx+hx*sc,y:cy+hy*sc-10*sc};if(!pts.length||Math.hypot(q.x-pts[pts.length-1].x,q.y-pts[pts.length-1].y)>step*.7)pts.push(q);}
+// 凹陷处两侧轨迹距离很近，顺序过滤会漏判导致多一颗，这里整体再去重一次。
+{
+const minGap=step*0.6;
+const dedup=[];
+pts.forEach(pt=>{const tooClose=dedup.some(q=>Math.hypot(pt.x-q.x,pt.y-q.y)<minGap);if(!tooClose)dedup.push(pt);});
+pts=dedup;
+}
 }else{
 const ro=Math.min(w,h)/2-step*1.2,ri=ro*.42,v=[];
 for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rr=i%2===0?ro:ri;v.push({x:cx+rr*Math.cos(a),y:cy+rr*Math.sin(a)});}
@@ -1143,6 +1202,16 @@ let curr = rawPts[0];
 for(let i=1; i<rawPts.length; i++) {
 let d = Math.hypot(rawPts[i].x - curr.x, rawPts[i].y - curr.y);
 if(d >= step) { tempPts.push(rawPts[i]); curr = rawPts[i]; }
+}
+// 心形两侧轨迹在凹陷处距离很近，按顺序的距离过滤会漏判，这里再做一次全局去重，避免凹陷处多贴一颗。
+{
+const minGap = step * 0.6;
+const dedup = [];
+tempPts.forEach(pt => {
+const tooClose = dedup.some(q => Math.hypot(pt.x - q.x, pt.y - q.y) < minGap);
+if(!tooClose) dedup.push(pt);
+});
+tempPts = dedup;
 }
 } else if(shape === 'star') {
 let rOuter = Math.min(w, h)/2 - step*1.2;
@@ -1370,24 +1439,6 @@ mainCtx.translate(r.x,r.y); mainCtx.rotate(r.angle||0);
 if(r.glowing&&!isExporting){mainCtx.shadowColor=r.glowColor||'#ffddee';mainCtx.shadowBlur=22;}
 mainCtx.drawImage(r.img,-r.sizeW/2,-r.sizeH/2,r.sizeW,r.sizeH);
 mainCtx.shadowBlur=0;
-if(r===selectedRecord&&!isExporting){
-const bw=r.sizeW/2*0.55, bh=r.sizeH/2*0.55;
-mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=3; mainCtx.setLineDash([5,4]);
-mainCtx.strokeRect(-bw,-bh,bw*2,bh*2);
-mainCtx.setLineDash([]);
-mainCtx.beginPath(); mainCtx.arc(bw,bh,20,0,Math.PI*2);
-mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
-mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.stroke();
-mainCtx.fillStyle="#ff85a2"; mainCtx.font='bold 20px Arial';
-mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
-mainCtx.fillText('\u21bb', bw, bh+2);
-mainCtx.beginPath(); mainCtx.arc(-bw,bh,20,0,Math.PI*2);
-mainCtx.fillStyle="rgba(255,255,255,0.97)"; mainCtx.fill();
-mainCtx.strokeStyle="#ff85a2"; mainCtx.lineWidth=2.5; mainCtx.stroke();
-mainCtx.fillStyle="#ff85a2"; mainCtx.font='bold 20px Arial';
-mainCtx.textAlign='center'; mainCtx.textBaseline='middle';
-mainCtx.fillText('\u2921', -bw, bh);
-}
 mainCtx.restore();
 });
 textLayers.forEach(l=>{
@@ -1493,30 +1544,32 @@ if(hitButtonPatternRotateDot(p.x,p.y,l)){isRotatingLayer=true;layerCenter={x:l.x
 if(hitButtonPatternScaleDot(p.x,p.y,l)){isScalingLayer=true;layerCenter={x:l.x,y:l.y};scaleStart.dist=Math.hypot(p.x-l.x,p.y-l.y);scaleStart.scale=l.scale;return;}
 if(hitButtonPattern(p.x,p.y,l)){isDraggingLayer=true;return;}
 }
+if(selectedButtonRecord && hitButtonRecord(p.x,p.y,selectedButtonRecord)){ isDraggingButtonRecord=true; return; }
+let foundBtnRec=null;
+for(let i=buttonCanvasRecords.length-1;i>=0;i--){ if(hitButtonRecord(p.x,p.y,buttonCanvasRecords[i])){foundBtnRec=buttonCanvasRecords[i];break;} }
+if(foundBtnRec){
+selectedButtonRecord=foundBtnRec; isDraggingButtonRecord=true;
+document.getElementById('buttonSizeSlider').value=Math.round(foundBtnRec.size);
+document.getElementById('buttonSizeVal').innerText=Math.round(foundBtnRec.size);
+const deg=Math.round((foundBtnRec.angle||0)*180/Math.PI);
+document.getElementById('buttonRotateSlider').value=deg;
+document.getElementById('buttonRotVal').innerText=deg+'°';
+draw(); return;
+}
 const design=getButtonStampDesign();
 if(design){
-// 允许普通扣子与外框/铺满同时存在；新点下的扣子成为“最后一个扣子”。
-addButtonRecord(p.x,p.y,design,1);draw();
+// 允许普通扣子与外框/铺满同时存在；新贴上的扣子自动成为“选中”状态，带虚线外框，可直接调整。
+addButtonRecord(p.x,p.y,design,1);
+selectedButtonRecord=buttonCanvasRecords[buttonCanvasRecords.length-1];
+document.getElementById('buttonSizeSlider').value=Math.round(selectedButtonRecord.size);
+document.getElementById('buttonSizeVal').innerText=Math.round(selectedButtonRecord.size);
+document.getElementById('buttonRotateSlider').value=0;
+document.getElementById('buttonRotVal').innerText='0°';
+draw();
 }
 return;
 }
-if(selectedRecord){
-if(hitRecordRotateDot(p.x,p.y,selectedRecord)){
-isRotatingRecord=true;
-layerCenter={x:selectedRecord.x,y:selectedRecord.y};
-rotStart.touchAngle=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
-rotStart.layerAngle=selectedRecord.angle||0;
-return;
-}
-if(hitRecordScaleDot(p.x,p.y,selectedRecord)){
-isScalingRecord=true;
-layerCenter={x:selectedRecord.x,y:selectedRecord.y};
-scaleStart.dist=Math.hypot(p.x-layerCenter.x,p.y-layerCenter.y);
-scaleStart.w=selectedRecord.sizeW; scaleStart.h=selectedRecord.sizeH;
-return;
-}
-if(hitRecord(p.x,p.y,selectedRecord)){ isDraggingRecord=true; return; }
-}
+if(selectedRecord && hitRecord(p.x,p.y,selectedRecord)){ isDraggingRecord=true; return; }
 if(selectedLayer){
 if(hitRotateDot(p.x, p.y, selectedLayer)){
 isRotatingLayer = true;
@@ -1599,26 +1652,10 @@ draw();
 }
 }else if(isDraggingLayer && selectedLayer){
 selectedLayer.x=p.x; selectedLayer.y=p.y; draw();
-}else if(isRotatingRecord && selectedRecord){
-const curA=Math.atan2(p.y-layerCenter.y,p.x-layerCenter.x);
-selectedRecord.angle=rotStart.layerAngle+(curA-rotStart.touchAngle);
-const deg=Math.round(((selectedRecord.angle*180/Math.PI)%360+360)%360);
-document.getElementById('rotateSlider').value=deg;
-document.getElementById('rotVal').innerText=deg+'°';
-draw();
-}else if(isScalingRecord && selectedRecord){
-const curDist=Math.hypot(p.x-layerCenter.x,p.y-layerCenter.y);
-if(scaleStart.dist>5){
-const factor=Math.max(0.1,Math.min(curDist/scaleStart.dist,8));
-selectedRecord.sizeW=Math.max(6,scaleStart.w*factor);
-selectedRecord.sizeH=Math.max(6,scaleStart.h*factor);
-const val=Math.round(Math.max(selectedRecord.sizeW,selectedRecord.sizeH));
-document.getElementById('sizeSlider').value=val;
-document.getElementById('sizeVal').innerText=val;
-draw();
-}
 }else if(isDraggingRecord && selectedRecord){
 selectedRecord.x=p.x; selectedRecord.y=p.y; draw();
+}else if(currentPage===4 && isDraggingButtonRecord && selectedButtonRecord){
+selectedButtonRecord.x=p.x; selectedButtonRecord.y=p.y; draw();
 }
 e.preventDefault();
 },{passive:false});
@@ -1629,6 +1666,7 @@ isScalingLayer=false;
 isDraggingRecord=false;
 isRotatingRecord=false;
 isScalingRecord=false;
+isDraggingButtonRecord=false;
 });
 document.getElementById('sizeSlider').oninput=function(){
 const val=parseInt(this.value); document.getElementById('sizeVal').innerText=val;
@@ -1793,7 +1831,7 @@ totalDots+=buttonCanvasRecords.length;
 const sequenceStep=Math.max(.5,60/(totalDots||1));
 function glowAmount(order,fi,total){
 if(mode!=='glow'||!total)return 0;
-const cursor=Math.floor(fi/2)%total;
+const cursor=fi%total; // 原来每2帧才前进一格，这里改成每帧前进一格，闪光更快
 let d=Math.abs(order-cursor);d=Math.min(d,total-d);
 return d===0?1:(d===1?.28:0);
 }
@@ -1820,7 +1858,7 @@ rx.clearRect(0,0,canvas.width,canvas.height);if(mainImg.src)rx.drawImage(mainImg
 if(isButtonVideo){
 let buttonGlobal=0;
 if(selectedButtonPattern){
-const l=selectedButtonPattern,sizeFactor=l.sizeFactor||1;
+const l=selectedButtonPattern,sizeFactor=l.scale||1;
 l.records.forEach((r,i)=>{
 const spatialIndex=getSpatialIndex(l.x+r.x,l.y+r.y),jitter=stableRandom(i+901);let pDelay=0,popScale=1;
 if(mode==='sequence'){pDelay=buttonGlobal*sequenceStep;if(fi<pDelay){buttonGlobal++;return;}popScale=Math.min(1,(fi-pDelay)/3);}
@@ -1876,7 +1914,17 @@ function updateDensityLabel(v){document.getElementById('densityVal').innerText={
 function updateDensityLabel2(v){document.getElementById('densityVal2').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function updateP3DensityLabel(v){document.getElementById('p3DensityVal').innerText={'6':'少','8':'中','10':'多','12':'极多'}[v]||'少';}
 function smartUndo(){
-if(currentPage===4){if(selectedButtonPattern){selectedButtonPattern=null;draw();return;}if(buttonCanvasRecords.length)buttonCanvasRecords.pop();draw();return;}
+if(currentPage===4){
+if(selectedButtonPattern){selectedButtonPattern=null;draw();return;}
+if(selectedButtonRecord){
+const idx=buttonCanvasRecords.indexOf(selectedButtonRecord);
+if(idx>-1) buttonCanvasRecords.splice(idx,1);
+selectedButtonRecord=null;
+draw();return;
+}
+if(buttonCanvasRecords.length)buttonCanvasRecords.pop();
+draw();return;
+}
 if(selectedRecord){records=records.map(arr=>arr.filter(r=>r!==selectedRecord)).filter(arr=>arr.length);selectedRecord=null;}
 else if(selectedLayer){textLayers=textLayers.filter(l=>l!==selectedLayer);selectedLayer=null;}
 else records.pop();
@@ -1884,7 +1932,7 @@ draw();
 }
 function clearAll(){
 if(confirm('清空吗？(⁠◡⁠ ⁠ω⁠ ⁠◡⁠)')){
-if(currentPage===4){buttonCanvasRecords=[];selectedButtonPattern=null;}
+if(currentPage===4){buttonCanvasRecords=[];selectedButtonPattern=null;selectedButtonRecord=null;}
 else{textLayers=[];records=[];selectedLayer=null;selectedRecord=null;}
 draw();
 }
